@@ -1,0 +1,38 @@
+{
+  "name": "neo-map",
+  "version": "0.1.0",
+  "author": "Estelle Scifo",
+  "private": false,
+  "dependencies": {
+      "neo4j-driver": "^1.6.1",
+      "react": "^16.3.2",
+      "react-dom": "^16.3.2",
+      "react-select": "^3.0.4",
+      "react-leaflet": "^2.4.0",
+      "leaflet": "^1.5.1"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  },
+  "description": "A Neo4j Desktop application to visualize nodes with geographic attributes on a map.",
+  "main": "index.html",
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stellasia/neomap.git"
+  },
+  "keywords": [
+    "neo4j",
+    "leaflet",
+    "map",
+    "gis"
+  ],
+  "bugs": {
+    "url": "https://github.com/stellasia/neomap/issues"
+  },
+    "licence": "SEE LICENSE IN <LICENSE>",
+  "homepage": "https://github.com/stellasia/neomap#readme"
+}

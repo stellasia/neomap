@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import { Layer } from './layer'
-import { Accordian } from 'react-bootstrap';
 
 
 class LayersList extends Component {
