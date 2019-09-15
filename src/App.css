@@ -1,0 +1,53 @@
+html, body, #root , .row {
+    padding: 0;
+    margin: 0;
+    height: 100%;
+}
+
+#wrapper {
+  height: 100%;
+  position: relative;
+  width: 100%;
+}
+
+#sidebar {
+  background: rgba(0,0,0,.75);
+  box-shadow: 0 1px 5px rgba(0,0,0,.1);
+  color: #fff;
+  width: 30%;
+  /* height: 100%;   */
+  min-height: 100%;
+  padding: 1%;
+}
+
+#app-maparea {
+  position: relative;
+  width: 70%;
+  height: inherit;
+  padding: 0;
+}
+
+.leaflet-container {
+  position: relative;
+  width: 100%;
+  height: inherit;
+}
+
+.btn {
+    margin-top: 20px;
+}
+
+
+form {
+    border: 1px solid white;
+    padding: 0 10px;
+}
+
+.select {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    padding: 0;
+}

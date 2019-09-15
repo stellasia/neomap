@@ -1,0 +1,7 @@
+# tmp files
+*~
+#*#
+
+# node dependencies
+/node_modules
+
