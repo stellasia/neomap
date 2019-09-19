@@ -51,19 +51,16 @@ class Layer extends Component {
 	    this.state["key"] = uid;
 	}
 
-	this.nodes = props.nodes;
 	this.driver = props.driver;
 
 	this.sendData = this.sendData.bind(this);
+	this.handleNameChange = this.handleNameChange.bind(this);
+	this.handleNodeLabelChange = this.handleNodeLabelChange.bind(this);
 	this.handleLatPropertyChange = this.handleLatPropertyChange.bind(this);
 	this.handleLonPropertyChange = this.handleLonPropertyChange.bind(this);
-	this.handleNodeLabelChange = this.handleNodeLabelChange.bind(this);
-	this.handleNameChange = this.handleNameChange.bind(this);
 	this.handleHiddenStateChange = this.handleHiddenStateChange.bind(this);
 	this.handleColorChange = this.handleColorChange.bind(this);
 
-	this.updateData = this.updateData.bind(this);
-	this.updatePosition = this.updatePosition.bind(this);
     };
 
 
@@ -92,7 +89,10 @@ class Layer extends Component {
 	});
     };
 
+
     updateData() {
+	//return [];
+
 	var res = [];
 	const session = this.driver.session();
 	var nodeLabel = this.state.nodeLabel.join("|");
@@ -124,13 +124,16 @@ class Layer extends Component {
 	    });
     };
 
+
     handleLatPropertyChange(e) {
 	this.setState({latProperty: e.target.value});
     };
 
+
     handleLonPropertyChange(e) {
 	this.setState({lonProperty: e.target.value});
     };
+
 
     handleNodeLabelChange(e) {
 	if (e === null)
@@ -143,22 +146,61 @@ class Layer extends Component {
 	this.setState({nodeLabel: labels});
     };
 
+
     handleNameChange(e) {
 	this.setState({name: e.target.value});
     };
+
 
     handleHiddenStateChange(e) {
 	this.setState({hidden: e.target.checked});
     };
 
+
     handleColorChange(e) {
 	this.setState({color: e.value});
     };
+
 
     sendData(event) {
 	this.updateData();
 	event.preventDefault();
     };
+
+
+    getNodes() {
+	/*This will be updated quite often,
+	   is that what we want?
+	*/
+	if (this.driver === undefined)
+	    return [];
+
+	var res = [];
+	const session = this.driver.session();
+	session
+	    .run(
+		`MATCH (n) WITH labels(n) as labs UNWIND labs as l RETURN distinct l as label`,
+	    )
+	    .then(function (result) {
+		result.records.forEach(function (record) {
+		    var el = {
+			value:record.get("label"),
+			label: record.get("label")
+		    };
+		    res.push(el);
+		});
+		session.close();
+	    })
+	    .catch(function (error) {
+		console.log(error);
+	    });
+	return res;
+    };
+
+
+    componentWillMount() {
+	this.nodes = this.getNodes();
+    }
 
 
     render() {
@@ -253,7 +295,8 @@ class Layer extends Component {
 	    </div>
 
 	);
-    }
-}
+    };
+};
+
 
 export default Layer;

@@ -3,51 +3,34 @@ import "./App.css";
 import Map from "./components/Map";
 import SideBar from "./components/SideBar";
 
-
 const neo4j = require("neo4j-driver/lib/browser/neo4j-web.min.js").v1;
 
 
 class App extends Component {
 
-    constructor(props) {
-	super(props);
+    constructor(props, context) {
+	super(props, context);
+	this.driver = props.driver || context.driver || this.getDriver();
 
 	this.state = {
-	    latitude: 47,
-	    longitude: 3,
-	    layers: {}
+	    layers: {},
 	};
-
-	this.driver = neo4j.driver("bolt://localhost:7687", neo4j.auth.basic("neo4j", "admin"));
-
     };
 
-    componentWillUnmount() {
-	this.driver.close();
-    }
 
-    getNodes() {
-	var res = [];
-	const session = this.driver.session();
-	session
-	    .run(
-		`MATCH (n) WITH labels(n) as labs UNWIND labs as l RETURN distinct l as label`,
+    getDriver() {
+	var uri = process.env.REACT_APP_NEO4J_URI; // || "bolt://localhost:7687";
+	var usr = process.env.REACT_APP_NEO4J_USER;
+	var pwd = process.env.REACT_APP_NEO4J_PASSWORD;
+	return neo4j.driver(
+	    uri,
+	    neo4j.auth.basic(
+		usr,
+		pwd
 	    )
-	    .then(function (result) {
-		result.records.forEach(function (record) {
-		    var el = {
-			value:record.get("label"),
-			label: record.get("label")
-		    };
-		    res.push(el);
-		});
-		session.close();
-	    })
-	    .catch(function (error) {
-		console.log(error);
-	    });
-	return res;
+	);
     };
+
 
     layersChanged = (childData) => {
 	this.setState({
@@ -55,26 +38,29 @@ class App extends Component {
 	});
     };
 
+
     render() {
 	return (
-            <div id="wrapper" className="row">
+	    <div id="wrapper" className="row">
             <div id="sidebar" className="col-md-4">
             <SideBar
+	    key="sidebar"
 	    layersChanged = {this.layersChanged}
-	    nodes = {this.getNodes()}
+	    //nodes = {this.state.nodes}
 	    layers = {this.state.layers}
 	    driver = {this.driver}
             />
             </div>
             <div id="app-maparea" className="col-md-8">
             <Map
+	    key="map"
 	    layers = {this.state.layers}
             />
             </div>
             </div>
 	);
-    }
-}
+    };
+};
 
 
 export default App;

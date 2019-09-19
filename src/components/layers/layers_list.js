@@ -7,20 +7,17 @@ class LayersList extends Component {
     constructor(props) {
 	super(props);
 
+	this.state = {
+	    driver: props.driver,
+	    layers: props.layers
+	};
+
 	this.sendData = this.sendData.bind(this);
-	this.getLayer = this.getLayer.bind(this);
 	this.renderLayers = this.renderLayers.bind(this);
 	this.renderNewLayer = this.renderNewLayer.bind(this);
 
-	this.state = {
-	    layers: props.layers,
-	    showNewLayer: false
-	};
     };
 
-    getLayer(key) {
-	return this.layers.get(key);
-    }
 
     sendData(data) {
 	var new_layer = data.layer;
@@ -39,17 +36,18 @@ class LayersList extends Component {
 	var layers = Object.entries(this.state.layers);
 	return layers.map( ([key,layer]) => {
 	    return (
-		<Layer key={layer.key} sendData={this.sendData} layer={layer} driver={this.props.driver} nodes={this.props.nodes} />
+		<Layer key={layer.key} sendData={this.sendData} layer={layer} driver={this.state.driver} />
 	    );
 	});
     };
+
 
     renderNewLayer() {
 	var layers = Object.entries(this.state.layers);
 	if (layers.length === 0) {
             return (
 		<div>
-		<Layer key={undefined} sendData={this.sendData} layer={undefined} driver={this.props.driver} nodes={this.props.nodes} />
+		<Layer key={undefined} sendData={this.sendData} layer={undefined} driver={this.state.driver} />
 		</div>
             )
 	};
@@ -66,5 +64,6 @@ class LayersList extends Component {
 	)
     };
 };
+
 
 export default LayersList;

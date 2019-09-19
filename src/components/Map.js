@@ -1,7 +1,6 @@
 import React, { Component } from 'react'
-import { Map as LeafletMap, Marker, TileLayer, LayerGroup, LayersControl, FeatureGroup } from 'react-leaflet'
+import { Map as LeafletMap, Marker, TileLayer, LayersControl, FeatureGroup } from 'react-leaflet'
 import L from 'leaflet';
-import HeatmapLayer from 'react-leaflet-heatmap-layer';
 
 
 class Map extends Component {
@@ -32,14 +31,6 @@ class Map extends Component {
 			return  <Marker key={j} position={pos} icon={icon} ></Marker>
 		    })
 		}
-                <HeatmapLayer
-		// fitBoundsOnLoad
-		// fitBoundsOnUpdate
-		points={data}
-		longitudeExtractor={m => m[1]}
-		latitudeExtractor={m => m[0]}
-		intensityExtractor={m => 1}
-                />
                 </FeatureGroup>
 		</LayersControl.Overlay>
 	    );
@@ -67,6 +58,10 @@ class Map extends Component {
             <LeafletMap center={center} zoom={11}>
             <LayersControl>
             <LayersControl.BaseLayer name="Base" checked>
+            <TileLayer
+	    attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+	    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
             <TileLayer
 	    attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
 	    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

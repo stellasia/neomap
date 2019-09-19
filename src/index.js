@@ -1,8 +1,13 @@
+import neo4j from 'neo4j-driver';
 import React from "react";
 import ReactDOM from "react-dom";
 import "./index.css";
 import App from "./App";
-import registerServiceWorker from "./registerServiceWorker";
 
-ReactDOM.render(<App />, document.getElementById("root"));
-registerServiceWorker();
+
+const NewApp = () => (
+	    <App key="app" />
+);
+
+
+ReactDOM.render(<NewApp />, document.getElementById('root'))

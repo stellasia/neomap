@@ -1,6 +1,6 @@
 # neo-map
 
-A Neo4j Desktop application to visualize nodes with geographic attributes on a map.
+A React application to visualize nodes with geographic attributes on a map.
 
 
 ## Using docker

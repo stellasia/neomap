@@ -7,15 +7,15 @@ class SideBar extends Component {
     constructor(props) {
 	super(props);
 
-	this.sendData = this.sendData.bind(this);
-
 	this.state = {
 	    layers: props.layers,
-	}
+	    driver: props.driver
+	};
 
-	// this.latitude = React.createRef();
-	// this.longitude = React.createRef();
+	this.sendData = this.sendData.bind(this);
+
     };
+
 
     sendData(layers) {
 	this.setState({
@@ -26,16 +26,17 @@ class SideBar extends Component {
 	});
     };
 
+
     render() {
 	return (
 	    <LayersList
-	    nodes = {this.props.nodes}
 	    layers = {this.state.layers}
 	    sendData = {this.sendData}
-	    driver = {this.props.driver}
+	    driver = {this.state.driver}
 	    />
 	);
-    }
-}
+    };
+};
+
 
 export default SideBar;
