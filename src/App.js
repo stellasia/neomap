@@ -4,14 +4,36 @@ import Map from "./components/Map";
 import SideBar from "./components/SideBar";
 
 const neo4j = require("neo4j-driver/lib/browser/neo4j-web.min.js").v1;
-
+const DEFAULT_DRIVER = {
+    uri: "bolt://localhost:7687",
+    user: "neo4j",
+    password: "neo4j",
+};
 
 class App extends Component {
 
     constructor(props, context) {
 	super(props, context);
+	console.log(props);
+	console.log(context);
 	this.driver = props.driver || context.driver || this.getDriver();
+	console.log(this.driver);
 
+
+	if (window.neo4jDesktopApi) {
+	    window.neo4jDesktopApi.getContext()
+			   .then((context) => {
+			       for (let project of context.projects) {
+				   console.log("Project :: " + project.name);
+				   for (let graph of project.graphs) {
+				       console.log("  " + graph.name + " (" + graph.description + ")");
+				       
+				   }
+			       }
+			   }
+			   );
+	}
+	
 	this.state = {
 	    layers: {},
 	};
@@ -19,9 +41,9 @@ class App extends Component {
 
 
     getDriver() {
-	var uri = process.env.REACT_APP_NEO4J_URI; // || "bolt://localhost:7687";
-	var usr = process.env.REACT_APP_NEO4J_USER;
-	var pwd = process.env.REACT_APP_NEO4J_PASSWORD;
+	var uri = DEFAULT_DRIVER.uri;
+	var usr = DEFAULT_DRIVER.user;
+	var pwd = DEFAULT_DRIVER.password;
 	return neo4j.driver(
 	    uri,
 	    neo4j.auth.basic(
@@ -32,6 +54,12 @@ class App extends Component {
     };
 
 
+    componentWillMount() {
+	console.log("App will mount");
+	console.log(this.state);
+	console.log(this.driver);
+    }
+    
     layersChanged = (childData) => {
 	this.setState({
 	    layers: childData.layers
