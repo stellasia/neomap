@@ -12,28 +12,27 @@ const DEFAULT_DRIVER = {
 
 class App extends Component {
 
-    constructor(props, context) {
-	super(props, context);
-	console.log(props);
-	console.log(context);
-	this.driver = props.driver || context.driver || this.getDriver();
-	console.log(this.driver);
-
+    constructor(props) {
+	super(props);
 
 	if (window.neo4jDesktopApi) {
-	    window.neo4jDesktopApi.getContext()
-			   .then((context) => {
-			       for (let project of context.projects) {
-				   console.log("Project :: " + project.name);
-				   for (let graph of project.graphs) {
-				       console.log("  " + graph.name + " (" + graph.description + ")");
-				       
-				   }
-			       }
-			   }
-			   );
+	    window.neo4jDesktopApi.getContext().then((context) => {
+		for (let project of context.projects) {
+		    for (let graph of project.graphs) {
+			if (graph.status === 'ACTIVE') {
+			    console.log("Active graph is; " + graph.name + " (" + graph.description + ")");
+			    let boltProtocol = graph.connection.configuration.protocols.bolt;
+			    let driver = neo4j.driver(boltProtocol.url, neo4j.auth.basic(boltProtocol.username, boltProtocol.password));
+			    this.driver = driver;
+			}
+		    }
+		}
+	    });
+	} else {
+	    this.driver = this.getDriver();
 	}
-	
+
+	console.log(this.driver);
 	this.state = {
 	    layers: {},
 	};
@@ -53,12 +52,6 @@ class App extends Component {
 	);
     };
 
-
-    componentWillMount() {
-	console.log("App will mount");
-	console.log(this.state);
-	console.log(this.driver);
-    }
     
     layersChanged = (childData) => {
 	this.setState({
@@ -67,14 +60,13 @@ class App extends Component {
     };
 
 
-    render() {
+    renderUI() {
 	return (
 	    <div id="wrapper" className="row">
             <div id="sidebar" className="col-md-4">
             <SideBar
 	    key="sidebar"
 	    layersChanged = {this.layersChanged}
-	    //nodes = {this.state.nodes}
 	    layers = {this.state.layers}
 	    driver = {this.driver}
             />
@@ -87,6 +79,14 @@ class App extends Component {
             </div>
             </div>
 	);
+    };
+
+
+    render() {
+	// wait until driver is ready...
+	return this.driver ? this.renderUI() : (
+	    <span>Loading wells...</span>
+	)
     };
 };
 
