@@ -1,5 +1,8 @@
 import React, { Component } from 'react';
 import Select from 'react-select'
+import Accordion from 'react-bootstrap/Accordion';
+import Card from 'react-bootstrap/Card';
+
 
 const LIMIT = 500;
 
@@ -19,12 +22,11 @@ const DEFAULT_LAYER = {
     latProperty: "latitude",
     lonProperty: "longitude",
     nodeLabel: [],
-    hidden: false,
     data: [],
     position: [],
     color: "blue",
     colorName: "Blue",
-    limit: 500
+    limit: LIMIT
 }
 
 
@@ -35,31 +37,29 @@ class Layer extends Component {
 
 	if (props.layer !== undefined) {
 	    this.state = {
-		key: props.layer.key,
+		ukey: props.layer.ukey,
 		name: props.layer.name,
 		latProperty: props.layer.latProperty,
 		lonProperty: props.layer.lonProperty,
 		nodeLabel: props.layer.nodeLabel,
-		hidden: props.layer.hidden,
 		data: props.layer.data,
 		position: props.layer.position,
 		color: props.layer.color,
-		colorName: props.layer.colorName
+		colorName: props.layer.colorName,
+		limit: props.layer.limit
 	    };
 	} else {
 	    this.state = DEFAULT_LAYER;
-	    var uid = (new Date().getTime()).toString(36);
-	    this.state["key"] = uid;
+	    this.state["ukey"] = props.ukey;
 	}
 
 	this.driver = props.driver;
-
+	
 	this.sendData = this.sendData.bind(this);
 	this.handleNameChange = this.handleNameChange.bind(this);
 	this.handleNodeLabelChange = this.handleNodeLabelChange.bind(this);
 	this.handleLatPropertyChange = this.handleLatPropertyChange.bind(this);
 	this.handleLonPropertyChange = this.handleLonPropertyChange.bind(this);
-	this.handleHiddenStateChange = this.handleHiddenStateChange.bind(this);
 	this.handleColorChange = this.handleColorChange.bind(this);
 
     };
@@ -84,7 +84,7 @@ class Layer extends Component {
 	}
 	this.setState({position: pos}, function() {
 	    this.props.sendData({
-		key: this.state.key,
+		ukey: this.state.ukey,
 		layer: this.state
 	    });
 	});
@@ -153,11 +153,6 @@ class Layer extends Component {
     };
 
 
-    handleHiddenStateChange(e) {
-	this.setState({hidden: e.target.checked});
-    };
-
-
     handleColorChange(e) {
 	this.setState({color: e.value});
     };
@@ -172,7 +167,7 @@ class Layer extends Component {
     getNodes() {
 	/*This will be updated quite often,
 	   is that what we want?
-	*/
+	 */
 	if (this.driver === undefined)
 	    return [];
 
@@ -205,7 +200,6 @@ class Layer extends Component {
 
 
     render() {
-
 	var selectedNodes = [];
 	this.nodes.map((value) => {
 	    this.state.nodeLabel.map((value2) => {
@@ -217,9 +211,18 @@ class Layer extends Component {
 	});
 
 	return (
-	    <div>
+
+	    <Card>
+
+	    <Accordion.Toggle as={Card.Header} eventKey="{this.state.ukey}" >
+	    <h3>{this.state.name} <small>({this.state.ukey})</small></h3>
+	    </Accordion.Toggle>
+
+	    <Accordion.Collapse eventKey="{this.state.ukey}" >
+
+	    <Card.Body>
+
 	    <form action="" >
-	    <h4>{this.state.name} <small>({this.state.key})</small></h4>
 
 	    <div className="form-group">
 	    <h5>Name</h5>
@@ -269,18 +272,6 @@ class Layer extends Component {
 	    </div>
 
 	    <div className="form-group">
-	    <input
-	    type="checkbox"
-	    id="hiddenprop"
-	    className="form-check-input"
-	    defaultValue={this.state.hidden}
-	    onChange={this.handleHiddenStateChange}
-	    checked ={this.state.hidden}
-	    />
-	    <label htmlFor="hiddenprop">Hide</label>
-	    </div>
-
-	    <div className="form-group">
 	    <h5>Color</h5>
 	    <Select
 	    className="form-control select"
@@ -293,10 +284,15 @@ class Layer extends Component {
 	    <input type="submit" className="btn btn-info" value="Update map >" onClick={this.sendData} />
 
 	    </form>
-	    </div>
+
+	    </Card.Body>
+
+	    </Accordion.Collapse>
+
+	    </Card>
 
 	);
-    };
+    }
 };
 
 

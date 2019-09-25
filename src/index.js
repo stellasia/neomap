@@ -5,7 +5,6 @@ import "./index.css";
 import App from "./App";
 import { GraphAppBase, ConnectModal, CONNECTED } from "graph-app-kit/components/GraphAppBase"
 
-
 const neo4j = require("neo4j-driver/lib/browser/neo4j-web.min.js");
 const integrationPoint = window.neo4jDesktopApi;
 

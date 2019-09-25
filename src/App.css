@@ -40,11 +40,6 @@ body {
     margin-top: 20px;
 }
 
-form {
-    border: 1px solid white;
-    padding: 0 10px;
-}
-
 .select {
     position: absolute;
     left: 0;
@@ -52,4 +47,10 @@ form {
     height: 100%;
     top: 0;
     padding: 0;
+}
+
+.card {
+    background-color: inherit;
+    border: 1px solid white;
+    padding: 0 10px;
 }

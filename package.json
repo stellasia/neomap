@@ -1,6 +1,6 @@
 {
     "name": "neomap",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "author": "Estelle Scifo",
     "private": false,
     "neo4jDesktop": {
@@ -15,7 +15,9 @@
 	"react-dom": "^16.3.2",
 	"react-leaflet": "^2.4.0",
 	"react-scripts": "^3.0.1",
-	"react-select": "^3.0.4"
+	"react-select": "^3.0.4",
+	"bootstrap": "^4.3.0",
+	"react-bootstrap@": "^1.0.0"
     },
     "scripts": {
 	"start": "react-scripts start",

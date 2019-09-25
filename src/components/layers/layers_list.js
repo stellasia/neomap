@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
-import Layer from './layer'
+import Accordion from 'react-bootstrap/Accordion';
+import Layer from './layer';
 
 
 class LayersList extends Component {
@@ -22,7 +23,7 @@ class LayersList extends Component {
     sendData(data) {
 	var new_layer = data.layer;
 	var layers = this.state.layers;
-	layers[new_layer.key] = new_layer;
+	layers[new_layer.ukey] = new_layer;
 	this.setState({
 	    layers: layers
 	});
@@ -35,32 +36,28 @@ class LayersList extends Component {
     renderLayers() {
 	var layers = Object.entries(this.state.layers);
 	return layers.map( ([key,layer]) => {
+	    console.log(layer);
 	    return (
-		<Layer key={layer.key} sendData={this.sendData} layer={layer} driver={this.state.driver} />
+		<Layer key={layer.ukey} ukey={layer.ukey} layer={layer} sendData={this.sendData} driver={this.state.driver} />
 	    );
 	});
     };
 
 
     renderNewLayer() {
-	var layers = Object.entries(this.state.layers);
-	if (layers.length === 0) {
-            return (
-		<div>
-		<Layer key={undefined} sendData={this.sendData} layer={undefined} driver={this.state.driver} />
-		</div>
-            )
-	};
-	return "";
+	var uid = (new Date().getTime() + Math.random()).toString(36);
+        return (
+	    <Layer key={uid} ukey={uid} layer={undefined} sendData={this.sendData} driver={this.state.driver} />
+	);
     };
 
 
     render() {
 	return (
-	    <div>
+	    <Accordion>
             {this.renderLayers()}
             {this.renderNewLayer()}
-	    </div>
+	    </Accordion>
 	)
     };
 };

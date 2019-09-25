@@ -14,7 +14,7 @@ class Map extends Component {
 
 
     renderLayer(layer) {
-	if (layer.key !== undefined &&  layer.hidden === false){
+	if (layer.ukey !== undefined){
 	    var data = layer.data;
 	    var color = layer.color;
 	    var url = `https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-${color}.png`;
@@ -24,7 +24,7 @@ class Map extends Component {
 
 	    return (
 
-		<LayersControl.Overlay name="Heatmap" checked>
+		<LayersControl.Overlay key={layer.ukey} name={layer.name} checked>
                 <FeatureGroup>
 		{
 		    data.map( (pos, j) => {
@@ -47,7 +47,7 @@ class Map extends Component {
 	if (layers.length > 0) {
 	    // TODO: no need to loop on ALL layers here
 	    layers.map( ([key, layer]) => {
-		if (layer.key !== undefined && layer.hidden === false)
+		if (layer.ukey !== undefined)
 		    center = layer.position;
 		return null
 	    });
