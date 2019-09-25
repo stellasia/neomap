@@ -36,7 +36,6 @@ class LayersList extends Component {
     renderLayers() {
 	var layers = Object.entries(this.state.layers);
 	return layers.map( ([key,layer]) => {
-	    console.log(layer);
 	    return (
 		<Layer key={layer.ukey} ukey={layer.ukey} layer={layer} sendData={this.sendData} driver={this.state.driver} />
 	    );

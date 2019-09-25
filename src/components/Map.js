@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Map as LeafletMap, Marker, TileLayer, LayersControl, FeatureGroup } from 'react-leaflet'
+import { Map as LeafletMap, Marker, TileLayer, LayersControl, FeatureGroup, Tooltip } from 'react-leaflet'
 import L from 'leaflet';
 
 
@@ -13,6 +13,21 @@ class Map extends Component {
     };
 
 
+    renderMarker(d, j, icon) {
+	if (d.tooltip) {
+	    return (
+		<Marker key={j} position={d.pos} icon={icon} >
+		<Tooltip>{d.tooltip}</Tooltip>
+		</Marker>
+	    )
+	}
+	return (
+	    <Marker key={j} position={d.pos} icon={icon} >
+	    </Marker>
+	)
+    };
+
+
     renderLayer(layer) {
 	if (layer.ukey !== undefined){
 	    var data = layer.data;
@@ -23,12 +38,11 @@ class Map extends Component {
 	    });
 
 	    return (
-
 		<LayersControl.Overlay key={layer.ukey} name={layer.name} checked>
                 <FeatureGroup>
 		{
-		    data.map( (pos, j) => {
-			return  <Marker key={j} position={pos} icon={icon} ></Marker>
+		    data.map( (d, j) => {
+			return this.renderMarker(d, j, icon);
 		    })
 		}
                 </FeatureGroup>

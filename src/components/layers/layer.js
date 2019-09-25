@@ -19,8 +19,9 @@ const POSSIBLE_COLORS = [
 
 const DEFAULT_LAYER = {
     name: "New layer",
-    latProperty: "latitude",
-    lonProperty: "longitude",
+    latitudeProperty: "latitude",
+    longitudeProperty: "longitude",
+    tooltipProperty: "name",
     nodeLabel: [],
     data: [],
     position: [],
@@ -36,18 +37,7 @@ class Layer extends Component {
 	super(props);
 
 	if (props.layer !== undefined) {
-	    this.state = {
-		ukey: props.layer.ukey,
-		name: props.layer.name,
-		latProperty: props.layer.latProperty,
-		lonProperty: props.layer.lonProperty,
-		nodeLabel: props.layer.nodeLabel,
-		data: props.layer.data,
-		position: props.layer.position,
-		color: props.layer.color,
-		colorName: props.layer.colorName,
-		limit: props.layer.limit
-	    };
+	    this.state = props.layer;
 	} else {
 	    this.state = DEFAULT_LAYER;
 	    this.state["ukey"] = props.ukey;
@@ -60,6 +50,7 @@ class Layer extends Component {
 	this.handleNodeLabelChange = this.handleNodeLabelChange.bind(this);
 	this.handleLatPropertyChange = this.handleLatPropertyChange.bind(this);
 	this.handleLonPropertyChange = this.handleLonPropertyChange.bind(this);
+	this.handleTooltipPropertyChange = this.handleTooltipPropertyChange.bind(this);
 	this.handleColorChange = this.handleColorChange.bind(this);
 
     };
@@ -72,8 +63,8 @@ class Layer extends Component {
 	    var latMean = 0;
 	    var lonMean = 0;
 	    arr.map( (item, i) => {
-		var lat = item[0];
-		var lon = item[1];
+		var lat = item.pos[0];
+		var lon = item.pos[1];
 		latMean += parseFloat(lat);
 		lonMean += parseFloat(lon);
 		return undefined;
@@ -103,18 +94,28 @@ class Layer extends Component {
 	} else {
 	    query = 'MATCH (n)';
 	}
-	query += `WHERE n.${this.state.latProperty} IS NOT NULL AND n.${this.state.lonProperty} IS NOT NULL RETURN n.${this.state.latProperty} as latitude, n.${this.state.lonProperty} as longitude LIMIT ${LIMIT}`;
+	query += ` WHERE n.${this.state.latitudeProperty} IS NOT NULL AND n.${this.state.longitudeProperty} IS NOT NULL`;
+	query += ` RETURN n.${this.state.latitudeProperty} as latitude, n.${this.state.longitudeProperty} as longitude`;
+
+	if (this.state.tooltipProperty !== undefined)
+	    query += `, n.${this.state.tooltipProperty} as tooltip`;
+	query += ` LIMIT ${this.state.limit}`;
+
 	var params = {};
 	session
 	    .run(
 		query, params
 	    )
 	    .then(result => {
-		result.records.forEach(function (record) {
-		    var el = [
-			record.get("latitude"),
-			record.get("longitude")
-		    ];
+		result.records.forEach(record => {
+		    var el = {
+			pos: [
+			    record.get("latitude"),
+			    record.get("longitude")
+			],
+		    };
+		    if (this.state.tooltipProperty)
+			el["tooltip"] =record.get("tooltip");
 		    res.push(el);
 		});
 		this.setState({data: res}, function() {this.updatePosition()});
@@ -127,12 +128,12 @@ class Layer extends Component {
 
 
     handleLatPropertyChange(e) {
-	this.setState({latProperty: e.target.value});
+	this.setState({latitudeProperty: e.target.value});
     };
 
 
     handleLonPropertyChange(e) {
-	this.setState({lonProperty: e.target.value});
+	this.setState({longitudeProperty: e.target.value});
     };
 
 
@@ -155,6 +156,11 @@ class Layer extends Component {
 
     handleColorChange(e) {
 	this.setState({color: e.value});
+    };
+
+
+    handleTooltipPropertyChange(e) {
+	this.setState({tooltipProperty: e.value});
     };
 
 
@@ -228,7 +234,6 @@ class Layer extends Component {
 	    <h5>Name</h5>
 	    <input
 	    type="text"
-	    id="nameprop"
 	    className="form-control"
 	    placeholder="Layer name"
 	    defaultValue={this.state.name}
@@ -251,10 +256,9 @@ class Layer extends Component {
 	    <h5>Latitude property</h5>
 	    <input
 	    type="text"
-	    id="latprop"
 	    className="form-control"
 	    placeholder="latitude"
-	    defaultValue={this.state.latProperty}
+	    defaultValue={this.state.latitudeProperty}
 	    onChange={this.handleLatPropertyChange}
 	    />
 	    </div>
@@ -263,11 +267,21 @@ class Layer extends Component {
 	    <h5>Longitude property</h5>
 	    <input
 	    type="text"
-	    id="lonprop"
 	    className="form-control"
 	    placeholder="longitude"
-	    defaultValue={this.state.lonProperty}
+	    defaultValue={this.state.longitudeProperty}
 	    onChange={this.handleLonPropertyChange}
+	    />
+	    </div>
+
+	    <div className="form-group">
+	    <h5>Tooltip property</h5>
+	    <input
+	    type="text"
+	    className="form-control"
+	    placeholder="Property used for tooltip"
+	    defaultValue={this.state.tooltipProperty}
+	    onChange={this.handleTooltipPropertyChange}
 	    />
 	    </div>
 

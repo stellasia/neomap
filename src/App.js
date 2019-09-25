@@ -18,8 +18,6 @@ class App extends Component {
     constructor(props) {
 	super(props);
 
-	console.log(this);
-
 	if (window.neo4jDesktopApi) {
 	    neo4jDesktopApi.getContext().then((context) => {
 		for (let project of context.projects) {
