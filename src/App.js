@@ -3,26 +3,34 @@ import "./App.css";
 import Map from "./components/Map";
 import SideBar from "./components/SideBar";
 
-const neo4j = require("neo4j-driver/lib/browser/neo4j-web.min.js").v1;
+const neo4j = require("neo4j-driver/lib/browser/neo4j-web.min.js");
 const DEFAULT_DRIVER = {
     uri: "bolt://localhost:7687",
     user: "neo4j",
     password: "neo4j",
 };
 
+
+const neo4jDesktopApi = window.neo4jDesktopApi;
+
 class App extends Component {
 
     constructor(props) {
 	super(props);
 
+	console.log(this);
+
 	if (window.neo4jDesktopApi) {
-	    window.neo4jDesktopApi.getContext().then((context) => {
+	    neo4jDesktopApi.getContext().then((context) => {
 		for (let project of context.projects) {
 		    for (let graph of project.graphs) {
 			if (graph.status === 'ACTIVE') {
 			    console.log("Active graph is; " + graph.name + " (" + graph.description + ")");
 			    let boltProtocol = graph.connection.configuration.protocols.bolt;
-			    let driver = neo4j.driver(boltProtocol.url, neo4j.auth.basic(boltProtocol.username, boltProtocol.password));
+			    let driver = neo4j.v1.driver(
+				boltProtocol.url,
+				neo4j.v1.auth.basic(boltProtocol.username, boltProtocol.password)
+			    );
 			    this.driver = driver;
 			}
 		    }
@@ -36,6 +44,9 @@ class App extends Component {
 	this.state = {
 	    layers: {},
 	};
+
+	this.layersChanged = this.layersChanged.bind(this);
+
     };
 
 
@@ -43,9 +54,9 @@ class App extends Component {
 	var uri = DEFAULT_DRIVER.uri;
 	var usr = DEFAULT_DRIVER.user;
 	var pwd = DEFAULT_DRIVER.password;
-	return neo4j.driver(
+	return neo4j.v1.driver(
 	    uri,
-	    neo4j.auth.basic(
+	    neo4j.v1.auth.basic(
 		usr,
 		pwd
 	    )
@@ -53,7 +64,7 @@ class App extends Component {
     };
 
     
-    layersChanged = (childData) => {
+    layersChanged(childData) {
 	this.setState({
 	    layers: childData.layers
 	});
@@ -85,7 +96,7 @@ class App extends Component {
     render() {
 	// wait until driver is ready...
 	return this.driver ? this.renderUI() : (
-	    <span>Loading wells...</span>
+	    <span>Loading...</span>
 	)
     };
 };

@@ -1,38 +1,63 @@
 {
-  "name": "neo-map",
-  "version": "0.1.0",
-  "author": "Estelle Scifo",
-  "private": false,
-  "dependencies": {
-      "neo4j-driver": "^1.6.1",
-      "react": "^16.3.2",
-      "react-dom": "^16.3.2",
-      "react-select": "^3.0.4",
-      "react-leaflet": "^2.4.0",
-      "leaflet": "^1.5.1"
-  },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject"
-  },
-  "description": "A Neo4j Desktop application to visualize nodes with geographic attributes on a map.",
-  "main": "index.html",
-  "devDependencies": {},
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/stellasia/neomap.git"
-  },
-  "keywords": [
-    "neo4j",
-    "leaflet",
-    "map",
-    "gis"
-  ],
-  "bugs": {
-    "url": "https://github.com/stellasia/neomap/issues"
-  },
+    "name": "neomap",
+    "version": "0.1.0",
+    "author": "Estelle Scifo",
+    "private": false,
+    "neo4jDesktop": {
+	"apiVersion": "^1.2.1",
+	"licenseRequired": false
+    },
+    "dependencies": {
+	"graph-app-kit": "^1.0.4",
+	"leaflet": "^1.5.1",
+	"neo4j-driver": "^1.7.2",
+	"react": "^16.3.2",
+	"react-dom": "^16.3.2",
+	"react-leaflet": "^2.4.0",
+	"react-scripts": "^3.0.1",
+	"react-select": "^3.0.4"
+    },
+    "scripts": {
+	"start": "react-scripts start",
+	"build": "rm -rf dist && react-scripts build && mv build dist",
+	"test": "react-scripts test --env=jsdom",
+	"eject": "react-scripts eject"
+    },
+    "files": [
+	"dist/",
+	"package.json"
+    ],
+    "description": "A Neo4j Desktop application to visualize nodes with geographic attributes on a map.",
+    "main": "index.js",
+    "devDependencies": {},
+    "repository": "git+https://github.com/stellasia/neomap.git",
+    "icons": [
+	{
+	    "src": "icon.png",
+	    "type": "png"
+	}
+    ],
+    "keywords": [
+	"neo4j",
+	"leaflet",
+	"map",
+	"gis"
+    ],
+    "bugs": {
+	"url": "https://github.com/stellasia/neomap/issues"
+    },
     "licence": "SEE LICENSE IN <LICENSE>",
-  "homepage": "https://github.com/stellasia/neomap#readme"
+    "homepage": ".",
+    "browserslist": {
+	"production": [
+	    ">0.2%",
+	    "not dead",
+	    "not op_mini all"
+	],
+	"development": [
+	    "last 1 chrome version",
+	    "last 1 firefox version",
+	    "last 1 safari version"
+	]
+    }
 }

@@ -23,7 +23,8 @@ const DEFAULT_LAYER = {
     data: [],
     position: [],
     color: "blue",
-    colorName: "Blue"
+    colorName: "Blue",
+    limit: 500
 }
 
 

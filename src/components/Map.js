@@ -43,6 +43,7 @@ class Map extends Component {
 	var layers = Object.entries(this.props.layers);
 
 	var center ;
+	var zoom ;
 	if (layers.length > 0) {
 	    // TODO: no need to loop on ALL layers here
 	    layers.map( ([key, layer]) => {
@@ -50,18 +51,16 @@ class Map extends Component {
 		    center = layer.position;
 		return null
 	    });
+	    zoom = 11;
 	} else {
 	    center = [47, 3];
+	    zoom = 4;
 	}
 
 	return (
-            <LeafletMap center={center} zoom={11}>
+            <LeafletMap center={center} zoom={zoom}>
             <LayersControl>
             <LayersControl.BaseLayer name="Base" checked>
-            <TileLayer
-	    attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-	    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
             <TileLayer
 	    attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
 	    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

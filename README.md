@@ -3,14 +3,25 @@
 A React application to visualize nodes with geographic attributes on a map.
 
 
-## Using docker
+## Add the app to Neo4jDesktop
 
-Build the docker image:
 
-     docker build -t neomap .
+## Want to contribute?
 
-Create a docker instance:
 
-    docker run -p 3000:3000 neomap:latest
 
-And navigate to [localhost:3000](localhost:3000).
+### Developper mode
+
+1. Clone this repo
+2. Install dependencies:
+
+        npm install
+
+3. Start the development server:
+
+        npm start
+
+4. Configure Neo4jDesktop by enabling the development mode in settings with the following paramters:
+    - Entry point: `http://localhost:3000`
+    - Root path: root of this repository
+

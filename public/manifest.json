@@ -1,7 +1,7 @@
 {
-    "name": "Neomap",
-    "permissions": [
-	"activeGraph"
-    ],
-    "homepage": "http://github.com/stellasia/neomap"
+    "short_name": "Neomap",
+    "start_url": ".",
+    "display": "standalone",
+    "homepage": "http://github.com/stellasia/neomap",
+    "apiVersion": "^1.2.1"
 }
