@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import { Map as LeafletMap, Marker, TileLayer, LayersControl, FeatureGroup, Tooltip } from 'react-leaflet'
+import HeatmapLayer from 'react-leaflet-heatmap-layer';
 import L from 'leaflet';
 
 
@@ -9,7 +10,9 @@ class Map extends Component {
     constructor(props) {
 	super(props);
 
-	this.renderLayer = this.renderLayer.bind(this);
+	this.renderMarkerLayer = this.renderMarkerLayer.bind(this);
+	this.renderHeatmapLayer = this.renderHeatmapLayer.bind(this);
+	this.renderClusterLayer = this.renderClusterLayer.bind(this);
     };
 
 
@@ -28,30 +31,49 @@ class Map extends Component {
     };
 
 
-    renderLayer(layer) {
-	if (layer.ukey !== undefined){
-	    var data = layer.data;
-	    var color = layer.color;
-	    var url = `https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-${color}.png`;
-	    var icon = new L.Icon({
-		iconUrl: url
-	    });
-
-	    return (
-		<LayersControl.Overlay key={layer.ukey} name={layer.name} checked>
-                <FeatureGroup>
-		{
-		    data.map( (d, j) => {
-			return this.renderMarker(d, j, icon);
-		    })
-		}
-                </FeatureGroup>
-		</LayersControl.Overlay>
-	    );
-	} else {
-	    return "";
-	}
+    renderMarkerLayer(layer) {
+	var data = layer.data;
+	var color = layer.color;
+	var url = `https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-${color}.png`;
+	var icon = new L.Icon({
+	    iconUrl: url
+	});
+	return (
+	    <LayersControl.Overlay key={layer.ukey} name={layer.name} checked>
+            <FeatureGroup>
+	    {
+		data.map( (d, j) => {
+		    return this.renderMarker(d, j, icon);
+		})
+	    }
+            </FeatureGroup>
+	    </LayersControl.Overlay>
+	);
     };
+
+
+    renderHeatmapLayer(layer) {
+	var data = layer.data;
+	return (
+	    <LayersControl.Overlay key={layer.ukey} name={layer.name} checked>
+	    <HeatmapLayer
+            points={data}
+            latitudeExtractor={m => m.pos[0]}
+            longitudeExtractor={m => m.pos[1]}
+            intensityExtractor={m => 1}
+	    radius={layer.radius}
+	    minOpacity={0.1}
+	    max={10}
+            />
+	    </LayersControl.Overlay>
+	);
+    };
+
+
+    renderClusterLayer(layer) {
+	return "Cluster layer not supported for now";
+    };
+
 
     render() {
 	var layers = Object.entries(this.props.layers);
@@ -82,7 +104,16 @@ class Map extends Component {
             </LayersControl.BaseLayer>
 	    {
 		layers.map( ([key, layer]) => {
-		    return this.renderLayer(layer);
+		    if (layer.ukey !== undefined) {
+			if (layer.rendering === "markers")
+			    return this.renderMarkerLayer(layer);
+			if (layer.rendering === "heatmap")
+			    return this.renderHeatmapLayer(layer);
+			if (layer.rendering === "clusters")
+			    return this.renderClusterLayer(layer);
+			return "";
+		    }
+		    return "";
 		})
 	    }
             </LayersControl>

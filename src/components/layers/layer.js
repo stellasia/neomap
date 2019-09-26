@@ -27,8 +27,10 @@ const DEFAULT_LAYER = {
     position: [],
     color: "blue",
     colorName: "Blue",
-    limit: LIMIT
-}
+    limit: LIMIT,
+    rendering: "markers",
+    radius: 30
+};
 
 
 class Layer extends Component {
@@ -52,6 +54,8 @@ class Layer extends Component {
 	this.handleLonPropertyChange = this.handleLonPropertyChange.bind(this);
 	this.handleTooltipPropertyChange = this.handleTooltipPropertyChange.bind(this);
 	this.handleColorChange = this.handleColorChange.bind(this);
+	this.handleRenderingChange = this.handleRenderingChange.bind(this);
+	this.handleRadiusChange = this.handleRadiusChange.bind(this);
 
     };
 
@@ -164,11 +168,20 @@ class Layer extends Component {
     };
 
 
+    handleRenderingChange(e) {
+	this.setState({rendering: e.target.value});
+    };
+
+
+    handleRadiusChange(e) {
+	this.setState({radius: parseFloat(e.target.value)});
+    };
+
+
     sendData(event) {
 	this.updateData();
 	event.preventDefault();
     };
-
 
     getNodes() {
 	/*This will be updated quite often,
@@ -292,6 +305,66 @@ class Layer extends Component {
 	    options={POSSIBLE_COLORS}
 	    defaultValue={{value: this.state.color, label: this.state.colorName}}
 	    onChange={this.handleColorChange}
+	    />
+	    </div>
+
+	    <div className="form-group">
+	    <h5>Rendering</h5>
+	    <div className="form-check">
+	    <label className="">
+	    <input
+            type="radio"
+            name="rendering"
+            value="markers"
+            checked={this.state.rendering === "markers"}
+            className="form-check-input"
+	    onChange={this.handleRenderingChange}
+	    />
+	    Markers
+	    </label>
+	    </div>
+
+	    <div className="form-check">
+	    <label className="">
+	    <input
+            type="radio"
+            name="rendering"
+            value="heatmap"
+            checked={this.state.rendering === "heatmap"}
+            className="form-check-input"
+	    onChange={this.handleRenderingChange}
+	    />
+	    Heatmap
+	    </label>
+	    </div>
+
+	    <div className="form-check">
+	    <label className="disabled">
+	    <input
+            type="radio"
+            name="rendering"
+            value="cluster"
+            checked={this.state.rendering === "clusters"}
+            className="form-check-input"
+	    disabled={true}
+	    onChange={this.handleRenderingChange}
+	    />
+	    Clusters
+	    </label>
+	    </div>
+
+	    </div>
+
+	    <div className="form-group">
+	    <h5>Heatmap radius</h5>
+	    <input
+	    type="range"
+	    min="1"
+	    max="100"
+	    name="radius"
+	    defaultValue={this.state.radius}
+	    className="slider"
+	    onChange={this.handleRadiusChange}
 	    />
 	    </div>
 
