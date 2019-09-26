@@ -87,18 +87,18 @@ class Layer extends Component {
 
 
     updateData() {
-	//return [];
-
+	// TODO: improve that method...
 	var res = [];
 	const session = this.driver.session();
-	var nodeLabel = this.state.nodeLabel.join("|");
 	var query = "";
-	if (nodeLabel !== "") {
-	    query = `MATCH (n:${nodeLabel})`;
-	} else {
-	    query = 'MATCH (n)';
-	}
-	query += ` WHERE n.${this.state.latitudeProperty} IS NOT NULL AND n.${this.state.longitudeProperty} IS NOT NULL`;
+	query = 'MATCH (n) WHERE true';
+	var sub_q = "(false ";
+	this.state.nodeLabel.forEach(lab => {
+	    sub_q += ` OR n:${lab}`;
+	});
+	sub_q += ")";
+	query += " AND " + sub_q;
+	query += ` AND n.${this.state.latitudeProperty} IS NOT NULL AND n.${this.state.longitudeProperty} IS NOT NULL`;
 	query += ` RETURN n.${this.state.latitudeProperty} as latitude, n.${this.state.longitudeProperty} as longitude`;
 
 	if (this.state.tooltipProperty !== undefined)
@@ -229,6 +229,8 @@ class Layer extends Component {
 	    return null
 	});
 
+	console.log(this.state.ukey);
+	console.log(selectedNodes);
 	return (
 
 	    <Card>
