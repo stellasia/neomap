@@ -355,7 +355,8 @@ class Layer extends Component {
 
 	    </div>
 
-	    <div className="form-group">
+	    <div className="form-group" hidden={this.state.rendering !== "heatmap"}
+	    >
 	    <h5>Heatmap radius</h5>
 	    <input
 	    type="range"
