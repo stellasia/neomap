@@ -93,7 +93,8 @@ class Layer extends Component {
 	var query = "";
 	query = 'MATCH (n) WHERE true';
 	var sub_q = "(false ";
-	this.state.nodeLabel.forEach(lab => {
+	this.state.nodeLabel.forEach( (value, key) => {
+	    let lab = value.label;
 	    sub_q += ` OR n:${lab}`;
 	});
 	sub_q += ")";
@@ -142,14 +143,14 @@ class Layer extends Component {
 
 
     handleNodeLabelChange(e) {
-	if (e === null)
-	    return null;
-	var labels = [];
-	e.map(function(label) {
-	    labels.push(label.label);
-	    return undefined;
-	});
-	this.setState({nodeLabel: labels});
+	/* if (e === null)
+	   return null;
+	   var labels = [];
+	   e.map(function(label) {
+	   labels.push(label.label);
+	   return undefined;
+	   }); */
+	this.setState({nodeLabel: e});
     };
 
 
@@ -219,18 +220,16 @@ class Layer extends Component {
 
 
     render() {
-	var selectedNodes = [];
-	this.nodes.map((value) => {
-	    this.state.nodeLabel.map((value2) => {
-		if (value.value === value2)
-		    selectedNodes.push(value);
-		return null
-	    });
-	    return null
-	});
+	/* var selectedNodes = [];
+	   this.nodes.map((value) => {
+	   this.state.nodeLabel.map((value2) => {
+	   if (value.value === value2)
+	   selectedNodes.push(value);
+	   return null
+	   });
+	   return null
+	   }); */
 
-	console.log(this.state.ukey);
-	console.log(selectedNodes);
 	return (
 
 	    <Card>
@@ -263,7 +262,7 @@ class Layer extends Component {
 	    options={this.nodes}
 	    onChange={this.handleNodeLabelChange}
 	    isMulti={true}
-	    defaultValue={selectedNodes}
+	    defaultValue={this.state.nodeLabel}
 	    />
 	    </div>
 
