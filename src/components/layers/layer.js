@@ -1,7 +1,20 @@
+/**Layer definition.
+
+   TODO: split into several files?
+*/
 import React, { Component } from 'react';
 import Select from 'react-select'
 import Accordion from 'react-bootstrap/Accordion';
 import Card from 'react-bootstrap/Card';
+import Tabs from 'react-bootstrap/Tabs';
+import Tab from 'react-bootstrap/Tab';
+import { CypherEditor } from "graph-app-kit/components/Editor"
+
+import "codemirror/lib/codemirror.css";
+import "codemirror/addon/lint/lint.css";
+import "codemirror/addon/hint/show-hint.css";
+import "cypher-codemirror/dist/cypher-codemirror-syntax.css";
+
 
 
 const LIMIT = 500;
@@ -17,6 +30,10 @@ const POSSIBLE_COLORS = [
     {value: "black", label: "Black"}
 ];
 
+const LAYER_TYPE_LATLON = 1;
+const LAYER_TYPE_CYPHER = 2;
+const LAYER_TYPE_SPATIAL = 3;
+
 const DEFAULT_LAYER = {
     name: "New layer",
     latitudeProperty: "latitude",
@@ -29,7 +46,9 @@ const DEFAULT_LAYER = {
     colorName: "Blue",
     limit: LIMIT,
     rendering: "markers",
-    radius: 30
+    radius: 30,
+    layerType: LAYER_TYPE_LATLON,
+    cypher: ""
 };
 
 
@@ -46,6 +65,8 @@ class Layer extends Component {
 	}
 
 	this.driver = props.driver;
+
+	this.nodes = this.getNodes();
 	
 	this.sendData = this.sendData.bind(this);
 	this.handleNameChange = this.handleNameChange.bind(this);
@@ -56,6 +77,7 @@ class Layer extends Component {
 	this.handleColorChange = this.handleColorChange.bind(this);
 	this.handleRenderingChange = this.handleRenderingChange.bind(this);
 	this.handleRadiusChange = this.handleRadiusChange.bind(this);
+	this.handleCypherChange = this.handleCypherChange.bind(this);
 
     };
 
@@ -86,25 +108,39 @@ class Layer extends Component {
     };
 
 
-    updateData() {
-	// TODO: improve that method...
-	var res = [];
-	const session = this.driver.session();
+    getQuery() {
+	if (this.state.layerType === LAYER_TYPE_CYPHER)
+	    return this.state.cypher
+
+	// lat lon query
 	var query = "";
 	query = 'MATCH (n) WHERE true';
-	var sub_q = "(false ";
-	this.state.nodeLabel.forEach( (value, key) => {
-	    let lab = value.label;
-	    sub_q += ` OR n:${lab}`;
-	});
-	sub_q += ")";
-	query += " AND " + sub_q;
+	if (this.state.nodeLabel.length > 0) {
+	    var sub_q = "(false";
+	    this.state.nodeLabel.forEach( (value, key) => {
+		let lab = value.label;
+		sub_q += ` OR n:${lab}`;
+	    });
+	    sub_q += ")";
+	    query += " AND " + sub_q;
+	}
 	query += ` AND n.${this.state.latitudeProperty} IS NOT NULL AND n.${this.state.longitudeProperty} IS NOT NULL`;
 	query += ` RETURN n.${this.state.latitudeProperty} as latitude, n.${this.state.longitudeProperty} as longitude`;
 
 	if (this.state.tooltipProperty !== undefined)
 	    query += `, n.${this.state.tooltipProperty} as tooltip`;
 	query += ` LIMIT ${this.state.limit}`;
+
+	return query;
+    };
+
+
+    updateData() {
+	// TODO: improve that method...
+	var res = [];
+	const session = this.driver.session();
+
+	var query = this.getQuery();
 
 	var params = {};
 	session
@@ -143,13 +179,6 @@ class Layer extends Component {
 
 
     handleNodeLabelChange(e) {
-	/* if (e === null)
-	   return null;
-	   var labels = [];
-	   e.map(function(label) {
-	   labels.push(label.label);
-	   return undefined;
-	   }); */
 	this.setState({nodeLabel: e});
     };
 
@@ -176,6 +205,15 @@ class Layer extends Component {
 
     handleRadiusChange(e) {
 	this.setState({radius: parseFloat(e.target.value)});
+    };
+
+
+    handleCypherChange(e) {
+	if (e !== "")
+	    this.setState({layerType: LAYER_TYPE_CYPHER});
+	else
+	    this.setState({layerType: LAYER_TYPE_LATLON});
+	this.setState({cypher: e});
     };
 
 
@@ -214,47 +252,24 @@ class Layer extends Component {
     };
 
 
-    componentWillMount() {
-	this.nodes = this.getNodes();
-    }
-
-
-    render() {
-	/* var selectedNodes = [];
-	   this.nodes.map((value) => {
-	   this.state.nodeLabel.map((value2) => {
-	   if (value.value === value2)
-	   selectedNodes.push(value);
-	   return null
-	   });
-	   return null
-	   }); */
-
+    renderConfigCypher() {
 	return (
-
-	    <Card>
-
-	    <Accordion.Toggle as={Card.Header} eventKey="{this.state.ukey}" >
-	    <h3>{this.state.name} <small>({this.state.ukey})</small></h3>
-	    </Accordion.Toggle>
-
-	    <Accordion.Collapse eventKey="{this.state.ukey}" >
-
-	    <Card.Body>
-
-	    <form action="" >
-
 	    <div className="form-group">
-	    <h5>Name</h5>
-	    <input
-	    type="text"
-	    className="form-control"
-	    placeholder="Layer name"
-	    defaultValue={this.state.name}
-	    onChange={this.handleNameChange}
+	    <h5>Query</h5>
+	    <p className="help">Checkout the documentation</p>
+	    <p className="help">(Ctrl+SPACE for autocomplete)</p>
+	    <CypherEditor
+	    value={this.state.cypher}
+	    onValueChange={this.handleCypherChange}
 	    />
 	    </div>
+	)
+    };
 
+
+    renderConfigDefault() {
+	return (
+	    <div>
 	    <div className="form-group">
 	    <h5>Node label</h5>
 	    <Select
@@ -298,6 +313,47 @@ class Layer extends Component {
 	    onChange={this.handleTooltipPropertyChange}
 	    />
 	    </div>
+	    </div>
+	)
+    };
+
+
+    render() {
+	return (
+
+	    <Card>
+
+	    <Accordion.Toggle as={Card.Header} eventKey="{this.state.ukey}" >
+	    <h3>{this.state.name} <small>({this.state.ukey})</small></h3>
+	    </Accordion.Toggle>
+
+	    <Accordion.Collapse eventKey="{this.state.ukey}" >
+
+	    <Card.Body>
+
+	    <form action="" >
+
+	    <div className="form-group">
+	    <h5>Name</h5>
+	    <input
+	    type="text"
+	    className="form-control"
+	    placeholder="Layer name"
+	    defaultValue={this.state.name}
+	    onChange={this.handleNameChange}
+	    />
+	    </div>
+
+	    <Tabs defaultActiveKey={this.state.layerType}>
+	    <Tab eventKey={LAYER_TYPE_LATLON} title="Lat/lon">
+	    {this.renderConfigDefault()}
+	    </Tab>
+	    <Tab eventKey={LAYER_TYPE_CYPHER} title="Cypher">
+	    {this.renderConfigCypher()}
+	    </Tab>
+	    <Tab eventKey={LAYER_TYPE_SPATIAL} title="Spatial" disabled>
+	    </Tab>
+	    </Tabs>
 
 	    <div className="form-group">
 	    <h5>Color</h5>
