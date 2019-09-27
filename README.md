@@ -17,11 +17,11 @@ A Neo4J Desktop (React-based) application to visualize nodes with geographic att
 5. Trust the application
 6. The application is now available and you can add it to your projects:
 
-	![](img/desktop_graphapp_install_add.png)
+	![](img/desktop_graphapp_add.png)
 
 7. Click install
 
-	![](img/desktop_graphapp_install_add_2.png)
+	![](img/desktop_graphapp_add_2.png)
 
 
 ## Want to contribute?
