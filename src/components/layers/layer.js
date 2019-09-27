@@ -8,15 +8,17 @@ import Accordion from 'react-bootstrap/Accordion';
 import Card from 'react-bootstrap/Card';
 import { CypherEditor } from "graph-app-kit/components/Editor"
 
+// css needed for CypherEditor
 import "codemirror/lib/codemirror.css";
 import "codemirror/addon/lint/lint.css";
 import "codemirror/addon/hint/show-hint.css";
 import "cypher-codemirror/dist/cypher-codemirror-syntax.css";
 
 
-
+// maximum number of points to show
 const LIMIT = 500;
 
+// marker colors
 const POSSIBLE_COLORS = [
     {value: "blue", label: "Blue"},
     {value: "red", label: "Red"},
@@ -29,10 +31,12 @@ const POSSIBLE_COLORS = [
 ];
 
 
+// layer type: either from node labels or cypher
 const LAYER_TYPE_LATLON = "latlon";
 const LAYER_TYPE_CYPHER = "cypher";
 
 
+// default parameters for new layers
 const DEFAULT_LAYER = {
     name: "New layer",
     layerType: LAYER_TYPE_LATLON,
@@ -65,8 +69,9 @@ class Layer extends Component {
 
 	this.driver = props.driver;
 
+	// list of available nodes
 	this.nodes = this.getNodes();
-	
+
 	this.sendData = this.sendData.bind(this);
 	this.deleteLayer = this.deleteLayer.bind(this);
 	this.handleNameChange = this.handleNameChange.bind(this);
@@ -84,6 +89,8 @@ class Layer extends Component {
 
 
     updatePosition() {
+	/*Set the map center based on `this.state.data`
+	*/
 	var arr = this.state.data;
 	var pos = [47, 3];
 	if (arr.length > 0) {
@@ -116,6 +123,9 @@ class Layer extends Component {
 
 
     getQuery() {
+	/*If layerType==cypher, query is inside the CypherEditor,
+	   otherwise, we need to build the query manually.
+	*/
 	if (this.state.layerType === LAYER_TYPE_CYPHER)
 	    return this.getCypherQuery();
 
@@ -123,6 +133,7 @@ class Layer extends Component {
 	// TODO: improve this method...
 	var query = "";
 	query = 'MATCH (n) WHERE true';
+	// filter wanted node labels
 	if (this.state.nodeLabel.length > 0) {
 	    var sub_q = "(false";
 	    this.state.nodeLabel.forEach( (value, key) => {
@@ -132,11 +143,17 @@ class Layer extends Component {
 	    sub_q += ")";
 	    query += " AND " + sub_q;
 	}
+	// filter out nodes with null latitude or longitude
 	query += ` AND n.${this.state.latitudeProperty} IS NOT NULL AND n.${this.state.longitudeProperty} IS NOT NULL`;
+	// return latitude, longitude
 	query += ` RETURN n.${this.state.latitudeProperty} as latitude, n.${this.state.longitudeProperty} as longitude`;
 
+	// if tooltip is not null, also return tooltip
 	if (this.state.tooltipProperty !== undefined)
 	    query += `, n.${this.state.tooltipProperty} as tooltip`;
+
+	// TODO: is that really needed???
+	// limit the number of points to avoid browser crash...
 	query += ` LIMIT ${this.state.limit}`;
 
 	return query;
@@ -144,6 +161,8 @@ class Layer extends Component {
 
 
     updateData() {
+	/*Query database and update `this.state.data`
+	*/
 	var res = [];
 	const session = this.driver.session();
 
@@ -226,12 +245,16 @@ class Layer extends Component {
 
 
     sendData(event) {
+	/*Send data to parent which will propagate to the Map component
+	*/
 	this.updateData();
 	event.preventDefault();
     };
 
 
     deleteLayer(event) {
+	/*Remove the layer
+	*/
 	this.props.deleteLayer(this.state.ukey);
 	event.preventDefault();
     };
@@ -240,6 +263,8 @@ class Layer extends Component {
     getNodes() {
 	/*This will be updated quite often,
 	   is that what we want?
+
+	   TODO: use apoc procedure for that, the query below can be quite loong...
 	 */
 	if (this.driver === undefined)
 	    return [];
@@ -268,12 +293,14 @@ class Layer extends Component {
 
 
     renderConfigCypher() {
+	/*If layerType==cypher, then we display the CypherEditor
+	*/
 	if (this.state.layerType !== LAYER_TYPE_CYPHER)
 	    return ""
 	return (
 	    <div className="form-group">
 	    <h5>Query</h5>
-	    <p className="help">Checkout <a href="https://github.com/stellasia/neomap/wiki" target="_blank">the documentation</a></p>
+	    <p className="help">Checkout <a href="https://github.com/stellasia/neomap/wiki" target="_blank" rel="noopener noreferrer" >the documentation</a></p>
 	    <p className="help">(Ctrl+SPACE for autocomplete)</p>
 	    <CypherEditor
 	    value={this.state.cypher}
@@ -285,6 +312,9 @@ class Layer extends Component {
 
 
     renderConfigDefault() {
+	/*If layerType==latlon, then we display the elements to choose
+	   node labels and properties to be used.
+	*/
 	if (this.state.layerType !== LAYER_TYPE_LATLON)
 	    return ""
 	return (

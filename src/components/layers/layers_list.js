@@ -21,6 +21,9 @@ class LayersList extends Component {
 
 
     sendData(data) {
+	/*Receives new data from child layer
+	   and propagete it to parent
+	*/
 	var new_layer = data.layer;
 	var layers = this.state.layers;
 	layers[new_layer.ukey] = new_layer;
@@ -34,6 +37,10 @@ class LayersList extends Component {
 
 
     deleteLayer(ukey) {
+	/*Remove a specific ukey from
+	   `this.state.layers` map
+	   and re-render map component
+	*/
 	var layers = this.state.layers;
 	delete layers[ukey];
 	this.setState({

@@ -17,6 +17,8 @@ class Map extends Component {
 
 
     renderMarker(d, j, icon) {
+	/*Render maker with optional tooltip
+	*/
 	if (d.tooltip) {
 	    return (
 		<Marker key={j} position={d.pos} icon={icon} >
@@ -32,6 +34,8 @@ class Map extends Component {
 
 
     renderMarkerLayer(layer) {
+	/*Will show one marker per items in `layer.data`
+	*/
 	var data = layer.data;
 	var color = layer.color;
 	var url = `https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-${color}.png`;
@@ -53,6 +57,8 @@ class Map extends Component {
 
 
     renderHeatmapLayer(layer) {
+	/* Create heatmap based on items in `layer.data`, each with weight 1.
+	*/
 	var data = layer.data;
 	return (
 	    <LayersControl.Overlay key={layer.ukey} name={layer.name} checked>
@@ -71,6 +77,8 @@ class Map extends Component {
 
 
     renderClusterLayer(layer) {
+	/*TODO: cluster layer
+	*/
 	return "Cluster layer not supported for now";
     };
 
@@ -78,6 +86,9 @@ class Map extends Component {
     render() {
 	var layers = Object.entries(this.props.layers);
 
+	/*Map center will be the one of the last layer...
+	   TODO: compute zoom or use leaflet tools to set it automatically?
+	*/
 	var center ;
 	var zoom ;
 	if (layers.length > 0) {

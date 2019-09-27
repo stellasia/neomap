@@ -59,24 +59,14 @@ body {
     overflow: visible;
 }
 
-
 .disabled {
     color: grey;
 }
-
 
 .nav-tabs {
     margin-bottom: 20px;
     background-color: #aaa;
     color: black;
-}
-
-.tab-content {
-    border-left: 1px solid white;
-    padding-left: 10px;
-    border-bottom: 1px solid white;
-    padding-bottom: 10px;
-    margin-bottom: 10px;
 }
 
 p.help {

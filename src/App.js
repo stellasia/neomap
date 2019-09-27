@@ -18,6 +18,10 @@ class App extends Component {
     constructor(props) {
 	super(props);
 
+	/*Get connection to the active graph
+
+	   TODO: what happens if the active graph changes?
+	*/
 	if (window.neo4jDesktopApi) {
 	    neo4jDesktopApi.getContext().then((context) => {
 		for (let project of context.projects) {
@@ -38,7 +42,8 @@ class App extends Component {
 	    this.driver = this.getDriver();
 	}
 
-	console.log(this.driver);
+	//console.log(this.driver);
+
 	this.state = {
 	    layers: {},
 	};
@@ -49,6 +54,9 @@ class App extends Component {
 
 
     getDriver() {
+	/*Get a default driver based on hard coded credential above
+	   TODO: remove or make this configurable through env vars or...
+	*/
 	var uri = DEFAULT_DRIVER.uri;
 	var usr = DEFAULT_DRIVER.user;
 	var pwd = DEFAULT_DRIVER.password;
@@ -63,6 +71,9 @@ class App extends Component {
 
     
     layersChanged(childData) {
+	/* Something changed in the layer definition,
+	   need to update map
+	*/
 	this.setState({
 	    layers: childData.layers
 	});

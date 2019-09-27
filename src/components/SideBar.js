@@ -18,6 +18,9 @@ class SideBar extends Component {
 
 
     sendData(layers) {
+	/*Receives data from child layer
+	   and propagete it to parent
+	 */
 	this.setState({
 	    layers: layers.layers
 	});

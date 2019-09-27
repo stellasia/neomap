@@ -1,5 +1,5 @@
 {
-    "name": "neomap",
+    "name": "@stellasia/neomap",
     "version": "0.2.0",
     "author": "Estelle Scifo",
     "private": false,
@@ -30,10 +30,13 @@
 	"dist/",
 	"package.json"
     ],
+    "publishConfig": {
+	"registry": "https://npm.pkg.github.com/"
+    },
     "description": "A Neo4j Desktop application to visualize nodes with geographic attributes on a map.",
     "main": "index.js",
     "devDependencies": {},
-    "repository": "git+https://github.com/stellasia/neomap.git",
+    "repository": "git://github.com/stellasia/neomap.git",
     "icons": [
 	{
 	    "src": "icon.png",
