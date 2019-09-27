@@ -74,9 +74,14 @@ body {
     margin-bottom: 10px;
 }
 
-.tab-content p.help {
+p.help {
     margin: 2px;
     font-style: italic;
     font-size: 0.8em;
     color: #999;
+}
+
+h4 {
+    margin-top: 1.1em;
+    color: #aaa;
 }

@@ -16,7 +16,7 @@ class LayersList extends Component {
 	this.sendData = this.sendData.bind(this);
 	this.renderLayers = this.renderLayers.bind(this);
 	this.renderNewLayer = this.renderNewLayer.bind(this);
-
+	this.deleteLayer = this.deleteLayer.bind(this);
     };
 
 
@@ -34,7 +34,14 @@ class LayersList extends Component {
 
 
     deleteLayer(ukey) {
-	this.layers.delete(ukey);
+	var layers = this.state.layers;
+	delete layers[ukey];
+	this.setState({
+	    layers: layers
+	});
+	this.props.sendData({
+	    layers: layers
+	});
     };
 
 

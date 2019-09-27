@@ -6,8 +6,6 @@ import React, { Component } from 'react';
 import Select from 'react-select'
 import Accordion from 'react-bootstrap/Accordion';
 import Card from 'react-bootstrap/Card';
-import Tabs from 'react-bootstrap/Tabs';
-import Tab from 'react-bootstrap/Tab';
 import { CypherEditor } from "graph-app-kit/components/Editor"
 
 import "codemirror/lib/codemirror.css";
@@ -30,13 +28,14 @@ const POSSIBLE_COLORS = [
     {value: "black", label: "Black"}
 ];
 
-const LAYER_TYPE_LATLON = 1;
-const LAYER_TYPE_CYPHER = 2;
-const LAYER_TYPE_SPATIAL = 3;
+
+const LAYER_TYPE_LATLON = "latlon";
+const LAYER_TYPE_CYPHER = "cypher";
 
 
 const DEFAULT_LAYER = {
     name: "New layer",
+    layerType: LAYER_TYPE_LATLON,
     latitudeProperty: "latitude",
     longitudeProperty: "longitude",
     tooltipProperty: "name",
@@ -48,7 +47,6 @@ const DEFAULT_LAYER = {
     limit: LIMIT,
     rendering: "markers",
     radius: 30,
-    layerType: LAYER_TYPE_LATLON,
     cypher: ""
 };
 
@@ -72,6 +70,7 @@ class Layer extends Component {
 	this.sendData = this.sendData.bind(this);
 	this.deleteLayer = this.deleteLayer.bind(this);
 	this.handleNameChange = this.handleNameChange.bind(this);
+	this.handleLayerTypeChange = this.handleLayerTypeChange.bind(this);
 	this.handleNodeLabelChange = this.handleNodeLabelChange.bind(this);
 	this.handleLatPropertyChange = this.handleLatPropertyChange.bind(this);
 	this.handleLonPropertyChange = this.handleLonPropertyChange.bind(this);
@@ -110,11 +109,18 @@ class Layer extends Component {
     };
 
 
+    getCypherQuery() {
+	// TODO: check that the query is valid
+	return this.state.cypher;
+    };
+
+
     getQuery() {
 	if (this.state.layerType === LAYER_TYPE_CYPHER)
-	    return this.state.cypher
+	    return this.getCypherQuery();
 
 	// lat lon query
+	// TODO: improve this method...
 	var query = "";
 	query = 'MATCH (n) WHERE true';
 	if (this.state.nodeLabel.length > 0) {
@@ -138,7 +144,6 @@ class Layer extends Component {
 
 
     updateData() {
-	// TODO: improve that method...
 	var res = [];
 	const session = this.driver.session();
 
@@ -157,8 +162,8 @@ class Layer extends Component {
 			    record.get("longitude")
 			],
 		    };
-		    if (this.state.tooltipProperty)
-			el["tooltip"] =record.get("tooltip");
+		    if (this.state.tooltipProperty && record.has("tooltip"))
+			el["tooltip"] = record.get("tooltip");
 		    res.push(el);
 		});
 		this.setState({data: res}, function() {this.updatePosition()});
@@ -167,6 +172,16 @@ class Layer extends Component {
 	    .catch(function (error) {
 		console.log(error);
 	    });
+    };
+
+
+    handleNameChange(e) {
+	this.setState({name: e.target.value});
+    };
+
+
+    handleLayerTypeChange(e) {
+	this.setState({layerType: e.target.value});
     };
 
 
@@ -182,11 +197,6 @@ class Layer extends Component {
 
     handleNodeLabelChange(e) {
 	this.setState({nodeLabel: e});
-    };
-
-
-    handleNameChange(e) {
-	this.setState({name: e.target.value});
     };
 
 
@@ -211,10 +221,6 @@ class Layer extends Component {
 
 
     handleCypherChange(e) {
-	if (e !== "")
-	    this.setState({layerType: LAYER_TYPE_CYPHER});
-	else
-	    this.setState({layerType: LAYER_TYPE_LATLON});
 	this.setState({cypher: e});
     };
 
@@ -262,10 +268,12 @@ class Layer extends Component {
 
 
     renderConfigCypher() {
+	if (this.state.layerType !== LAYER_TYPE_CYPHER)
+	    return ""
 	return (
 	    <div className="form-group">
 	    <h5>Query</h5>
-	    <p className="help">Checkout the documentation</p>
+	    <p className="help">Checkout <a href="https://github.com/stellasia/neomap/wiki" target="_blank">the documentation</a></p>
 	    <p className="help">(Ctrl+SPACE for autocomplete)</p>
 	    <CypherEditor
 	    value={this.state.cypher}
@@ -277,6 +285,8 @@ class Layer extends Component {
 
 
     renderConfigDefault() {
+	if (this.state.layerType !== LAYER_TYPE_LATLON)
+	    return ""
 	return (
 	    <div>
 	    <div className="form-group">
@@ -353,21 +363,49 @@ class Layer extends Component {
 	    />
 	    </div>
 
-	    <Tabs defaultActiveKey={this.state.layerType}>
-	    <Tab eventKey={LAYER_TYPE_LATLON} title="Lat/lon">
+	    <h4>  > Data</h4>
+
+	    <div className="form-group">
+	    <h5>Layer type</h5>
+	    <div className="form-check">
+	    <label>
+	    <input
+            type="radio"
+            name="layerType"
+            value={LAYER_TYPE_LATLON}
+            checked={this.state.layerType === LAYER_TYPE_LATLON}
+            className="form-check-input"
+	    onChange={this.handleLayerTypeChange}
+	    />
+	    Simple
+	    </label>
+	    </div>
+
+	    <div className="form-check">
+	    <label>
+	    <input
+            type="radio"
+            name="layerType"
+            value={LAYER_TYPE_CYPHER}
+            checked={this.state.layerType === LAYER_TYPE_CYPHER}
+            className="form-check-input"
+	    onChange={this.handleLayerTypeChange}
+	    />
+	    Advanced
+	    </label>
+	    </div>
+	    </div>
+
 	    {this.renderConfigDefault()}
-	    </Tab>
-	    <Tab eventKey={LAYER_TYPE_CYPHER} title="Cypher">
 	    {this.renderConfigCypher()}
-	    </Tab>
-	    <Tab eventKey={LAYER_TYPE_SPATIAL} title="Spatial" disabled>
-	    </Tab>
-	    </Tabs>
+
+
+	    <h4>  > Map rendering</h4>
 
 	    <div className="form-group">
 	    <h5>Rendering</h5>
 	    <div className="form-check">
-	    <label className="">
+	    <label>
 	    <input
             type="radio"
             name="rendering"
@@ -434,7 +472,7 @@ class Layer extends Component {
 	    />
 	    </div>
 
-	    <input type="submit" className="btn btn-danger" value="Delete layer" onClick={this.deleteLayer} />
+	    <input type="submit" className="btn btn-danger" value="Delete layer" onClick={this.deleteLayer} hidden={this.props.layer === undefined} />
 	    <input type="submit" className="btn btn-info" value="Update map >" onClick={this.sendData} />
 
 	    </form>
