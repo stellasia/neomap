@@ -1,6 +1,6 @@
 {
-    "name": "@stellasia/neomap",
-    "version": "0.2.0",
+    "name": "neomap",
+    "version": "0.2.1",
     "author": "Estelle Scifo",
     "private": false,
     "neo4jDesktop": {
