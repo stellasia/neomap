@@ -34,6 +34,7 @@ const LAYER_TYPE_LATLON = 1;
 const LAYER_TYPE_CYPHER = 2;
 const LAYER_TYPE_SPATIAL = 3;
 
+
 const DEFAULT_LAYER = {
     name: "New layer",
     latitudeProperty: "latitude",
@@ -69,6 +70,7 @@ class Layer extends Component {
 	this.nodes = this.getNodes();
 	
 	this.sendData = this.sendData.bind(this);
+	this.deleteLayer = this.deleteLayer.bind(this);
 	this.handleNameChange = this.handleNameChange.bind(this);
 	this.handleNodeLabelChange = this.handleNodeLabelChange.bind(this);
 	this.handleLatPropertyChange = this.handleLatPropertyChange.bind(this);
@@ -222,6 +224,13 @@ class Layer extends Component {
 	event.preventDefault();
     };
 
+
+    deleteLayer(event) {
+	this.props.deleteLayer(this.state.ukey);
+	event.preventDefault();
+    };
+
+
     getNodes() {
 	/*This will be updated quite often,
 	   is that what we want?
@@ -356,16 +365,6 @@ class Layer extends Component {
 	    </Tabs>
 
 	    <div className="form-group">
-	    <h5>Color</h5>
-	    <Select
-	    className="form-control select"
-	    options={POSSIBLE_COLORS}
-	    defaultValue={{value: this.state.color, label: this.state.colorName}}
-	    onChange={this.handleColorChange}
-	    />
-	    </div>
-
-	    <div className="form-group">
 	    <h5>Rendering</h5>
 	    <div className="form-check">
 	    <label className="">
@@ -412,8 +411,17 @@ class Layer extends Component {
 
 	    </div>
 
-	    <div className="form-group" hidden={this.state.rendering !== "heatmap"}
-	    >
+	    <div className="form-group" hidden={this.state.rendering !== "markers"}>
+	    <h5>Color</h5>
+	    <Select
+	    className="form-control select"
+	    options={POSSIBLE_COLORS}
+	    defaultValue={{value: this.state.color, label: this.state.colorName}}
+	    onChange={this.handleColorChange}
+	    />
+	    </div>
+
+	    <div className="form-group" hidden={this.state.rendering !== "heatmap"}>
 	    <h5>Heatmap radius</h5>
 	    <input
 	    type="range"
@@ -426,6 +434,7 @@ class Layer extends Component {
 	    />
 	    </div>
 
+	    <input type="submit" className="btn btn-danger" value="Delete layer" onClick={this.deleteLayer} />
 	    <input type="submit" className="btn btn-info" value="Update map >" onClick={this.sendData} />
 
 	    </form>

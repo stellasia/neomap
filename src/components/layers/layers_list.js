@@ -33,11 +33,16 @@ class LayersList extends Component {
     };
 
 
+    deleteLayer(ukey) {
+	this.layers.delete(ukey);
+    };
+
+
     renderLayers() {
 	var layers = Object.entries(this.state.layers);
 	return layers.map( ([key,layer]) => {
 	    return (
-		<Layer key={layer.ukey} ukey={layer.ukey} layer={layer} sendData={this.sendData} driver={this.state.driver} />
+		<Layer key={layer.ukey} ukey={layer.ukey} layer={layer} deleteLayer={this.deleteLayer} sendData={this.sendData} driver={this.state.driver} />
 	    );
 	});
     };
