@@ -372,11 +372,11 @@ class Layer extends Component {
 
 	    <Card>
 
-	    <Accordion.Toggle as={Card.Header} eventKey="{this.state.ukey}" >
+	    <Accordion.Toggle as={Card.Header} eventKey={this.state.ukey} >
 	    <h3>{this.state.name} <small>({this.state.ukey})</small></h3>
 	    </Accordion.Toggle>
 
-	    <Accordion.Collapse eventKey="{this.state.ukey}" >
+	    <Accordion.Collapse eventKey={this.state.ukey} >
 
 	    <Card.Body>
 
