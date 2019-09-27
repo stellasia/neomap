@@ -443,7 +443,7 @@ class Layer extends Component {
 	    disabled={true}
 	    onChange={this.handleRenderingChange}
 	    />
-	    Clusters
+	    Clusters (not implemted yet)
 	    </label>
 	    </div>
 

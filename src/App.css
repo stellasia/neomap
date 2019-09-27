@@ -55,6 +55,11 @@ body {
     padding: 0 10px;
 }
 
+.accordion > .card {
+    overflow: visible;
+}
+
+
 .disabled {
     color: grey;
 }
