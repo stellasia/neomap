@@ -16,7 +16,7 @@ import "cypher-codemirror/dist/cypher-codemirror-syntax.css";
 
 
 // maximum number of points to show
-const LIMIT = 500;
+const LIMIT = 2000;
 
 // marker colors
 const POSSIBLE_COLORS = [
