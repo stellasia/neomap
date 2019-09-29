@@ -1,11 +1,12 @@
 # neo-map
 
-A Neo4J Desktop (React-based) application to visualize nodes with geographic attributes on a map.
+A Neo4J Desktop (React-based) application to visualize nodes with geographical attributes on a map.
 
+## Installation
 
-## Add the app to Neo4jDesktop
+### Add the app to Neo4jDesktop
 
-### From tarball
+#### From tarball
 
 1. Go to the repository [releases](https://github.com/stellasia/neomap/releases)
 2. Download the `noemap-<version>.tar.gz`
@@ -19,14 +20,19 @@ A Neo4J Desktop (React-based) application to visualize nodes with geographic att
 
 	![](img/desktop_graphapp_add.png)
 
-7. Click install
+7. Click "Add"
 
 	![](img/desktop_graphapp_add_2.png)
 
 
+## Usage
+
+Read the [tutorial](https://github.com/stellasia/neomap/wiki/NeoMap-Tutorial/) or the [FAQ](https://github.com/stellasia/neomap/wiki/FAQ).
+
+
 ## Want to contribute?
 
-## WARNING
+### WARNING
 
 I am a data scientist, not a front-end developer. If someone with expertise with React wants to take a look and suggest improvements, that would be very welcome!
 
