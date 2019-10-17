@@ -76,6 +76,13 @@ p.help {
     color: #999;
 }
 
+.form-label {
+    margin-bottom: .5rem;
+    font-weight: 500;
+    line-height: 1.2;
+    font-size: 1.25rem;
+}
+
 h4 {
     margin-top: 1.1em;
     color: #aaa;

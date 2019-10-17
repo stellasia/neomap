@@ -6,6 +6,7 @@ import React, { Component } from 'react';
 import Select from 'react-select'
 import Accordion from 'react-bootstrap/Accordion';
 import Card from 'react-bootstrap/Card';
+import { Form, Button } from 'react-bootstrap';
 import { CypherEditor } from "graph-app-kit/components/Editor"
 
 // css needed for CypherEditor
@@ -35,6 +36,10 @@ const POSSIBLE_COLORS = [
 const LAYER_TYPE_LATLON = "latlon";
 const LAYER_TYPE_CYPHER = "cypher";
 
+const RENDERING_MARKERS = "markers";
+const RENDERING_HEATMAP = "heatmap";
+const RENDERING_CLUSTERS = "clusters";
+
 
 // default parameters for new layers
 const DEFAULT_LAYER = {
@@ -49,7 +54,7 @@ const DEFAULT_LAYER = {
     color: "blue",
     colorName: "Blue",
     limit: LIMIT,
-    rendering: "markers",
+    rendering: RENDERING_MARKERS,
     radius: 30,
     cypher: ""
 };
@@ -149,7 +154,7 @@ class Layer extends Component {
 	query += ` RETURN n.${this.state.latitudeProperty} as latitude, n.${this.state.longitudeProperty} as longitude`;
 
 	// if tooltip is not null, also return tooltip
-	if (this.state.tooltipProperty !== undefined)
+	if (this.state.tooltipProperty !== '')
 	    query += `, n.${this.state.tooltipProperty} as tooltip`;
 
 	// TODO: is that really needed???
@@ -162,7 +167,7 @@ class Layer extends Component {
 
     updateData() {
 	/*Query database and update `this.state.data`
-	*/
+	 */
 	var res = [];
 	const session = this.driver.session();
 
@@ -225,7 +230,7 @@ class Layer extends Component {
 
 
     handleTooltipPropertyChange(e) {
-	this.setState({tooltipProperty: e.value});
+	this.setState({tooltipProperty: e.target.value});
     };
 
 
@@ -246,7 +251,7 @@ class Layer extends Component {
 
     sendData(event) {
 	/*Send data to parent which will propagate to the Map component
-	*/
+	 */
 	this.updateData();
 	event.preventDefault();
     };
@@ -254,7 +259,7 @@ class Layer extends Component {
 
     deleteLayer(event) {
 	/*Remove the layer
-	*/
+	 */
 	this.props.deleteLayer(this.state.ukey);
 	event.preventDefault();
     };
@@ -294,19 +299,20 @@ class Layer extends Component {
 
     renderConfigCypher() {
 	/*If layerType==cypher, then we display the CypherEditor
-	*/
+	 */
 	if (this.state.layerType !== LAYER_TYPE_CYPHER)
 	    return ""
 	return (
-	    <div className="form-group">
-	    <h5>Query</h5>
-	    <p className="help">Checkout <a href="https://github.com/stellasia/neomap/wiki" target="_blank" rel="noopener noreferrer" >the documentation</a></p>
-	    <p className="help">(Ctrl+SPACE for autocomplete)</p>
+	    <Form.Group controlId="formCypher">
+	    <Form.Label>Query</Form.Label>
+	    <Form.Text>
+	    <p>Checkout <a href="https://github.com/stellasia/neomap/wiki" target="_blank" rel="noopener noreferrer" >the documentation</a> (Ctrl+SPACE for autocomplete)</p>
+	    </Form.Text>
 	    <CypherEditor
-	    value={this.state.cypher}
-	    onValueChange={this.handleCypherChange}
+	        value={this.state.cypher}
+	        onValueChange={this.handleCypherChange}
 	    />
-	    </div>
+	    </Form.Group>
 	)
     };
 
@@ -314,54 +320,54 @@ class Layer extends Component {
     renderConfigDefault() {
 	/*If layerType==latlon, then we display the elements to choose
 	   node labels and properties to be used.
-	*/
+	 */
 	if (this.state.layerType !== LAYER_TYPE_LATLON)
 	    return ""
 	return (
 	    <div>
-	    <div className="form-group">
-	    <h5>Node label</h5>
+	    <Form.Group controlId="formNodeLabel">
+	    <Form.Label>Node label(s)</Form.Label>
 	    <Select
-	    className="form-control select"
-	    options={this.nodes}
-	    onChange={this.handleNodeLabelChange}
-	    isMulti={true}
-	    defaultValue={this.state.nodeLabel}
+	        className="form-control select"
+	        options={this.nodes}
+	        onChange={this.handleNodeLabelChange}
+	        isMulti={true}
+	        defaultValue={this.state.nodeLabel}
 	    />
-	    </div>
+	    </Form.Group>
 
-	    <div className="form-group">
-	    <h5>Latitude property</h5>
-	    <input
-	    type="text"
-	    className="form-control"
-	    placeholder="latitude"
-	    defaultValue={this.state.latitudeProperty}
-	    onChange={this.handleLatPropertyChange}
+	    <Form.Group controlId="formLatitudeProperty">
+	    <Form.Label>Latitude property</Form.Label>
+	    <Form.Control
+	        type="text"
+	        className="form-control"
+	        placeholder="latitude"
+	        defaultValue={this.state.latitudeProperty}
+	        onChange={this.handleLatPropertyChange}
 	    />
-	    </div>
+	    </Form.Group>
 
-	    <div className="form-group">
-	    <h5>Longitude property</h5>
-	    <input
-	    type="text"
-	    className="form-control"
-	    placeholder="longitude"
-	    defaultValue={this.state.longitudeProperty}
-	    onChange={this.handleLonPropertyChange}
+	    <Form.Group controlId="formLongitudeProperty">
+	    <Form.Label>Longitude property</Form.Label>
+	    <Form.Control
+	        type="text"
+	        className="form-control"
+	        placeholder="longitude"
+	        defaultValue={this.state.longitudeProperty}
+	        onChange={this.handleLonPropertyChange}
 	    />
-	    </div>
+	    </Form.Group>
 
-	    <div className="form-group">
-	    <h5>Tooltip property</h5>
-	    <input
-	    type="text"
-	    className="form-control"
-	    placeholder="Property used for tooltip"
-	    defaultValue={this.state.tooltipProperty}
-	    onChange={this.handleTooltipPropertyChange}
+	    <Form.Group controlId="formTooltipProperty">
+	    <Form.Label>Tooltip property</Form.Label>
+	    <Form.Control
+	        type="text"
+	        className="form-control"
+	        placeholder="name"
+	        defaultValue={this.state.tooltipProperty}
+	        onChange={this.handleTooltipPropertyChange}
 	    />
-	    </div>
+	    </Form.Group>
 	    </div>
 	)
     };
@@ -380,51 +386,41 @@ class Layer extends Component {
 
 	    <Card.Body>
 
-	    <form action="" >
+	    <Form action="" >
 
-	    <div className="form-group">
-	    <h5>Name</h5>
-	    <input
-	    type="text"
-	    className="form-control"
-	    placeholder="Layer name"
-	    defaultValue={this.state.name}
-	    onChange={this.handleNameChange}
+	    <Form.Group controlId="formLayerName">
+	    <Form.Label>Name</Form.Label>
+	    <Form.Control
+	        type="text"
+	        className="form-control"
+	        placeholder="Layer name"
+	        defaultValue={this.state.name}
+	        onChange={this.handleNameChange}
 	    />
-	    </div>
+	    </Form.Group>
+
 
 	    <h4>  > Data</h4>
 
-	    <div className="form-group">
-	    <h5>Layer type</h5>
-	    <div className="form-check">
-	    <label>
-	    <input
-            type="radio"
-            name="layerType"
-            value={LAYER_TYPE_LATLON}
-            checked={this.state.layerType === LAYER_TYPE_LATLON}
-            className="form-check-input"
-	    onChange={this.handleLayerTypeChange}
+	    <Form.Group controlId="formLayerType">
+	    <Form.Label>Layer type</Form.Label>
+	    <Form.Check
+                type="radio"
+                id={ LAYER_TYPE_LATLON }
+                label={ "Simple" }
+                value={ LAYER_TYPE_LATLON }
+                checked={this.state.layerType === LAYER_TYPE_LATLON}
+	        onChange={this.handleLayerTypeChange}
 	    />
-	    Simple
-	    </label>
-	    </div>
-
-	    <div className="form-check">
-	    <label>
-	    <input
-            type="radio"
-            name="layerType"
-            value={LAYER_TYPE_CYPHER}
-            checked={this.state.layerType === LAYER_TYPE_CYPHER}
-            className="form-check-input"
-	    onChange={this.handleLayerTypeChange}
+	    <Form.Check
+                type="radio"
+                id={ LAYER_TYPE_CYPHER }
+                label={ "Advanced" }
+                value={ LAYER_TYPE_CYPHER }
+                checked={this.state.layerType === LAYER_TYPE_CYPHER}
+	        onChange={this.handleLayerTypeChange}
 	    />
-	    Advanced
-	    </label>
-	    </div>
-	    </div>
+	    </Form.Group>
 
 	    {this.renderConfigDefault()}
 	    {this.renderConfigCypher()}
@@ -432,81 +428,68 @@ class Layer extends Component {
 
 	    <h4>  > Map rendering</h4>
 
-	    <div className="form-group">
-	    <h5>Rendering</h5>
-	    <div className="form-check">
-	    <label>
-	    <input
-            type="radio"
-            name="rendering"
-            value="markers"
-            checked={this.state.rendering === "markers"}
-            className="form-check-input"
-	    onChange={this.handleRenderingChange}
+	    <Form.Group controlId="formRendering">
+	    <Form.Label>Rendering</Form.Label>
+	    <Form.Check
+                type="radio"
+                id={ RENDERING_MARKERS }
+                label={ "Markers" }
+                value={ RENDERING_MARKERS }
+                checked={this.state.rendering === RENDERING_MARKERS}
+	        onChange={this.handleRenderingChange}
 	    />
-	    Markers
-	    </label>
-	    </div>
-
-	    <div className="form-check">
-	    <label className="">
-	    <input
-            type="radio"
-            name="rendering"
-            value="heatmap"
-            checked={this.state.rendering === "heatmap"}
-            className="form-check-input"
-	    onChange={this.handleRenderingChange}
+	    <Form.Check
+                type="radio"
+                id={ RENDERING_HEATMAP }
+                label={ "Heatmap" }
+                value={ RENDERING_HEATMAP }
+                checked={this.state.rendering === RENDERING_HEATMAP}
+	        onChange={this.handleRenderingChange}
 	    />
-	    Heatmap
-	    </label>
-	    </div>
-
-	    <div className="form-check">
-	    <label className="disabled">
-	    <input
-            type="radio"
-            name="rendering"
-            value="cluster"
-            checked={this.state.rendering === "clusters"}
-            className="form-check-input"
-	    disabled={true}
-	    onChange={this.handleRenderingChange}
+	    <Form.Check
+                type="radio"
+                id={ RENDERING_CLUSTERS }
+                label={ "Clusters (not implemented yet)" }
+                value={ RENDERING_CLUSTERS }
+                checked={this.state.rendering === RENDERING_CLUSTERS}
+	        onChange={this.handleRenderingChange}
+	        disabled
 	    />
-	    Clusters (not implemted yet)
-	    </label>
-	    </div>
+	    </Form.Group>
 
-	    </div>
-
-	    <div className="form-group" hidden={this.state.rendering !== "markers"}>
-	    <h5>Color</h5>
+	    <Form.Group controlId="formColor" hidden={this.state.rendering !== RENDERING_MARKERS}>
+	    <Form.Label>Color</Form.Label>
 	    <Select
-	    className="form-control select"
-	    options={POSSIBLE_COLORS}
-	    defaultValue={{value: this.state.color, label: this.state.colorName}}
-	    onChange={this.handleColorChange}
+	        className="form-control select"
+	        options={POSSIBLE_COLORS}
+	        defaultValue={{value: this.state.color, label: this.state.colorName}}
+	        onChange={this.handleColorChange}
 	    />
-	    </div>
+	    </Form.Group>
 
-	    <div className="form-group" hidden={this.state.rendering !== "heatmap"}>
-	    <h5>Heatmap radius</h5>
-	    <input
-	    type="range"
-	    min="1"
-	    max="100"
-	    name="radius"
-	    defaultValue={this.state.radius}
-	    className="slider"
-	    onChange={this.handleRadiusChange}
+	    <Form.Group controlId="formRadius" hidden={this.state.rendering !== RENDERING_HEATMAP}>
+	    <Form.Label>Heatmap radius</Form.Label>
+	    <Form.Control
+	        type="range"
+	        min="1"
+	        max="100"
+	        name="radius"
+	        defaultValue={this.state.radius}
+	        className="slider"
+	        onChange={this.handleRadiusChange}
 	    />
-	    </div>
+	    </Form.Group>
 
-	    <input type="submit" className="btn btn-danger" value="Delete layer" onClick={this.deleteLayer} hidden={this.props.layer === undefined} />
-	    <input type="submit" className="btn btn-info" value="Update map >" onClick={this.sendData} />
 
-	    </form>
+	    <Button variant="danger" type="submit"  onClick={this.deleteLayer} hidden={this.props.layer === undefined}>
+	    Delete Layer
+	    </Button>
 
+	    <Button variant="info" type="submit"  onClick={this.sendData} >
+	    Update map
+	    </Button>
+
+	    </Form>
 	    </Card.Body>
 
 	    </Accordion.Collapse>
