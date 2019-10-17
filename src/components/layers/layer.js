@@ -343,7 +343,7 @@ class Layer extends Component {
 	        className="form-control"
 	        placeholder="latitude"
 	        defaultValue={this.state.latitudeProperty}
-	        onChange={this.handleLatitudePropertyChange}
+	        onChange={this.handleLatPropertyChange}
 	    />
 	    </Form.Group>
 
@@ -354,7 +354,7 @@ class Layer extends Component {
 	        className="form-control"
 	        placeholder="longitude"
 	        defaultValue={this.state.longitudeProperty}
-	        onChange={this.handleLongitudePropertyChange}
+	        onChange={this.handleLonPropertyChange}
 	    />
 	    </Form.Group>
 
