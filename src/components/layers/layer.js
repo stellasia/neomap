@@ -352,7 +352,7 @@ class Layer extends Component {
 	    />
 	    </div>
 
-	    <div className="form-group">
+	    <div className="form-group" hidden={this.state.rendering !== "markers"} >
 	    <h5>Tooltip property</h5>
 	    <input
 	    type="text"
