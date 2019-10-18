@@ -56,7 +56,7 @@ class LayersList extends Component {
 	var layers = Object.entries(this.state.layers);
 	return layers.map( ([key,layer]) => {
 	    return (
-		<Layer key={layer.ukey} ukey={layer.ukey} layer={layer} deleteLayer={this.deleteLayer} sendData={this.sendData} driver={this.state.driver} />
+		<Layer data-id="layers" key={layer.ukey} ukey={layer.ukey} layer={layer} deleteLayer={this.deleteLayer} sendData={this.sendData} driver={this.state.driver} />
 	    );
 	});
     };
@@ -65,7 +65,7 @@ class LayersList extends Component {
     renderNewLayer() {
 	var uid = (new Date().getTime() + Math.random()).toString(36);
         return (
-	    <Layer key={uid} ukey={uid} layer={undefined} sendData={this.sendData} driver={this.state.driver} />
+	    <Layer key={uid} data-id="new-layer" ukey={uid} layer={undefined} sendData={this.sendData} driver={this.state.driver} />
 	);
     };
 
