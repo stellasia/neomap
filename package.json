@@ -9,8 +9,6 @@
 	},
 	"dependencies": {
 		"bootstrap": "^4.3.0",
-		"enzyme": "^3.10.0",
-		"enzyme-adapter-react-16": "^1.15.1",
 		"graph-app-kit": "^1.0.4",
 		"leaflet": "^1.5.1",
 		"neo4j-driver": "^1.7.2",
@@ -37,7 +35,10 @@
 	},
 	"description": "A Neo4j Desktop application to visualize nodes with geographic attributes on a map.",
 	"main": "index.js",
-	"devDependencies": {},
+	"devDependencies": {
+		"enzyme": "^3.10.0",
+		"enzyme-adapter-react-16": "^1.15.1"
+	},
 	"repository": "git://github.com/stellasia/neomap.git",
 	"icons": [
 		{
