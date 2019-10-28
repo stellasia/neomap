@@ -344,27 +344,29 @@ class Layer extends Component {
 	        placeholder="latitude"
 	        defaultValue={this.state.latitudeProperty}
 	        onChange={this.handleLatPropertyChange}
+	        id={ 'latitutdePropertyID-' + this.state.ukey}
 	    />
 	    </Form.Group>
 
 	    <Form.Group controlId="formLongitudeProperty">
 	    <Form.Label>Longitude property</Form.Label>
 	    <Form.Control
-	        type="text"
-	        className="form-control"
-	        placeholder="longitude"
-	        defaultValue={this.state.longitudeProperty}
-	        onChange={this.handleLonPropertyChange}
+	    type="text"
+	    className="form-control"
+	    placeholder="longitude"
+	    defaultValue={this.state.longitudeProperty}
+	    onChange={this.handleLonPropertyChange}
+	    id={ 'longitudePropertyID-' + this.state.ukey}
 	    />
 	    </Form.Group>
 
 	    <Form.Group controlId="formTooltipProperty">
 	    <Form.Label>Tooltip property</Form.Label>
 	    <Form.Control
-	        type="text"
-	        className="form-control"
-	        placeholder="name"
-	        defaultValue={this.state.tooltipProperty}
+	    type="text"
+	    className="form-control"
+	    placeholder="name"
+	    defaultValue={this.state.tooltipProperty}
 	        onChange={this.handleTooltipPropertyChange}
 	    />
 	    </Form.Group>
