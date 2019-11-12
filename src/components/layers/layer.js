@@ -1,7 +1,7 @@
 /**Layer definition.
 
    TODO: split into several files?
-*/
+ */
 import React, { Component } from 'react';
 import Select from 'react-select'
 import Accordion from 'react-bootstrap/Accordion';
@@ -95,7 +95,7 @@ class Layer extends Component {
 
     updatePosition() {
 	/*Set the map center based on `this.state.data`
-	*/
+	 */
 	var arr = this.state.data;
 	var pos = [47, 3];
 	if (arr.length > 0) {
@@ -130,7 +130,7 @@ class Layer extends Component {
     getQuery() {
 	/*If layerType==cypher, query is inside the CypherEditor,
 	   otherwise, we need to build the query manually.
-	*/
+	 */
 	if (this.state.layerType === LAYER_TYPE_CYPHER)
 	    return this.getCypherQuery();
 
@@ -309,8 +309,9 @@ class Layer extends Component {
 	    <p>Checkout <a href="https://github.com/stellasia/neomap/wiki" target="_blank" rel="noopener noreferrer" >the documentation</a> (Ctrl+SPACE for autocomplete)</p>
 	    </Form.Text>
 	    <CypherEditor
-	        value={this.state.cypher}
-	        onValueChange={this.handleCypherChange}
+	    value={this.state.cypher}
+	    onValueChange={this.handleCypherChange}
+	    name="cypher"
 	    />
 	    </Form.Group>
 	)
@@ -328,23 +329,24 @@ class Layer extends Component {
 	    <Form.Group controlId="formNodeLabel">
 	    <Form.Label>Node label(s)</Form.Label>
 	    <Select
-	        className="form-control select"
-	        options={this.nodes}
-	        onChange={this.handleNodeLabelChange}
-	        isMulti={true}
-	        defaultValue={this.state.nodeLabel}
+	    className="form-control select"
+	    options={this.nodes}
+	    onChange={this.handleNodeLabelChange}
+	    isMulti={true}
+	    defaultValue={this.state.nodeLabel}
+	    name="nodeLabel"
 	    />
 	    </Form.Group>
 
 	    <Form.Group controlId="formLatitudeProperty">
 	    <Form.Label>Latitude property</Form.Label>
 	    <Form.Control
-	        type="text"
-	        className="form-control"
-	        placeholder="latitude"
-	        defaultValue={this.state.latitudeProperty}
-	        onChange={this.handleLatPropertyChange}
-	        id={ 'latitutdePropertyID-' + this.state.ukey}
+	    type="text"
+	    className="form-control"
+	    placeholder="latitude"
+	    defaultValue={this.state.latitudeProperty}
+	    onChange={this.handleLatPropertyChange}
+	    name="latitudeProperty"
 	    />
 	    </Form.Group>
 
@@ -356,18 +358,7 @@ class Layer extends Component {
 	    placeholder="longitude"
 	    defaultValue={this.state.longitudeProperty}
 	    onChange={this.handleLonPropertyChange}
-	    id={ 'longitudePropertyID-' + this.state.ukey}
-	    />
-	    </Form.Group>
-
-	    <Form.Group controlId="formTooltipProperty">
-	    <Form.Label>Tooltip property</Form.Label>
-	    <Form.Control
-	    type="text"
-	    className="form-control"
-	    placeholder="name"
-	    defaultValue={this.state.tooltipProperty}
-	        onChange={this.handleTooltipPropertyChange}
+	    name="longitudeProperty"
 	    />
 	    </Form.Group>
 	    </div>
@@ -393,11 +384,12 @@ class Layer extends Component {
 	    <Form.Group controlId="formLayerName">
 	    <Form.Label>Name</Form.Label>
 	    <Form.Control
-	        type="text"
-	        className="form-control"
-	        placeholder="Layer name"
-	        defaultValue={this.state.name}
-	        onChange={this.handleNameChange}
+	    type="text"
+	    className="form-control"
+	    placeholder="Layer name"
+	    defaultValue={this.state.name}
+	    onChange={this.handleNameChange}
+	    name="name"
 	    />
 	    </Form.Group>
 
@@ -407,20 +399,22 @@ class Layer extends Component {
 	    <Form.Group controlId="formLayerType">
 	    <Form.Label>Layer type</Form.Label>
 	    <Form.Check
-                type="radio"
-                id={ LAYER_TYPE_LATLON }
-                label={ "Simple" }
-                value={ LAYER_TYPE_LATLON }
-                checked={this.state.layerType === LAYER_TYPE_LATLON}
-	        onChange={this.handleLayerTypeChange}
+            type="radio"
+            id={ LAYER_TYPE_LATLON }
+            label={ "Simple" }
+            value={ LAYER_TYPE_LATLON }
+            checked={this.state.layerType === LAYER_TYPE_LATLON}
+	    onChange={this.handleLayerTypeChange}
+	    name="layerTypeLatLon"
 	    />
 	    <Form.Check
-                type="radio"
-                id={ LAYER_TYPE_CYPHER }
-                label={ "Advanced" }
-                value={ LAYER_TYPE_CYPHER }
-                checked={this.state.layerType === LAYER_TYPE_CYPHER}
-	        onChange={this.handleLayerTypeChange}
+            type="radio"
+            id={ LAYER_TYPE_CYPHER }
+            label={ "Advanced" }
+            value={ LAYER_TYPE_CYPHER }
+            checked={this.state.layerType === LAYER_TYPE_CYPHER}
+	    onChange={this.handleLayerTypeChange}
+	    name="layerTypeCypher"
 	    />
 	    </Form.Group>
 
@@ -433,52 +427,68 @@ class Layer extends Component {
 	    <Form.Group controlId="formRendering">
 	    <Form.Label>Rendering</Form.Label>
 	    <Form.Check
-                type="radio"
-                id={ RENDERING_MARKERS }
-                label={ "Markers" }
-                value={ RENDERING_MARKERS }
-                checked={this.state.rendering === RENDERING_MARKERS}
-	        onChange={this.handleRenderingChange}
+            type="radio"
+            id={ RENDERING_MARKERS }
+            label={ "Markers" }
+            value={ RENDERING_MARKERS }
+            checked={this.state.rendering === RENDERING_MARKERS}
+	    onChange={this.handleRenderingChange}
+	    name="mapRenderingMarker"
 	    />
 	    <Form.Check
-                type="radio"
-                id={ RENDERING_HEATMAP }
-                label={ "Heatmap" }
-                value={ RENDERING_HEATMAP }
-                checked={this.state.rendering === RENDERING_HEATMAP}
-	        onChange={this.handleRenderingChange}
+            type="radio"
+            id={ RENDERING_HEATMAP }
+            label={ "Heatmap" }
+            value={ RENDERING_HEATMAP }
+            checked={this.state.rendering === RENDERING_HEATMAP}
+	    onChange={this.handleRenderingChange}
+	    name="mapRenderingHeatmap"
 	    />
 	    <Form.Check
-                type="radio"
-                id={ RENDERING_CLUSTERS }
-                label={ "Clusters (not implemented yet)" }
-                value={ RENDERING_CLUSTERS }
-                checked={this.state.rendering === RENDERING_CLUSTERS}
-	        onChange={this.handleRenderingChange}
-	        disabled
+            type="radio"
+            id={ RENDERING_CLUSTERS }
+            label={ "Clusters (not implemented yet)" }
+            value={ RENDERING_CLUSTERS }
+            checked={this.state.rendering === RENDERING_CLUSTERS}
+	    onChange={this.handleRenderingChange}
+	    name="mapRenderingCluster"
+	    disabled
 	    />
 	    </Form.Group>
 
-	    <Form.Group controlId="formColor" hidden={this.state.rendering !== RENDERING_MARKERS}>
+	    <Form.Group controlId="formColor" hidden={this.state.rendering !== RENDERING_MARKERS} name="formgroupColor" >
 	    <Form.Label>Color</Form.Label>
 	    <Select
-	        className="form-control select"
-	        options={POSSIBLE_COLORS}
-	        defaultValue={{value: this.state.color, label: this.state.colorName}}
-	        onChange={this.handleColorChange}
+	    className="form-control select"
+	    options={POSSIBLE_COLORS}
+	    defaultValue={{value: this.state.color, label: this.state.colorName}}
+	    onChange={this.handleColorChange}
+	    name="color"
 	    />
 	    </Form.Group>
 
-	    <Form.Group controlId="formRadius" hidden={this.state.rendering !== RENDERING_HEATMAP}>
+	    <Form.Group controlId="formTooltipProperty" hidden={this.state.rendering !== RENDERING_MARKERS}  name="formgroupTooltip">
+	    <Form.Label>Tooltip property</Form.Label>
+	    <Form.Control
+	    type="text"
+	    className="form-control"
+	    placeholder="name"
+	    defaultValue={this.state.tooltipProperty}
+	    onChange={this.handleTooltipPropertyChange}
+	    name="tooltipProperty"
+	    />
+	    </Form.Group>
+
+	    <Form.Group controlId="formRadius" hidden={this.state.rendering !== RENDERING_HEATMAP} >
 	    <Form.Label>Heatmap radius</Form.Label>
 	    <Form.Control
-	        type="range"
-	        min="1"
-	        max="100"
-	        name="radius"
-	        defaultValue={this.state.radius}
-	        className="slider"
-	        onChange={this.handleRadiusChange}
+	    type="range"
+	    min="1"
+	    max="100"
+	    defaultValue={this.state.radius}
+	    className="slider"
+	    onChange={this.handleRadiusChange}
+	    name="radius"
 	    />
 	    </Form.Group>
 
