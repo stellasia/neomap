@@ -181,6 +181,10 @@ class Layer extends Component {
 		query, params
 	    )
 	    .then(result => {
+		if ((result.records === undefined) | (result.records.length === 0)) {
+		    alert("No result found, please check your query");
+		    return;
+		}
 		result.records.forEach(record => {
 		    var el = {
 			pos: [
@@ -195,8 +199,17 @@ class Layer extends Component {
 		this.setState({data: res}, function() {this.updatePosition()});
 		session.close();
 	    })
-	    .catch(function (error) {
+	    .catch(error => {
 		console.log(error);
+		var message = "Invalid cypher query.";
+		if (this.state.layerType === LAYER_TYPE_LATLON) {
+		    message += "\nContact the development team";
+		} else {
+		    message += "\nFix your query and try again";
+		}
+		message += "\n\n" + error;
+		alert(message);
+		return;
 	    });
     };
 
