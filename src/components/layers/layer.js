@@ -79,12 +79,14 @@ class Layer extends Component {
 
 	this.sendData = this.sendData.bind(this);
 	this.deleteLayer = this.deleteLayer.bind(this);
+	this.showQuery = this.showQuery.bind(this);
 	this.handleNameChange = this.handleNameChange.bind(this);
 	this.handleLayerTypeChange = this.handleLayerTypeChange.bind(this);
 	this.handleNodeLabelChange = this.handleNodeLabelChange.bind(this);
 	this.handleLatPropertyChange = this.handleLatPropertyChange.bind(this);
 	this.handleLonPropertyChange = this.handleLonPropertyChange.bind(this);
 	this.handleTooltipPropertyChange = this.handleTooltipPropertyChange.bind(this);
+	this.handleLimitChange = this.handleLimitChange.bind(this);
 	this.handleColorChange = this.handleColorChange.bind(this);
 	this.handleRenderingChange = this.handleRenderingChange.bind(this);
 	this.handleRadiusChange = this.handleRadiusChange.bind(this);
@@ -146,12 +148,12 @@ class Layer extends Component {
 		sub_q += ` OR n:${lab}`;
 	    });
 	    sub_q += ")";
-	    query += " AND " + sub_q;
+	    query += "\nAND " + sub_q;
 	}
 	// filter out nodes with null latitude or longitude
-	query += ` AND n.${this.state.latitudeProperty} IS NOT NULL AND n.${this.state.longitudeProperty} IS NOT NULL`;
+	query += `\nAND n.${this.state.latitudeProperty} IS NOT NULL AND n.${this.state.longitudeProperty} IS NOT NULL`;
 	// return latitude, longitude
-	query += ` RETURN n.${this.state.latitudeProperty} as latitude, n.${this.state.longitudeProperty} as longitude`;
+	query += `\nRETURN n.${this.state.latitudeProperty} as latitude, n.${this.state.longitudeProperty} as longitude`;
 
 	// if tooltip is not null, also return tooltip
 	if (this.state.tooltipProperty !== '')
@@ -159,7 +161,7 @@ class Layer extends Component {
 
 	// TODO: is that really needed???
 	// limit the number of points to avoid browser crash...
-	query += ` LIMIT ${this.state.limit}`;
+	query += `\nLIMIT ${this.state.limit}`;
 
 	return query;
     };
@@ -204,7 +206,40 @@ class Layer extends Component {
     };
 
 
+    handleLimitChange(e) {
+	var new_value = e.target.value;
+	if (new_value > LIMIT) {
+	    if (
+		window.confirm(
+		    'Adding too many markers in likely to overload your browser. Continue anyway?'
+		) === false
+	    ) {
+		return;
+	    }
+	}
+	this.setState({limit: new_value});
+    };
+
+
     handleLayerTypeChange(e) {
+	var old_type = this.state.layerType;
+	var new_type = e.target.value;
+	if (old_type === new_type) {
+	    return;
+	}
+	if (old_type === LAYER_TYPE_LATLON & new_type === LAYER_TYPE_CYPHER) {
+	    this.setState({cypher: this.getQuery()});
+	}
+	else {
+	    if (
+		window.confirm(
+		    'You will loose your cypher query, is that what you want?'
+		) === false
+	    ) {
+		return;
+	    }
+	    this.setState({cypher: ""});
+	}
 	this.setState({layerType: e.target.value});
     };
 
@@ -264,6 +299,10 @@ class Layer extends Component {
 	event.preventDefault();
     };
 
+    showQuery(event) {
+	alert(this.getQuery());
+	event.preventDefault();
+    };
 
     getNodes() {
 	/*This will be updated quite often,
@@ -359,6 +398,21 @@ class Layer extends Component {
 	    defaultValue={this.state.longitudeProperty}
 	    onChange={this.handleLonPropertyChange}
 	    name="longitudeProperty"
+	    />
+	    </Form.Group>
+
+	    <Form.Group controlId="formLimit">
+	    <Form.Label>Max. nodes</Form.Label>
+	    <Form.Text>
+	    <p>The browser can only display a limited number of nodes (less than a few 10000)</p>
+	    </Form.Text>
+	    <Form.Control
+	    type="text"
+	    className="form-control"
+	    placeholder="limit"
+	    defaultValue={this.state.limit}
+	    onChange={this.handleLimitChange}
+	    name="limit"
 	    />
 	    </Form.Group>
 	    </div>
@@ -495,6 +549,10 @@ class Layer extends Component {
 
 	    <Button variant="danger" type="submit"  onClick={this.deleteLayer} hidden={this.props.layer === undefined}>
 	    Delete Layer
+	    </Button>
+
+	    <Button variant="success" type="submit"  onClick={this.showQuery} hidden={this.state.layerType !== LAYER_TYPE_LATLON}>
+	    Show query
 	    </Button>
 
 	    <Button variant="info" type="submit"  onClick={this.sendData} >
