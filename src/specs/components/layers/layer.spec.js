@@ -47,6 +47,14 @@ describe('<Layer />', () => {
 	expect(wrapper.state().tooltipProperty).toEqual(text);
     });
 
+    it('Layer change limit', () => {
+	var identifier = '[name="limit"]';
+	var input = wrapper.find(identifier);
+	var text = 10;
+	input.simulate('change',  { target: {value: text }});
+	expect(wrapper.state().limit).toEqual(text);
+    });
+    
     it('Layer change layer type latlon', () => {
 	var identifier = '[name="layerTypeLatLon"]';
 	var checkbox = wrapper.find(identifier);
@@ -69,6 +77,9 @@ describe('<Layer />', () => {
 	expect(wrapper.exists('[name="latitudeProperty"]')).toEqual(false);
 	expect(wrapper.exists('[name="longitudeProperty"]')).toEqual(false);
 	expect(wrapper.exists('[name="nodeLabel"]')).toEqual(false);
+
+	// this.state.cypher is not ""
+	expect(wrapper.state().cypher).not.toEqual("");	
     });
 
 
