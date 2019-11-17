@@ -273,7 +273,10 @@ class Layer extends Component {
 
 
     handleColorChange(e) {
-	this.setState({color: e.value});
+	this.setState({
+	    color: e.value,
+	    colorName: e.label
+	});
     };
 
 
@@ -439,7 +442,14 @@ class Layer extends Component {
 	    <Card>
 
 	    <Accordion.Toggle as={Card.Header} eventKey={this.state.ukey} >
-	    <h3>{this.state.name} <small>({this.state.ukey})</small></h3>
+	    <h3>{this.state.name}
+	    <small hidden>({this.state.ukey})</small>
+	    <span
+	    hidden={this.state.rendering !== RENDERING_MARKERS}
+	    style={{background: this.state.color, float: 'right'}}>
+	    {this.state.colorName}
+	    </span>
+	    </h3>
 	    </Accordion.Toggle>
 
 	    <Accordion.Collapse eventKey={this.state.ukey} >
