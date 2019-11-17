@@ -46,9 +46,12 @@ I am a data scientist, not a front-end developer. If someone with expertise with
 
 3. Start the development server:
 
-        npm start
+        npm run start
 
 4. Configure Neo4jDesktop by enabling the development mode in settings with the following paramters:
     - Entry point: `http://localhost:3000`
     - Root path: root of this repository
 
+5. Run tests: install dev dependencies and
+
+        npm run test

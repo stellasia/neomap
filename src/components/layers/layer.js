@@ -8,6 +8,8 @@ import Accordion from 'react-bootstrap/Accordion';
 import Card from 'react-bootstrap/Card';
 import { Form, Button } from 'react-bootstrap';
 import { CypherEditor } from "graph-app-kit/components/Editor"
+import { confirmAlert } from 'react-confirm-alert'; // Import
+import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
 
 // css needed for CypherEditor
 import "codemirror/lib/codemirror.css";
@@ -273,7 +275,10 @@ class Layer extends Component {
 
 
     handleColorChange(e) {
-	this.setState({color: e.value});
+	this.setState({
+	    color: e.value,
+	    colorName: e.label
+	});
     };
 
 
@@ -308,12 +313,26 @@ class Layer extends Component {
     deleteLayer(event) {
 	/*Remove the layer
 	 */
-	this.props.deleteLayer(this.state.ukey);
 	event.preventDefault();
+	if (
+	    window.confirm(
+		`Delete layer ${this.state.name}? This action can not be undone.`
+	    ) === false
+	) {
+	    return;
+	}
+	this.props.deleteLayer(this.state.ukey);
     };
 
     showQuery(event) {
-	alert(this.getQuery());
+	confirmAlert({
+	    message: this.getQuery(),
+	    buttons: [
+		{
+		    label: 'OK',
+		}
+	    ]
+	});
 	event.preventDefault();
     };
 
@@ -439,7 +458,14 @@ class Layer extends Component {
 	    <Card>
 
 	    <Accordion.Toggle as={Card.Header} eventKey={this.state.ukey} >
-	    <h3>{this.state.name} <small>({this.state.ukey})</small></h3>
+	    <h3>{this.state.name}
+	    <small hidden>({this.state.ukey})</small>
+	    <span
+	    hidden={this.state.rendering !== RENDERING_MARKERS}
+	    style={{background: this.state.color, float: 'right'}}>
+	    {this.state.colorName}
+	    </span>
+	    </h3>
 	    </Accordion.Toggle>
 
 	    <Accordion.Collapse eventKey={this.state.ukey} >

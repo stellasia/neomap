@@ -54,7 +54,15 @@ describe('<Layer />', () => {
 	input.simulate('change',  { target: {value: text }});
 	expect(wrapper.state().limit).toEqual(text);
     });
-    
+
+    it('Layer change color', () => {
+	var identifier = '[name="color"]';
+	var input = wrapper.find(identifier);
+	input.simulate('change',  {value: "yellow", label: "Yellow" });
+	expect(wrapper.state().color).toEqual("yellow");
+	expect(wrapper.state().colorName).toEqual("Yellow");
+    });
+
     it('Layer change layer type latlon', () => {
 	var identifier = '[name="layerTypeLatLon"]';
 	var checkbox = wrapper.find(identifier);
