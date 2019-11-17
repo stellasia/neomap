@@ -28,6 +28,10 @@ body {
   padding: 0;
 }
 
+.leaflet-pane {
+    z-index: 1;
+}
+
 .leaflet-container {
   position: relative;
   width: 100%;
