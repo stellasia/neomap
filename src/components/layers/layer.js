@@ -222,17 +222,7 @@ class Layer extends Component {
 
 
     handleLimitChange(e) {
-	var new_value = e.target.value;
-	if (new_value > LIMIT) {
-	    if (
-		window.confirm(
-		    'Adding too many markers in likely to overload your browser. Continue anyway?'
-		) === false
-	    ) {
-		return;
-	    }
-	}
-	this.setState({limit: new_value});
+	this.setState({limit: e.target.value});
     };
 
 
@@ -378,6 +368,7 @@ class Layer extends Component {
 	    <Form.Label>Query</Form.Label>
 	    <Form.Text>
 	    <p>Checkout <a href="https://github.com/stellasia/neomap/wiki" target="_blank" rel="noopener noreferrer" >the documentation</a> (Ctrl+SPACE for autocomplete)</p>
+	    <p className="font-italic">Be careful, the browser can only display a limited number of nodes (less than a few 10000)</p>
 	    </Form.Text>
 	    <CypherEditor
 	    value={this.state.cypher}
@@ -436,7 +427,7 @@ class Layer extends Component {
 	    <Form.Group controlId="formLimit">
 	    <Form.Label>Max. nodes</Form.Label>
 	    <Form.Text>
-	    <p>The browser can only display a limited number of nodes (less than a few 10000)</p>
+	    <p className="font-italic">Be careful, the browser can only display a limited number of nodes (less than a few 10000)</p>
 	    </Form.Text>
 	    <Form.Control
 	    type="text"
@@ -560,7 +551,7 @@ class Layer extends Component {
 	    />
 	    </Form.Group>
 
-	    <Form.Group controlId="formTooltipProperty" hidden={this.state.rendering !== RENDERING_MARKERS}  name="formgroupTooltip">
+	    <Form.Group controlId="formTooltipProperty" hidden={(this.state.rendering !== RENDERING_MARKERS) || (this.state.layerType !== LAYER_TYPE_LATLON)}  name="formgroupTooltip">
 	    <Form.Label>Tooltip property</Form.Label>
 	    <Form.Control
 	    type="text"
