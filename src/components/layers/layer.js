@@ -47,14 +47,13 @@ const RENDERING_CLUSTERS = "clusters";
 const DEFAULT_LAYER = {
     name: "New layer",
     layerType: LAYER_TYPE_LATLON,
-    latitudeProperty: "latitude",
-    longitudeProperty: "longitude",
-    tooltipProperty: "name",
+    latitudeProperty: {value: "latitude", label: "latitude"},
+    longitudeProperty: {value: "longitude", label: "longitude"},
+    tooltipProperty: {value: "id", label: "id"},
     nodeLabel: [],
     data: [],
     position: [],
-    color: "blue",
-    colorName: "Blue",
+    color: {value: "blue", label: "Blue"},
     limit: LIMIT,
     rendering: RENDERING_MARKERS,
     radius: 30,
@@ -77,7 +76,8 @@ class Layer extends Component {
 	this.driver = props.driver;
 
 	// list of available nodes
-	this.nodes = this.getNodes();
+	this.state.nodes = this.getNodes();
+	this.state.labels = this.getLabels();
 
 	this.sendData = this.sendData.bind(this);
 	this.deleteLayer = this.deleteLayer.bind(this);
@@ -131,6 +131,22 @@ class Layer extends Component {
     };
 
 
+    getNodeFilter() {
+	var filter = '';
+	// filter wanted node labels
+	if (this.state.nodeLabel !== null && this.state.nodeLabel.length > 0) {
+	    var sub_q = "(false";
+	    this.state.nodeLabel.forEach( (value, key) => {
+		let lab = value.label;
+		sub_q += ` OR n:${lab}`;
+	    });
+	    sub_q += ")";
+	    filter += "\nAND " + sub_q;
+	}
+	return filter;
+    };
+
+
     getQuery() {
 	/*If layerType==cypher, query is inside the CypherEditor,
 	   otherwise, we need to build the query manually.
@@ -143,23 +159,15 @@ class Layer extends Component {
 	var query = "";
 	query = 'MATCH (n) WHERE true';
 	// filter wanted node labels
-	if (this.state.nodeLabel.length > 0) {
-	    var sub_q = "(false";
-	    this.state.nodeLabel.forEach( (value, key) => {
-		let lab = value.label;
-		sub_q += ` OR n:${lab}`;
-	    });
-	    sub_q += ")";
-	    query += "\nAND " + sub_q;
-	}
+	query += this.getNodeFilter();
 	// filter out nodes with null latitude or longitude
-	query += `\nAND n.${this.state.latitudeProperty} IS NOT NULL AND n.${this.state.longitudeProperty} IS NOT NULL`;
+	query += `\nAND exists(n.${this.state.latitudeProperty.value}) AND exists(n.${this.state.longitudeProperty.value})`;
 	// return latitude, longitude
-	query += `\nRETURN n.${this.state.latitudeProperty} as latitude, n.${this.state.longitudeProperty} as longitude`;
+	query += `\nRETURN n.${this.state.latitudeProperty.value} as latitude, n.${this.state.longitudeProperty.value} as longitude`;
 
 	// if tooltip is not null, also return tooltip
 	if (this.state.tooltipProperty !== '')
-	    query += `, n.${this.state.tooltipProperty} as tooltip`;
+	    query += `, n.${this.state.tooltipProperty.value} as tooltip`;
 
 	// TODO: is that really needed???
 	// limit the number of points to avoid browser crash...
@@ -194,7 +202,7 @@ class Layer extends Component {
 			    record.get("longitude")
 			],
 		    };
-		    if (this.state.tooltipProperty && record.has("tooltip"))
+		    if (this.state.tooltipProperty.value && record.has("tooltip"))
 			el["tooltip"] = record.get("tooltip");
 		    res.push(el);
 		});
@@ -222,17 +230,7 @@ class Layer extends Component {
 
 
     handleLimitChange(e) {
-	var new_value = e.target.value;
-	if (new_value > LIMIT) {
-	    if (
-		window.confirm(
-		    'Adding too many markers in likely to overload your browser. Continue anyway?'
-		) === false
-	    ) {
-		return;
-	    }
-	}
-	this.setState({limit: new_value});
+	this.setState({limit: e.target.value});
     };
 
 
@@ -260,32 +258,31 @@ class Layer extends Component {
 
 
     handleLatPropertyChange(e) {
-	this.setState({latitudeProperty: e.target.value});
+	this.setState({latitudeProperty: e});
     };
 
 
     handleLonPropertyChange(e) {
-	this.setState({longitudeProperty: e.target.value});
+	this.setState({longitudeProperty: e});
     };
 
+    handleTooltipPropertyChange(e) {
+	this.setState({tooltipProperty: e});
+    };
 
     handleNodeLabelChange(e) {
-	this.setState({nodeLabel: e});
+	this.setState({nodeLabel: e}, function() {
+	    this.setState({labels:  this.getLabels()})
+	}
+	);
     };
 
 
     handleColorChange(e) {
 	this.setState({
-	    color: e.value,
-	    colorName: e.label
+	    color: e,
 	});
     };
-
-
-    handleTooltipPropertyChange(e) {
-	this.setState({tooltipProperty: e.target.value});
-    };
-
 
     handleRenderingChange(e) {
 	this.setState({rendering: e.target.value});
@@ -368,6 +365,46 @@ class Layer extends Component {
     };
 
 
+    getLabels() {
+	/*This will be updated quite often,
+	   is that what we want?
+
+	   TODO: use apoc procedure for that, the query below can be quite loong...
+	 */
+	if (this.driver === undefined)
+	    return [];
+
+	var res = [];
+	const session = this.driver.session();
+	var query = "";
+	if (this.state.nodeLabel !== null && this.state.nodeLabel.length > 0) {
+	    query = "MATCH (n) WHERE true ";
+	    query += this.getNodeFilter();
+	    query += " WITH n LIMIT 100 UNWIND keys(n) AS key RETURN DISTINCT key AS propertyKey";
+	} else {
+	    query = "CALL db.propertyKeys()"
+	}
+	session
+	    .run(
+		query
+	    )
+	    .then(function (result) {
+		result.records.forEach(function (record) {
+		    var el = {
+			value: record.get("propertyKey"),
+			label: record.get("propertyKey")
+		    };
+		    res.push(el);
+		});
+		session.close();
+	    })
+	    .catch(function (error) {
+		console.log(error);
+	    });
+	return res;
+    };
+
+
     renderConfigCypher() {
 	/*If layerType==cypher, then we display the CypherEditor
 	 */
@@ -378,6 +415,7 @@ class Layer extends Component {
 	    <Form.Label>Query</Form.Label>
 	    <Form.Text>
 	    <p>Checkout <a href="https://github.com/stellasia/neomap/wiki" target="_blank" rel="noopener noreferrer" >the documentation</a> (Ctrl+SPACE for autocomplete)</p>
+	    <p className="font-italic">Be careful, the browser can only display a limited number of nodes (less than a few 10000)</p>
 	    </Form.Text>
 	    <CypherEditor
 	    value={this.state.cypher}
@@ -395,13 +433,14 @@ class Layer extends Component {
 	 */
 	if (this.state.layerType !== LAYER_TYPE_LATLON)
 	    return ""
+
 	return (
 	    <div>
 	    <Form.Group controlId="formNodeLabel">
 	    <Form.Label>Node label(s)</Form.Label>
 	    <Select
 	    className="form-control select"
-	    options={this.nodes}
+	    options={this.state.nodes}
 	    onChange={this.handleNodeLabelChange}
 	    isMulti={true}
 	    defaultValue={this.state.nodeLabel}
@@ -411,32 +450,44 @@ class Layer extends Component {
 
 	    <Form.Group controlId="formLatitudeProperty">
 	    <Form.Label>Latitude property</Form.Label>
-	    <Form.Control
-	    type="text"
-	    className="form-control"
-	    placeholder="latitude"
-	    defaultValue={this.state.latitudeProperty}
+	    <Select
+	    className="form-control select"
+	    options={this.state.labels}
 	    onChange={this.handleLatPropertyChange}
+	    isMulti={false}
+	    defaultValue={this.state.latitudeProperty}
 	    name="latitudeProperty"
 	    />
 	    </Form.Group>
 
 	    <Form.Group controlId="formLongitudeProperty">
 	    <Form.Label>Longitude property</Form.Label>
-	    <Form.Control
-	    type="text"
-	    className="form-control"
-	    placeholder="longitude"
-	    defaultValue={this.state.longitudeProperty}
+	    <Select
+	    className="form-control select"
+	    options={this.state.labels}
 	    onChange={this.handleLonPropertyChange}
+	    isMulti={false}
+	    defaultValue={this.state.longitudeProperty}
 	    name="longitudeProperty"
+	    />
+	    </Form.Group>
+
+	    <Form.Group controlId="formTooltipProperty" hidden={(this.state.rendering !== RENDERING_MARKERS)}  name="formgroupTooltip">
+	    <Form.Label>Tooltip property</Form.Label>
+	    <Select
+	    className="form-control select"
+	    options={this.state.labels}
+	    onChange={this.handleTooltipPropertyChange}
+	    isMulti={false}
+	    defaultValue={this.state.tooltipProperty}
+	    name="tooltipProperty"
 	    />
 	    </Form.Group>
 
 	    <Form.Group controlId="formLimit">
 	    <Form.Label>Max. nodes</Form.Label>
 	    <Form.Text>
-	    <p>The browser can only display a limited number of nodes (less than a few 10000)</p>
+	    <p className="font-italic">Be careful, the browser can only display a limited number of nodes (less than a few 10000)</p>
 	    </Form.Text>
 	    <Form.Control
 	    type="text"
@@ -462,8 +513,8 @@ class Layer extends Component {
 	    <small hidden>({this.state.ukey})</small>
 	    <span
 	    hidden={this.state.rendering !== RENDERING_MARKERS}
-	    style={{background: this.state.color, float: 'right'}}>
-	    {this.state.colorName}
+	    style={{background: this.state.color.value, float: 'right'}}>
+	    {this.state.color.label}
 	    </span>
 	    </h3>
 	    </Accordion.Toggle>
@@ -554,21 +605,9 @@ class Layer extends Component {
 	    <Select
 	    className="form-control select"
 	    options={POSSIBLE_COLORS}
-	    defaultValue={{value: this.state.color, label: this.state.colorName}}
+	    defaultValue={this.state.color}
 	    onChange={this.handleColorChange}
 	    name="color"
-	    />
-	    </Form.Group>
-
-	    <Form.Group controlId="formTooltipProperty" hidden={this.state.rendering !== RENDERING_MARKERS}  name="formgroupTooltip">
-	    <Form.Label>Tooltip property</Form.Label>
-	    <Form.Control
-	    type="text"
-	    className="form-control"
-	    placeholder="name"
-	    defaultValue={this.state.tooltipProperty}
-	    onChange={this.handleTooltipPropertyChange}
-	    name="tooltipProperty"
 	    />
 	    </Form.Group>
 
@@ -590,11 +629,11 @@ class Layer extends Component {
 	    Delete Layer
 	    </Button>
 
-	    <Button variant="success" type="submit"  onClick={this.showQuery} hidden={this.state.layerType !== LAYER_TYPE_LATLON}>
+	    <Button variant="info" type="submit"  onClick={this.showQuery} hidden={this.state.layerType !== LAYER_TYPE_LATLON}>
 	    Show query
 	    </Button>
 
-	    <Button variant="info" type="submit"  onClick={this.sendData} >
+	    <Button variant="success" type="submit"  onClick={this.sendData} >
 	    Update map
 	    </Button>
 
