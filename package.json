@@ -1,6 +1,6 @@
 {
     "name": "neomap",
-    "version": "0.3.0",
+    "version": "0.3.1",
     "author": "Estelle Scifo",
     "private": false,
     "neo4jDesktop": {

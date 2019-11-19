@@ -629,11 +629,11 @@ class Layer extends Component {
 	    Delete Layer
 	    </Button>
 
-	    <Button variant="success" type="submit"  onClick={this.showQuery} hidden={this.state.layerType !== LAYER_TYPE_LATLON}>
+	    <Button variant="info" type="submit"  onClick={this.showQuery} hidden={this.state.layerType !== LAYER_TYPE_LATLON}>
 	    Show query
 	    </Button>
 
-	    <Button variant="info" type="submit"  onClick={this.sendData} >
+	    <Button variant="success" type="submit"  onClick={this.sendData} >
 	    Update map
 	    </Button>
 

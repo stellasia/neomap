@@ -3,5 +3,5 @@
     "start_url": ".",
     "display": "standalone",
     "homepage": "http://github.com/stellasia/neomap",
-    "apiVersion": "^1.2.1"
+    "apiVersion": "^1.2"
 }
