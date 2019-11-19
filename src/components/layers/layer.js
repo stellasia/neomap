@@ -161,7 +161,7 @@ class Layer extends Component {
 	// filter wanted node labels
 	query += this.getNodeFilter();
 	// filter out nodes with null latitude or longitude
-	query += `\nAND n.${this.state.latitudeProperty.value} IS NOT NULL AND n.${this.state.longitudeProperty.value} IS NOT NULL`;
+	query += `\nAND exists(n.${this.state.latitudeProperty.value}) AND exists(n.${this.state.longitudeProperty.value})`;
 	// return latitude, longitude
 	query += `\nRETURN n.${this.state.latitudeProperty.value} as latitude, n.${this.state.longitudeProperty.value} as longitude`;
 
