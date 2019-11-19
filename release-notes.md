@@ -1,9 +1,11 @@
 # neo-map release notes
 
-## 0.3.1
+## 0.3.1 (2019-11-19)
 
-- Remove warning popup when changing the limit (#36)
-- Fix the tooltip input display (#34)
+- Remove warning popup when changing the limit (#36);
+- Fix the tooltip input display (#34);
+- Improve map centering/zooming (now fit bounds);
+- Lat/lon/tooltip labels now selectable from list of available labels;
 
 
 ## 0.3.0 (2019-11-17)
