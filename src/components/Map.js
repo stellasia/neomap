@@ -37,7 +37,7 @@ class Map extends Component {
 	/*Will show one marker per items in `layer.data`
 	*/
 	var data = layer.data;
-	var color = layer.color;
+	var color = layer.color.value;
 	var url = `https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-${color}.png`;
 	var icon = new L.Icon({
 	    iconUrl: url

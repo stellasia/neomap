@@ -47,14 +47,13 @@ const RENDERING_CLUSTERS = "clusters";
 const DEFAULT_LAYER = {
     name: "New layer",
     layerType: LAYER_TYPE_LATLON,
-    latitudeProperty: "latitude",
-    longitudeProperty: "longitude",
+    latitudeProperty: {value: "latitude", label: "latitude"},
+    longitudeProperty: {value: "longitude", label: "longitude"},
     tooltipProperty: "name",
     nodeLabel: [],
     data: [],
     position: [],
-    color: "blue",
-    colorName: "Blue",
+    color: {value: "blue", label: "Blue"},
     limit: LIMIT,
     rendering: RENDERING_MARKERS,
     radius: 30,
@@ -153,9 +152,9 @@ class Layer extends Component {
 	    query += "\nAND " + sub_q;
 	}
 	// filter out nodes with null latitude or longitude
-	query += `\nAND n.${this.state.latitudeProperty} IS NOT NULL AND n.${this.state.longitudeProperty} IS NOT NULL`;
+	query += `\nAND n.${this.state.latitudeProperty.value} IS NOT NULL AND n.${this.state.longitudeProperty.value} IS NOT NULL`;
 	// return latitude, longitude
-	query += `\nRETURN n.${this.state.latitudeProperty} as latitude, n.${this.state.longitudeProperty} as longitude`;
+	query += `\nRETURN n.${this.state.latitudeProperty.value} as latitude, n.${this.state.longitudeProperty.value} as longitude`;
 
 	// if tooltip is not null, also return tooltip
 	if (this.state.tooltipProperty !== '')
@@ -250,12 +249,12 @@ class Layer extends Component {
 
 
     handleLatPropertyChange(e) {
-	this.setState({latitudeProperty: e.target.value});
+	this.setState({latitudeProperty: e});
     };
 
 
     handleLonPropertyChange(e) {
-	this.setState({longitudeProperty: e.target.value});
+	this.setState({longitudeProperty: e});
     };
 
 
@@ -266,8 +265,7 @@ class Layer extends Component {
 
     handleColorChange(e) {
 	this.setState({
-	    color: e.value,
-	    colorName: e.label
+	    color: e,
 	});
     };
 
@@ -358,6 +356,38 @@ class Layer extends Component {
     };
 
 
+    getLabels() {
+	/*This will be updated quite often,
+	   is that what we want?
+
+	   TODO: use apoc procedure for that, the query below can be quite loong...
+	 */
+	if (this.driver === undefined)
+	    return [];
+
+	var res = [];
+	const session = this.driver.session();
+	session
+	    .run(
+		"CALL db.propertyKeys()",
+	    )
+	    .then(function (result) {
+		result.records.forEach(function (record) {
+		    var el = {
+			value:record.get("propertyKey"),
+			label: record.get("propertyKey")
+		    };
+		    res.push(el);
+		});
+		session.close();
+	    })
+	    .catch(function (error) {
+		console.log(error);
+	    });
+	return res;
+    };
+
+
     renderConfigCypher() {
 	/*If layerType==cypher, then we display the CypherEditor
 	 */
@@ -386,6 +416,9 @@ class Layer extends Component {
 	 */
 	if (this.state.layerType !== LAYER_TYPE_LATLON)
 	    return ""
+
+	var labels = this.getLabels();
+
 	return (
 	    <div>
 	    <Form.Group controlId="formNodeLabel">
@@ -402,25 +435,37 @@ class Layer extends Component {
 
 	    <Form.Group controlId="formLatitudeProperty">
 	    <Form.Label>Latitude property</Form.Label>
-	    <Form.Control
-	    type="text"
-	    className="form-control"
-	    placeholder="latitude"
-	    defaultValue={this.state.latitudeProperty}
+	    <Select
+	    className="form-control select"
+	    options={labels}
 	    onChange={this.handleLatPropertyChange}
+	    isMulti={false}
+	    defaultValue={this.state.latitudeProperty}
 	    name="latitudeProperty"
 	    />
 	    </Form.Group>
 
 	    <Form.Group controlId="formLongitudeProperty">
 	    <Form.Label>Longitude property</Form.Label>
+	    <Select
+	    className="form-control select"
+	    options={labels}
+	    onChange={this.handleLonPropertyChange}
+	    isMulti={false}
+	    defaultValue={this.state.longitudeProperty}
+	    name="longitudeProperty"
+	    />
+	    </Form.Group>
+
+	    <Form.Group controlId="formTooltipProperty" hidden={(this.state.rendering !== RENDERING_MARKERS)}  name="formgroupTooltip">
+	    <Form.Label>Tooltip property</Form.Label>
 	    <Form.Control
 	    type="text"
 	    className="form-control"
-	    placeholder="longitude"
-	    defaultValue={this.state.longitudeProperty}
-	    onChange={this.handleLonPropertyChange}
-	    name="longitudeProperty"
+	    placeholder="name"
+	    defaultValue={this.state.tooltipProperty}
+	    onChange={this.handleTooltipPropertyChange}
+	    name="tooltipProperty"
 	    />
 	    </Form.Group>
 
@@ -453,8 +498,8 @@ class Layer extends Component {
 	    <small hidden>({this.state.ukey})</small>
 	    <span
 	    hidden={this.state.rendering !== RENDERING_MARKERS}
-	    style={{background: this.state.color, float: 'right'}}>
-	    {this.state.colorName}
+	    style={{background: this.state.color.value, float: 'right'}}>
+	    {this.state.color.label}
 	    </span>
 	    </h3>
 	    </Accordion.Toggle>
@@ -545,21 +590,9 @@ class Layer extends Component {
 	    <Select
 	    className="form-control select"
 	    options={POSSIBLE_COLORS}
-	    defaultValue={{value: this.state.color, label: this.state.colorName}}
+	    defaultValue={this.state.color}
 	    onChange={this.handleColorChange}
 	    name="color"
-	    />
-	    </Form.Group>
-
-	    <Form.Group controlId="formTooltipProperty" hidden={(this.state.rendering !== RENDERING_MARKERS) || (this.state.layerType !== LAYER_TYPE_LATLON)}  name="formgroupTooltip">
-	    <Form.Label>Tooltip property</Form.Label>
-	    <Form.Control
-	    type="text"
-	    className="form-control"
-	    placeholder="name"
-	    defaultValue={this.state.tooltipProperty}
-	    onChange={this.handleTooltipPropertyChange}
-	    name="tooltipProperty"
 	    />
 	    </Form.Group>
 

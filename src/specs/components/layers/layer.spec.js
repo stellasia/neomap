@@ -19,7 +19,7 @@ describe('<Layer />', () => {
 	var identifier = '[name="name"]';
 	var input = wrapper.find(identifier);
 	var text = "newValue";
-	input.simulate('change',  { target: {value: text }});
+	input.simulate('change', { target: {value: text }});
 	expect(wrapper.state().name).toEqual(text);
     });
 
@@ -27,23 +27,23 @@ describe('<Layer />', () => {
 	var identifier = '[name="latitudeProperty"]';
 	var input = wrapper.find(identifier);
 	var text = "newValue";
-	input.simulate('change',  { target: {value: text }});
-	expect(wrapper.state().latitudeProperty).toEqual(text);
+	input.simulate('change', { value: text, label: text });
+	expect(wrapper.state().latitudeProperty.value).toEqual(text);
     });
 
     it('Layer change lon property', () => {
 	var identifier = '[name="longitudeProperty"]';
 	var input = wrapper.find(identifier);
 	var text = "newValue";
-	input.simulate('change',  { target: {value: text }});
-	expect(wrapper.state().longitudeProperty).toEqual(text);
+	input.simulate('change', {value: text, label: text });
+	expect(wrapper.state().longitudeProperty.value).toEqual(text);
     });
 
     it('Layer change tooltip property', () => {
 	var identifier = '[name="tooltipProperty"]';
 	var input = wrapper.find(identifier);
 	var text = "newValue";
-	input.simulate('change',  { target: {value: text }});
+	input.simulate('change', { target: {value: text }});
 	expect(wrapper.state().tooltipProperty).toEqual(text);
     });
 
@@ -51,16 +51,16 @@ describe('<Layer />', () => {
 	var identifier = '[name="limit"]';
 	var input = wrapper.find(identifier);
 	var text = 10;
-	input.simulate('change',  { target: {value: text }});
+	input.simulate('change', { target: {value: text }});
 	expect(wrapper.state().limit).toEqual(text);
     });
 
     it('Layer change color', () => {
 	var identifier = '[name="color"]';
 	var input = wrapper.find(identifier);
-	input.simulate('change',  {value: "yellow", label: "Yellow" });
-	expect(wrapper.state().color).toEqual("yellow");
-	expect(wrapper.state().colorName).toEqual("Yellow");
+	input.simulate('change', {value: "yellow", label: "Yellow" });
+	expect(wrapper.state().color.value).toEqual("yellow");
+	expect(wrapper.state().color.label).toEqual("Yellow");
     });
 
     it('Layer change layer type latlon', () => {
