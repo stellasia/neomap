@@ -43,8 +43,8 @@ describe('<Layer />', () => {
 	var identifier = '[name="tooltipProperty"]';
 	var input = wrapper.find(identifier);
 	var text = "newValue";
-	input.simulate('change', { target: {value: text }});
-	expect(wrapper.state().tooltipProperty).toEqual(text);
+	input.simulate('change', {value: text, label: text });
+	expect(wrapper.state().tooltipProperty.value).toEqual(text);
     });
 
     it('Layer change limit', () => {

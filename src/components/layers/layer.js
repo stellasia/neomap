@@ -49,7 +49,7 @@ const DEFAULT_LAYER = {
     layerType: LAYER_TYPE_LATLON,
     latitudeProperty: {value: "latitude", label: "latitude"},
     longitudeProperty: {value: "longitude", label: "longitude"},
-    tooltipProperty: "name",
+    tooltipProperty: {value: "id", label: "id"},
     nodeLabel: [],
     data: [],
     position: [],
@@ -76,7 +76,8 @@ class Layer extends Component {
 	this.driver = props.driver;
 
 	// list of available nodes
-	this.nodes = this.getNodes();
+	this.state.nodes = this.getNodes();
+	this.state.labels = this.getLabels();
 
 	this.sendData = this.sendData.bind(this);
 	this.deleteLayer = this.deleteLayer.bind(this);
@@ -130,6 +131,22 @@ class Layer extends Component {
     };
 
 
+    getNodeFilter() {
+	var filter = '';
+	// filter wanted node labels
+	if (this.state.nodeLabel !== null && this.state.nodeLabel.length > 0) {
+	    var sub_q = "(false";
+	    this.state.nodeLabel.forEach( (value, key) => {
+		let lab = value.label;
+		sub_q += ` OR n:${lab}`;
+	    });
+	    sub_q += ")";
+	    filter += "\nAND " + sub_q;
+	}
+	return filter;
+    };
+
+
     getQuery() {
 	/*If layerType==cypher, query is inside the CypherEditor,
 	   otherwise, we need to build the query manually.
@@ -142,15 +159,7 @@ class Layer extends Component {
 	var query = "";
 	query = 'MATCH (n) WHERE true';
 	// filter wanted node labels
-	if (this.state.nodeLabel.length > 0) {
-	    var sub_q = "(false";
-	    this.state.nodeLabel.forEach( (value, key) => {
-		let lab = value.label;
-		sub_q += ` OR n:${lab}`;
-	    });
-	    sub_q += ")";
-	    query += "\nAND " + sub_q;
-	}
+	query += this.getNodeFilter();
 	// filter out nodes with null latitude or longitude
 	query += `\nAND n.${this.state.latitudeProperty.value} IS NOT NULL AND n.${this.state.longitudeProperty.value} IS NOT NULL`;
 	// return latitude, longitude
@@ -158,7 +167,7 @@ class Layer extends Component {
 
 	// if tooltip is not null, also return tooltip
 	if (this.state.tooltipProperty !== '')
-	    query += `, n.${this.state.tooltipProperty} as tooltip`;
+	    query += `, n.${this.state.tooltipProperty.value} as tooltip`;
 
 	// TODO: is that really needed???
 	// limit the number of points to avoid browser crash...
@@ -193,7 +202,7 @@ class Layer extends Component {
 			    record.get("longitude")
 			],
 		    };
-		    if (this.state.tooltipProperty && record.has("tooltip"))
+		    if (this.state.tooltipProperty.value && record.has("tooltip"))
 			el["tooltip"] = record.get("tooltip");
 		    res.push(el);
 		});
@@ -257,9 +266,15 @@ class Layer extends Component {
 	this.setState({longitudeProperty: e});
     };
 
+    handleTooltipPropertyChange(e) {
+	this.setState({tooltipProperty: e});
+    };
 
     handleNodeLabelChange(e) {
-	this.setState({nodeLabel: e});
+	this.setState({nodeLabel: e}, function() {
+	    this.setState({labels:  this.getLabels()})
+	}
+	);
     };
 
 
@@ -268,12 +283,6 @@ class Layer extends Component {
 	    color: e,
 	});
     };
-
-
-    handleTooltipPropertyChange(e) {
-	this.setState({tooltipProperty: e.target.value});
-    };
-
 
     handleRenderingChange(e) {
 	this.setState({rendering: e.target.value});
@@ -367,14 +376,22 @@ class Layer extends Component {
 
 	var res = [];
 	const session = this.driver.session();
+	var query = "";
+	if (this.state.nodeLabel !== null && this.state.nodeLabel.length > 0) {
+	    query = "MATCH (n) WHERE true ";
+	    query += this.getNodeFilter();
+	    query += " WITH n LIMIT 100 UNWIND keys(n) AS key RETURN DISTINCT key AS propertyKey";
+	} else {
+	    query = "CALL db.propertyKeys()"
+	}
 	session
 	    .run(
-		"CALL db.propertyKeys()",
+		query
 	    )
 	    .then(function (result) {
 		result.records.forEach(function (record) {
 		    var el = {
-			value:record.get("propertyKey"),
+			value: record.get("propertyKey"),
 			label: record.get("propertyKey")
 		    };
 		    res.push(el);
@@ -417,15 +434,13 @@ class Layer extends Component {
 	if (this.state.layerType !== LAYER_TYPE_LATLON)
 	    return ""
 
-	var labels = this.getLabels();
-
 	return (
 	    <div>
 	    <Form.Group controlId="formNodeLabel">
 	    <Form.Label>Node label(s)</Form.Label>
 	    <Select
 	    className="form-control select"
-	    options={this.nodes}
+	    options={this.state.nodes}
 	    onChange={this.handleNodeLabelChange}
 	    isMulti={true}
 	    defaultValue={this.state.nodeLabel}
@@ -437,7 +452,7 @@ class Layer extends Component {
 	    <Form.Label>Latitude property</Form.Label>
 	    <Select
 	    className="form-control select"
-	    options={labels}
+	    options={this.state.labels}
 	    onChange={this.handleLatPropertyChange}
 	    isMulti={false}
 	    defaultValue={this.state.latitudeProperty}
@@ -449,7 +464,7 @@ class Layer extends Component {
 	    <Form.Label>Longitude property</Form.Label>
 	    <Select
 	    className="form-control select"
-	    options={labels}
+	    options={this.state.labels}
 	    onChange={this.handleLonPropertyChange}
 	    isMulti={false}
 	    defaultValue={this.state.longitudeProperty}
@@ -459,12 +474,12 @@ class Layer extends Component {
 
 	    <Form.Group controlId="formTooltipProperty" hidden={(this.state.rendering !== RENDERING_MARKERS)}  name="formgroupTooltip">
 	    <Form.Label>Tooltip property</Form.Label>
-	    <Form.Control
-	    type="text"
-	    className="form-control"
-	    placeholder="name"
-	    defaultValue={this.state.tooltipProperty}
+	    <Select
+	    className="form-control select"
+	    options={this.state.labels}
 	    onChange={this.handleTooltipPropertyChange}
+	    isMulti={false}
+	    defaultValue={this.state.tooltipProperty}
 	    name="tooltipProperty"
 	    />
 	    </Form.Group>
