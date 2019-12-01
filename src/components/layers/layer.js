@@ -37,6 +37,7 @@ const POSSIBLE_COLORS = [
 // layer type: either from node labels or cypher
 const LAYER_TYPE_LATLON = "latlon";
 const LAYER_TYPE_CYPHER = "cypher";
+const LAYER_TYPE_SPATIAL = "spatial";
 
 const RENDERING_MARKERS = "markers";
 const RENDERING_HEATMAP = "heatmap";
@@ -57,7 +58,8 @@ const DEFAULT_LAYER = {
     limit: LIMIT,
     rendering: RENDERING_MARKERS,
     radius: 30,
-    cypher: ""
+    cypher: "",
+    spatialLayer: "",
 };
 
 
@@ -78,6 +80,7 @@ class Layer extends Component {
 	// list of available nodes
 	this.state.nodes = this.getNodes();
 	this.state.labels = this.getLabels();
+	this.state.spatialLayers = this.getSpatialLayers();
 
 	this.sendData = this.sendData.bind(this);
 	this.deleteLayer = this.deleteLayer.bind(this);
@@ -93,6 +96,7 @@ class Layer extends Component {
 	this.handleRenderingChange = this.handleRenderingChange.bind(this);
 	this.handleRadiusChange = this.handleRadiusChange.bind(this);
 	this.handleCypherChange = this.handleCypherChange.bind(this);
+	this.handleSpatialLayerChange = this.handleSpatialLayerChange.bind(this);
 
     };
 
@@ -146,6 +150,16 @@ class Layer extends Component {
 	return filter;
     };
 
+    getSpatialQuery() {
+	var query = `CALL spatial.layer('${this.state.spatialLayer.value}') YIELD node `;
+	query += "WITH node ";
+	query += "MATCH (node)-[]-()-[:RTREE_REFERENCE]-(n) ";
+	query += "RETURN n.latitude as latitude, n.longitude as longitude ";
+	if (this.state.tooltipProperty !== '')
+	    query += `, n.${this.state.tooltipProperty.value} as tooltip`;
+	query += `\nLIMIT ${this.state.limit}`;
+	return query;
+    }
 
     getQuery() {
 	/*If layerType==cypher, query is inside the CypherEditor,
@@ -153,6 +167,8 @@ class Layer extends Component {
 	 */
 	if (this.state.layerType === LAYER_TYPE_CYPHER)
 	    return this.getCypherQuery();
+	if (this.state.layerType === LAYER_TYPE_SPATIAL)
+	    return this.getSpatialQuery();
 
 	// lat lon query
 	// TODO: improve this method...
@@ -243,7 +259,7 @@ class Layer extends Component {
 	if (old_type === LAYER_TYPE_LATLON & new_type === LAYER_TYPE_CYPHER) {
 	    this.setState({cypher: this.getQuery()});
 	}
-	else {
+	else if (old_type === LAYER_TYPE_CYPHER ){
 	    if (
 		window.confirm(
 		    'You will loose your cypher query, is that what you want?'
@@ -298,7 +314,10 @@ class Layer extends Component {
 	this.setState({cypher: e});
     };
 
-
+    handleSpatialLayerChange(e) {
+	this.setState({spatialLayer: e});
+    };
+    
     sendData(event) {
 	/*Send data to parent which will propagate to the Map component
 	 */
@@ -404,6 +423,39 @@ class Layer extends Component {
 	return res;
     };
 
+    getSpatialLayers() {
+	/*This will be updated quite often,
+	   is that what we want?
+
+	   TODO: use apoc procedure for that, the query below can be quite loong...
+	 */
+	if (this.driver === undefined)
+	    return [];
+
+	var res = [];
+	const session = this.driver.session();
+	var query = "CALL spatial.layers();";
+	session
+	    .run(
+		query
+	    )
+	    .then(function (result) {
+		result.records.forEach(function (record) {
+		    var el = {
+			value: record.get("name"),
+			label: record.get("name")
+		    };
+		    res.push(el);
+		});
+		session.close();
+	    })
+	    .catch(function (error) {
+		console.log(error);
+		return undefined;
+	    });
+	return res;
+    };
+
 
     renderConfigCypher() {
 	/*If layerType==cypher, then we display the CypherEditor
@@ -502,7 +554,53 @@ class Layer extends Component {
 	)
     };
 
+    renderConfigSpatial() {
+	if (this.state.layerType !== LAYER_TYPE_SPATIAL)
+	    return ""
+	return (
+	    <div>
+	    <Form.Group controlId="formSpatialLayer" name="formgroupSpatialLayer">
+	    <Form.Label>Spatial layer</Form.Label>
+	    <Select
+	    className="form-control select"
+	    options={this.state.spatialLayers}
+	    onChange={this.handleSpatialLayerChange}
+	    isMulti={false}
+	    defaultValue={this.state.spatialLayer}
+	    name="spatialLayer"
+	    />
+	    </Form.Group>
 
+	    <Form.Group controlId="formTooltipProperty" hidden={(this.state.rendering !== RENDERING_MARKERS)}  name="formgroupTooltip">
+	    <Form.Label>Tooltip property</Form.Label>
+	    <Select
+	    className="form-control select"
+	    options={this.state.labels}
+	    onChange={this.handleTooltipPropertyChange}
+	    isMulti={false}
+	    defaultValue={this.state.tooltipProperty}
+	    name="tooltipProperty"
+	    />
+
+	    </Form.Group>
+	    <Form.Group controlId="formLimit">
+	    <Form.Label>Max. nodes</Form.Label>
+	    <Form.Text>
+	    <p className="font-italic">Be careful, the browser can only display a limited number of nodes (less than a few 10000)</p>
+	    </Form.Text>
+	    <Form.Control
+	    type="text"
+	    className="form-control"
+	    placeholder="limit"
+	    defaultValue={this.state.limit}
+	    onChange={this.handleLimitChange}
+	    name="limit"
+	    />
+	    </Form.Group>
+	    </div>	    
+	)
+    };
+    
     render() {
 	return (
 
@@ -560,10 +658,21 @@ class Layer extends Component {
 	    onChange={this.handleLayerTypeChange}
 	    name="layerTypeCypher"
 	    />
+	    <Form.Check
+            type="radio"
+            id={ LAYER_TYPE_SPATIAL }
+            label={ "Spatial" }
+            value={ LAYER_TYPE_SPATIAL }
+            checked={this.state.layerType === LAYER_TYPE_SPATIAL}
+	    hidden={this.state.spatialLayers === undefined }
+	    onChange={this.handleLayerTypeChange}
+	    name="layerTypeSpatial"
+	    />
 	    </Form.Group>
 
 	    {this.renderConfigDefault()}
 	    {this.renderConfigCypher()}
+	    {this.renderConfigSpatial()}
 
 
 	    <h4>  > Map rendering</h4>
