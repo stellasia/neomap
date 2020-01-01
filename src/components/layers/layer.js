@@ -53,6 +53,14 @@ const DEFAULT_LAYER = {
 };
 
 
+const SIMPLE_LAYER_DEFAULT_CONFIG = {
+	latitudeProperty: {value: "latitude", label: "latitude"},
+	longitudeProperty: {value: "longitude", label: "longitude"},
+	tooltipProperty: {value: "id", label: "id"},
+	nodeLabel: [],
+};
+
+
 class Layer extends Component {
 
 	constructor(props) {
@@ -140,9 +148,8 @@ class Layer extends Component {
 							record.get("latitude"),
 							record.get("longitude")
 						],
+						tooltip: record.get("tooltip")
 					};
-					if (this.state.tooltipProperty.value && record.has("tooltip"))
-						el["tooltip"] = record.get("tooltip");
 					res.push(el);
 				});
 				this.setState({data: res}, function () {
@@ -253,6 +260,7 @@ class Layer extends Component {
 		if (this.state.layerType === LAYER_TYPE_LATLON)
 			return (
 				<SimpleLayer
+					{...SIMPLE_LAYER_DEFAULT_CONFIG}
 					driver={this.driver}
 					limit={this.state.limit}
 					rendering={this.state.rendering}
