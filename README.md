@@ -1,4 +1,4 @@
-# neo-map
+# neomap
 
 A Neo4J Desktop (React-based) application to visualize nodes with geographical attributes on a map.
 
