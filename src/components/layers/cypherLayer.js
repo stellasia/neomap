@@ -2,7 +2,6 @@
  */
 import React, {Component} from 'react';
 import {Form} from 'react-bootstrap';
-
 import {CypherEditor} from "graph-app-kit/components/Editor"
 // css needed for CypherEditor
 import "codemirror/lib/codemirror.css";
@@ -20,11 +19,18 @@ class CypherLayer extends Component {
 
         this.state = {cypher: props.initQuery};
 
+        this.handleCypherChange = this.handleCypherChange.bind(this);
+
     };
 
 
     getQuery() {
         return this.state.cypher;
+    };
+
+
+    handleCypherChange(e) {
+        this.setState({cypher: e});
     };
 
 

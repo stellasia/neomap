@@ -6,21 +6,12 @@ import Select from 'react-select'
 import {RENDERING_MARKERS} from '../../constants'
 
 
-const DEFAULT_CONFIG = {
-	latitudeProperty: {value: "latitude", label: "latitude"},
-	longitudeProperty: {value: "longitude", label: "longitude"},
-	tooltipProperty: {value: "id", label: "id"},
-	nodeLabel: [],
-};
-
-
 class SimpleLayer extends Component {
 
 	constructor(props) {
 		super(props);
 
-		this.state = DEFAULT_CONFIG;
-		this.state["limit"] = props.limit;
+		this.state = props;
 
 		this.driver = props.driver;
 
