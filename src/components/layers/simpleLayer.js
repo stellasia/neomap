@@ -11,7 +11,7 @@ class SimpleLayer extends Component {
 	constructor(props) {
 		super(props);
 
-		this.state = props;
+		this.state = {...props};
 
 		this.driver = props.driver;
 
