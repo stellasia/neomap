@@ -10,28 +10,28 @@ const integrationPoint = window.neo4jDesktopApi;
 
 
 export const NewApp = () => (
-    <GraphAppBase
-    driverFactory={neo4j.v1}
-    integrationPoint={integrationPoint}
-    render={({
-	connectionState,
-	connectionDetails,
-	setCredentials,
-	on,
-	off,
-	initialDesktopContext
-    }) => {
-	return [
-	    <ConnectModal
-	    key="modal"
-	    errorMsg={connectionDetails ? connectionDetails.message : ""}
-	    onSubmit={setCredentials}
-	    show={connectionState !== CONNECTED}
-	    />,
-	    <App key="app" />
-	];
-    }}
-    />
+	<GraphAppBase
+		driverFactory={neo4j.v1}
+		integrationPoint={integrationPoint}
+		render={({
+					 connectionState,
+					 connectionDetails,
+					 setCredentials,
+					 on,
+					 off,
+					 initialDesktopContext
+				 }) => {
+			return [
+				<ConnectModal
+					key="modal"
+					errorMsg={connectionDetails ? connectionDetails.message : ""}
+					onSubmit={setCredentials}
+					show={connectionState !== CONNECTED}
+				/>,
+				<App key="app" />
+			];
+		}}
+	/>
 );
 
 
