@@ -1,17 +1,17 @@
-//import neo4j from 'neo4j-driver';
 import React from "react";
 import ReactDOM from "react-dom";
 import "./index.css";
 import App from "./App";
-import { GraphAppBase, ConnectModal, CONNECTED } from "graph-app-kit/components/GraphAppBase"
+import { GraphAppBase } from "graph-app-kit/components/GraphAppBase"
 
-const neo4j = require("neo4j-driver/lib/browser/neo4j-web.min.js");
+const neo4j = require("neo4j-driver/lib/browser/neo4j-web.min.js").v1;
 const integrationPoint = window.neo4jDesktopApi;
 
 
 export const NewApp = () => (
+
 	<GraphAppBase
-		driverFactory={neo4j.v1}
+		driverFactory={neo4j}
 		integrationPoint={integrationPoint}
 		render={({
 					 connectionState,
@@ -22,13 +22,12 @@ export const NewApp = () => (
 					 initialDesktopContext
 				 }) => {
 			return [
-				<ConnectModal
-					key="modal"
-					errorMsg={connectionDetails ? connectionDetails.message : ""}
-					onSubmit={setCredentials}
-					show={connectionState !== CONNECTED}
-				/>,
-				<App key="app" />
+				<App key="app"
+					 integrationPoint={integrationPoint}
+					 connectionDetails={connectionDetails}
+					 connectionState={connectionState}
+					 initialDesktopContext={initialDesktopContext}
+				/>
 			];
 		}}
 	/>

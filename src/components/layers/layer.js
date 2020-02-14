@@ -9,6 +9,9 @@ import Card from 'react-bootstrap/Card';
 import { Form, Button } from 'react-bootstrap';
 import { CypherEditor } from "graph-app-kit/components/Editor"
 import { confirmAlert } from 'react-confirm-alert'; // Import
+import neo4jService from '../../services/neo4jService'
+
+
 import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
 
 // css needed for CypherEditor
@@ -77,7 +80,7 @@ class Layer extends Component {
 
 		// list of available nodes
 		this.state.nodes = this.getNodes();
-		this.state.labels = this.getLabels();
+		this.state.propertyNames = this.getPropertyNames();
 
 		this.sendData = this.sendData.bind(this);
 		this.deleteLayer = this.deleteLayer.bind(this);
@@ -180,47 +183,22 @@ class Layer extends Component {
 	updateData() {
 		/*Query database and update `this.state.data`
          */
-		var res = [];
-		const session = this.driver.session();
-
-		var query = this.getQuery();
-
-		var params = {};
-		session
-			.run(
-				query, params
-			)
-			.then(result => {
-				if ((result.records === undefined) | (result.records.length === 0)) {
-					alert("No result found, please check your query");
-					return;
-				}
-				result.records.forEach(record => {
-					var el = {
-						pos: [
-							record.get("latitude"),
-							record.get("longitude")
-						],
-					};
-					if (this.state.tooltipProperty.value && record.has("tooltip"))
-						el["tooltip"] = record.get("tooltip");
-					res.push(el);
-				});
-				this.setState({data: res}, function() {this.updatePosition()});
-				session.close();
-			})
-			.catch(error => {
-				console.log(error);
+		neo4jService.getData(this.driver, this.getQuery(), {}).then( res => {
+			if (res.status === "ERROR") {
 				var message = "Invalid cypher query.";
 				if (this.state.layerType === LAYER_TYPE_LATLON) {
 					message += "\nContact the development team";
 				} else {
 					message += "\nFix your query and try again";
 				}
-				message += "\n\n" + error;
+				message += "\n\n" + res.result;
 				alert(message);
-				return;
-			});
+			} else {
+				this.setState({data: res.result}, function () {
+					this.updatePosition()
+				});
+			}
+		});
 	};
 
 
@@ -272,7 +250,7 @@ class Layer extends Component {
 
 	handleNodeLabelChange(e) {
 		this.setState({nodeLabel: e}, function() {
-				this.setState({labels:  this.getLabels()})
+				this.setState({labels:  this.getPropertyNames()})
 			}
 		);
 	};
@@ -336,72 +314,13 @@ class Layer extends Component {
 	getNodes() {
 		/*This will be updated quite often,
            is that what we want?
-
-           TODO: use apoc procedure for that, the query below can be quite loong...
          */
-		if (this.driver === undefined)
-			return [];
-
-		var res = [];
-		const session = this.driver.session();
-		session
-			.run(
-				`MATCH (n) WITH labels(n) as labs UNWIND labs as l RETURN distinct l as label`,
-			)
-			.then(function (result) {
-				result.records.forEach(function (record) {
-					var el = {
-						value:record.get("label"),
-						label: record.get("label")
-					};
-					res.push(el);
-				});
-				session.close();
-			})
-			.catch(function (error) {
-				console.log(error);
-			});
-		return res;
+		return neo4jService.getNodeLabels(this.driver);
 	};
 
 
-	getLabels() {
-		/*This will be updated quite often,
-           is that what we want?
-
-           TODO: use apoc procedure for that, the query below can be quite loong...
-         */
-		if (this.driver === undefined)
-			return [];
-
-		var res = [];
-		const session = this.driver.session();
-		var query = "";
-		if (this.state.nodeLabel !== null && this.state.nodeLabel.length > 0) {
-			query = "MATCH (n) WHERE true ";
-			query += this.getNodeFilter();
-			query += " WITH n LIMIT 100 UNWIND keys(n) AS key RETURN DISTINCT key AS propertyKey";
-		} else {
-			query = "CALL db.propertyKeys()"
-		}
-		session
-			.run(
-				query
-			)
-			.then(function (result) {
-				result.records.forEach(function (record) {
-					var el = {
-						value: record.get("propertyKey"),
-						label: record.get("propertyKey")
-					};
-					res.push(el);
-				});
-				session.close();
-			})
-			.catch(function (error) {
-				console.log(error);
-			});
-		return res;
+	getPropertyNames() {
+		return neo4jService.getProperties(this.driver, this.getNodeFilter());
 	};
 
 
