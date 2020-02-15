@@ -1,6 +1,7 @@
 # neo-map
 
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/Naereen/StrapDown.js/graphs/commit-activity)
+
 [![Actions Status](https://github.com/stellasia/neomap/workflows/Node CI/badge.svg)](https://github.com/stellasia/neomap/actions)
 
 
