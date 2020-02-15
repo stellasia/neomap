@@ -98,16 +98,8 @@ class Layer extends Component {
 
 	componentDidMount() {
 		// list of available nodes
-		this.getNodes().then( result => {
-			this.setState({
-				nodes: result
-			})
-		});
-		this.getPropertyNames().then( result => {
-			this.setState({
-				propertyNames: result
-			})
-		});
+		this.getNodes();
+		this.getPropertyNames();
 	}
 
 
@@ -261,12 +253,7 @@ class Layer extends Component {
 
 	handleNodeLabelChange(e) {
 		this.setState({nodeLabel: e}, function() {
-			this.getPropertyNames().then( result => {
-				this.setState({
-						propertyNames: result
-					}
-				)
-			})
+			this.getPropertyNames();
 		});
 	};
 
@@ -329,12 +316,18 @@ class Layer extends Component {
 		/*This will be updated quite often,
            is that what we want?
          */
-		return neo4jService.getNodeLabels(this.driver);
+		neo4jService.getNodeLabels(this.driver).then( result => {
+			this.setState({
+				nodes: result
+			})
+		});
 	};
 
 
 	getPropertyNames() {
-		return neo4jService.getProperties(this.driver, this.getNodeFilter());
+		neo4jService.getProperties(this.driver, this.getNodeFilter()).then( result => {
+			this.setState({propertyNames: result});
+		});
 	};
 
 

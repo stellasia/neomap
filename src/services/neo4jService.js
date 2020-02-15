@@ -106,8 +106,12 @@ export default {
                             record.get("latitude"),
                             record.get("longitude")
                         ],
-                        tooltip: record.get("tooltip")
                     };
+                    if (record.has("tooltip")) {
+                        // make sure tooltip is a string, otherwise leaflet is not happy AT ALL!
+                        let val = record.get("tooltip").toString();
+                        el["tooltip"] = val;
+                    }
                     res.push(el);
                 });
                 session.close();
