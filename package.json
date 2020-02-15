@@ -9,7 +9,6 @@
 	},
 	"dependencies": {
 		"bootstrap": "^4.3.0",
-		"graph-app-kit": "^1.0.4",
 		"leaflet": "^1.5.1",
 		"neo4j-driver": "^1.7.2",
 		"react": "^16.3.2",

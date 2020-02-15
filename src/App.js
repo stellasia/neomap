@@ -9,7 +9,6 @@ class App extends Component {
 
 	constructor(props) {
 		super(props);
-		this.integrationPoint = props.integrationPoint;
 
 		this.state = {
 			layers: {},
@@ -26,7 +25,7 @@ class App extends Component {
 	}
 
 	componentDidMount() {
-		this.driver = this.getDriver().then( result => {
+		this.getDriver().then( result => {
 			this.driver = result;
 		}).then( () => {
 			this.setState({

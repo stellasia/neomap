@@ -54,6 +54,7 @@ const DEFAULT_LAYER = {
 	longitudeProperty: {value: "longitude", label: "longitude"},
 	tooltipProperty: {value: "id", label: "id"},
 	nodeLabel: [],
+	propertyNames: [],
 	data: [],
 	position: [],
 	color: {value: "blue", label: "Blue"},
@@ -78,10 +79,6 @@ class Layer extends Component {
 
 		this.driver = props.driver;
 
-		// list of available nodes
-		this.state.nodes = this.getNodes();
-		this.state.propertyNames = this.getPropertyNames();
-
 		this.sendData = this.sendData.bind(this);
 		this.deleteLayer = this.deleteLayer.bind(this);
 		this.showQuery = this.showQuery.bind(this);
@@ -98,6 +95,20 @@ class Layer extends Component {
 		this.handleCypherChange = this.handleCypherChange.bind(this);
 
 	};
+
+	componentDidMount() {
+		// list of available nodes
+		this.getNodes().then( result => {
+			this.setState({
+				nodes: result
+			})
+		});
+		this.getPropertyNames().then( result => {
+			this.setState({
+				propertyNames: result
+			})
+		});
+	}
 
 
 	updatePosition() {
@@ -250,11 +261,14 @@ class Layer extends Component {
 
 	handleNodeLabelChange(e) {
 		this.setState({nodeLabel: e}, function() {
-				this.setState({labels:  this.getPropertyNames()})
-			}
-		);
+			this.getPropertyNames().then( result => {
+				this.setState({
+						propertyNames: result
+					}
+				)
+			})
+		});
 	};
-
 
 	handleColorChange(e) {
 		this.setState({
@@ -371,7 +385,7 @@ class Layer extends Component {
 					<Form.Label>Latitude property</Form.Label>
 					<Select
 						className="form-control select"
-						options={this.state.labels}
+						options={this.state.propertyNames}
 						onChange={this.handleLatPropertyChange}
 						isMulti={false}
 						defaultValue={this.state.latitudeProperty}
@@ -383,7 +397,7 @@ class Layer extends Component {
 					<Form.Label>Longitude property</Form.Label>
 					<Select
 						className="form-control select"
-						options={this.state.labels}
+						options={this.state.propertyNames}
 						onChange={this.handleLonPropertyChange}
 						isMulti={false}
 						defaultValue={this.state.longitudeProperty}
@@ -395,7 +409,7 @@ class Layer extends Component {
 					<Form.Label>Tooltip property</Form.Label>
 					<Select
 						className="form-control select"
-						options={this.state.labels}
+						options={this.state.propertyNames}
 						onChange={this.handleTooltipPropertyChange}
 						isMulti={false}
 						defaultValue={this.state.tooltipProperty}

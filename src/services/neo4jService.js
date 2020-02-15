@@ -24,17 +24,15 @@ export default {
         return driver;
     },
 
-    getNodeLabels: function(driver) {
-        // TODO: use APOC procedure for that, the query below can be quite loong...
-
+    getNodeLabels: async function(driver) {
         if (driver === undefined)
             return [];
 
         var res = [];
         const session = driver.session();
-        session
+        await session
             .run(
-                `MATCH (n) WITH labels(n) as labs UNWIND labs as l RETURN DISTINCT l as label`,
+                `CALL db.labels() YIELD label RETURN label ORDER BY label`,
             )
             .then(function (result) {
                 result.records.forEach(function (record) {
@@ -53,7 +51,7 @@ export default {
         return res;
     },
 
-    getProperties: function(driver, nodeFilter) {
+    getProperties: async function(driver, nodeFilter) {
         if (driver === undefined)
             return [];
 
@@ -63,11 +61,11 @@ export default {
         if (nodeFilter !== "") {
             query = "MATCH (n) WHERE true ";
             query += nodeFilter;
-            query += " WITH n LIMIT 100 UNWIND keys(n) AS key RETURN DISTINCT key AS propertyKey";
+            query += " WITH n LIMIT 100 UNWIND keys(n) AS key RETURN DISTINCT key AS propertyKey ORDER BY key";
         } else {
-            query = "CALL db.propertyKeys()"
+            query = "CALL db.propertyKeys() YIELD propertyKey RETURN propertyKey ORDER BY propertyKey"
         }
-        session
+        await session
             .run(
                 query
             )
