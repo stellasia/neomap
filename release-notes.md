@@ -1,5 +1,12 @@
 # neo-map release notes
 
+## 0.4 (WIP)
+
+- Enforce tooltip is a string (fix rendering issue in some weird cases)
+- Fix CI
+- Code refactoring
+
+
 ## 0.3.1 (2019-11-19)
 
 - Remove warning popup when changing the limit (#36);
