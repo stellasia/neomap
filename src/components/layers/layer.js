@@ -1,23 +1,28 @@
 /**Layer definition.
+
+
+ TODO: split into several files?
  */
 import React, {Component} from 'react';
 import Select from 'react-select'
 import Accordion from 'react-bootstrap/Accordion';
 import Card from 'react-bootstrap/Card';
-import {Button, Form} from 'react-bootstrap';
-import {confirmAlert} from 'react-confirm-alert';
-import SimpleLayer from './simpleLayer';
-import CypherLayer from './cypherLayer';
-import SpatialLayer from "./spatialLayer";
+import { Form, Button } from 'react-bootstrap';
+import { CypherEditor } from "graph-app-kit/components/Editor"
+import { confirmAlert } from 'react-confirm-alert'; // Import
+import neo4jService from '../../services/neo4jService'
 import {
 	LAYER_TYPE_CYPHER,
 	LAYER_TYPE_LATLON,
-	LAYER_TYPE_SPATIAL,
 	RENDERING_CLUSTERS,
 	RENDERING_HEATMAP,
 	RENDERING_MARKERS
 } from "../../constants"
-// css
+
+
+import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
+
+// css needed for CypherEditor
 import "codemirror/lib/codemirror.css";
 import "codemirror/addon/lint/lint.css";
 import "codemirror/addon/hint/show-hint.css";
@@ -43,6 +48,11 @@ const POSSIBLE_COLORS = [
 const DEFAULT_LAYER = {
 	name: "New layer",
 	layerType: LAYER_TYPE_LATLON,
+	latitudeProperty: {value: "latitude", label: "latitude"},
+	longitudeProperty: {value: "longitude", label: "longitude"},
+	tooltipProperty: {value: "id", label: "id"},
+	nodeLabel: [],
+	propertyNames: [],
 	data: [],
 	position: [],
 	color: {value: "blue", label: "Blue"},
@@ -52,13 +62,6 @@ const DEFAULT_LAYER = {
 	cypher: ""
 };
 
-
-const SIMPLE_LAYER_DEFAULT_CONFIG = {
-	latitudeProperty: {value: "latitude", label: "latitude"},
-	longitudeProperty: {value: "longitude", label: "longitude"},
-	tooltipProperty: {value: "id", label: "id"},
-	nodeLabel: [],
-};
 
 
 class Layer extends Component {
@@ -119,55 +122,77 @@ class Layer extends Component {
 	};
 
 
+	getCypherQuery() {
+		// TODO: check that the query is valid
+		return this.state.cypher;
+	};
+
+
+	getNodeFilter() {
+		var filter = '';
+		// filter wanted node labels
+		if (this.state.nodeLabel !== null && this.state.nodeLabel.length > 0) {
+			var sub_q = "(false";
+			this.state.nodeLabel.forEach( (value, key) => {
+				let lab = value.label;
+				sub_q += ` OR n:${lab}`;
+			});
+			sub_q += ")";
+			filter += "\nAND " + sub_q;
+		}
+		return filter;
+	};
+
+
 	getQuery() {
-		return this.dataConf.current.getQuery();
+		/*If layerType==cypher, query is inside the CypherEditor,
+           otherwise, we need to build the query manually.
+         */
+		if (this.state.layerType === LAYER_TYPE_CYPHER)
+			return this.getCypherQuery();
+
+		// lat lon query
+		// TODO: improve this method...
+		var query = "";
+		query = 'MATCH (n) WHERE true';
+		// filter wanted node labels
+		query += this.getNodeFilter();
+		// filter out nodes with null latitude or longitude
+		query += `\nAND exists(n.${this.state.latitudeProperty.value}) AND exists(n.${this.state.longitudeProperty.value})`;
+		// return latitude, longitude
+		query += `\nRETURN n.${this.state.latitudeProperty.value} as latitude, n.${this.state.longitudeProperty.value} as longitude`;
+
+		// if tooltip is not null, also return tooltip
+		if (this.state.tooltipProperty !== '')
+			query += `, n.${this.state.tooltipProperty.value} as tooltip`;
+
+		// TODO: is that really needed???
+		// limit the number of points to avoid browser crash...
+		query += `\nLIMIT ${this.state.limit}`;
+
+		return query;
 	};
 
 
 	updateData() {
 		/*Query database and update `this.state.data`
          */
-		var res = [];
-		const session = this.driver.session();
-
-		var query = this.getQuery();
-
-		var params = {};
-		session
-			.run(
-				query, params
-			)
-			.then(result => {
-				if ((result.records === undefined) || (result.records.length === 0)) {
-					alert("No result found, please check your query");
-					return;
-				}
-				result.records.forEach(record => {
-					var el = {
-						pos: [
-							record.get("latitude"),
-							record.get("longitude")
-						],
-						tooltip: record.get("tooltip")
-					};
-					res.push(el);
-				});
-				this.setState({data: res}, function () {
-					this.updatePosition()
-				});
-				session.close();
-			})
-			.catch(error => {
-				console.log(error);
+		neo4jService.getData(this.driver, this.getQuery(), {}).then( res => {
+			if (res.status === "ERROR") {
 				var message = "Invalid cypher query.";
 				if (this.state.layerType === LAYER_TYPE_LATLON) {
 					message += "\nContact the development team";
 				} else {
 					message += "\nFix your query and try again";
 				}
-				message += "\n\n" + error;
+				message += "\n\n" + res.result;
 				alert(message);
-			});
+			} else {
+				this.setState({data: res.result}, function () {
+					this.updatePosition()
+				});
+			}
+		});
 	};
 
 
@@ -187,9 +212,10 @@ class Layer extends Component {
 		if (old_type === new_type) {
 			return;
 		}
-		if (new_type === LAYER_TYPE_CYPHER) {
+		if (old_type === LAYER_TYPE_LATLON & new_type === LAYER_TYPE_CYPHER) {
 			this.setState({cypher: this.getQuery()});
-		} else if (old_type === LAYER_TYPE_CYPHER) {
+		}
+		else {
 			if (
 				window.confirm(
 					'You will loose your cypher query, is that what you want?'
@@ -202,13 +228,30 @@ class Layer extends Component {
 		this.setState({layerType: e.target.value});
 	};
 
+	handleLatPropertyChange(e) {
+		this.setState({latitudeProperty: e});
+	};
+
+
+	handleLonPropertyChange(e) {
+		this.setState({longitudeProperty: e});
+	};
+
+	handleTooltipPropertyChange(e) {
+		this.setState({tooltipProperty: e});
+	};
+
+	handleNodeLabelChange(e) {
+		this.setState({nodeLabel: e}, function() {
+			this.getPropertyNames();
+		});
+	};
 
 	handleColorChange(e) {
 		this.setState({
 			color: e,
 		});
 	};
-
 
 	handleRenderingChange(e) {
 		this.setState({rendering: e.target.value});
@@ -217,6 +260,11 @@ class Layer extends Component {
 
 	handleRadiusChange(e) {
 		this.setState({radius: parseFloat(e.target.value)});
+	};
+
+
+	handleCypherChange(e) {
+		this.setState({cypher: e});
 	};
 
 
@@ -242,7 +290,6 @@ class Layer extends Component {
 		this.props.deleteLayer(this.state.ukey);
 	};
 
-
 	showQuery(event) {
 		confirmAlert({
 			message: this.getQuery(),
@@ -255,35 +302,120 @@ class Layer extends Component {
 		event.preventDefault();
 	};
 
+	getNodes() {
+		/*This will be updated quite often,
+           is that what we want?
+         */
+		neo4jService.getNodeLabels(this.driver).then( result => {
+			this.setState({
+				nodes: result
+			})
+		});
+	};
 
-	renderDataConfig() {
-		if (this.state.layerType === LAYER_TYPE_LATLON)
-			return (
-				<SimpleLayer
-					{...SIMPLE_LAYER_DEFAULT_CONFIG}
-					driver={this.driver}
-					limit={this.state.limit}
-					rendering={this.state.rendering}
-					ref={this.dataConf}
+
+	getPropertyNames() {
+		neo4jService.getProperties(this.driver, this.getNodeFilter()).then( result => {
+			this.setState({propertyNames: result});
+		});
+	};
+
+
+	renderConfigCypher() {
+		/*If layerType==cypher, then we display the CypherEditor
+         */
+		if (this.state.layerType !== LAYER_TYPE_CYPHER)
+			return ""
+		return (
+			<Form.Group controlId="formCypher">
+				<Form.Label>Query</Form.Label>
+				<Form.Text>
+					<p>Checkout <a href="https://github.com/stellasia/neomap/wiki" target="_blank" rel="noopener noreferrer" >the documentation</a> (Ctrl+SPACE for autocomplete)</p>
+					<p className="font-italic">Be careful, the browser can only display a limited number of nodes (less than a few 10000)</p>
+				</Form.Text>
+				<CypherEditor
+					value={this.state.cypher}
+					onValueChange={this.handleCypherChange}
+					name="cypher"
 				/>
-			);
-		if (this.state.layerType === LAYER_TYPE_CYPHER)
-			return (
-				<CypherLayer
-					driver={this.driver}
-					initQuery={this.state.cypher}
-					ref={this.dataConf}
-				/>
-			);
-		if (this.state.layerType === LAYER_TYPE_SPATIAL)
-			return (
-				<SpatialLayer
-					driver={this.driver}
-					limit={this.state.limit}
-					rendering={this.state.rendering}
-					ref={this.dataConf}
-				/>
-			);
+			</Form.Group>
+		)
+	};
+
+
+	renderConfigDefault() {
+		/*If layerType==latlon, then we display the elements to choose
+           node labels and properties to be used.
+         */
+		if (this.state.layerType !== LAYER_TYPE_LATLON)
+			return ""
+
+		return (
+			<div>
+				<Form.Group controlId="formNodeLabel">
+					<Form.Label>Node label(s)</Form.Label>
+					<Select
+						className="form-control select"
+						options={this.state.nodes}
+						onChange={this.handleNodeLabelChange}
+						isMulti={true}
+						defaultValue={this.state.nodeLabel}
+						name="nodeLabel"
+					/>
+				</Form.Group>
+
+				<Form.Group controlId="formLatitudeProperty">
+					<Form.Label>Latitude property</Form.Label>
+					<Select
+						className="form-control select"
+						options={this.state.propertyNames}
+						onChange={this.handleLatPropertyChange}
+						isMulti={false}
+						defaultValue={this.state.latitudeProperty}
+						name="latitudeProperty"
+					/>
+				</Form.Group>
+
+				<Form.Group controlId="formLongitudeProperty">
+					<Form.Label>Longitude property</Form.Label>
+					<Select
+						className="form-control select"
+						options={this.state.propertyNames}
+						onChange={this.handleLonPropertyChange}
+						isMulti={false}
+						defaultValue={this.state.longitudeProperty}
+						name="longitudeProperty"
+					/>
+				</Form.Group>
+
+				<Form.Group controlId="formTooltipProperty" hidden={(this.state.rendering !== RENDERING_MARKERS)}  name="formgroupTooltip">
+					<Form.Label>Tooltip property</Form.Label>
+					<Select
+						className="form-control select"
+						options={this.state.propertyNames}
+						onChange={this.handleTooltipPropertyChange}
+						isMulti={false}
+						defaultValue={this.state.tooltipProperty}
+						name="tooltipProperty"
+					/>
+				</Form.Group>
+
+				<Form.Group controlId="formLimit">
+					<Form.Label>Max. nodes</Form.Label>
+					<Form.Text>
+						<p className="font-italic">Be careful, the browser can only display a limited number of nodes (less than a few 10000)</p>
+					</Form.Text>
+					<Form.Control
+						type="text"
+						className="form-control"
+						placeholder="limit"
+						defaultValue={this.state.limit}
+						onChange={this.handleLimitChange}
+						name="limit"
+					/>
+				</Form.Group>
+			</div>
+		)
 	};
 
 
@@ -297,16 +429,17 @@ class Layer extends Component {
 						<small hidden>({this.state.ukey})</small>
 						<span
 							hidden={this.state.rendering !== RENDERING_MARKERS}
-							style={{background: this.state.color.value, float: 'right'}}
-						>{this.state.color.label}</span>
+							style={{background: this.state.color.value, float: 'right'}}>
+	    {this.state.color.label}
+	    </span>
 					</h3>
 				</Accordion.Toggle>
 
-				<Accordion.Collapse eventKey={this.state.ukey}>
+				<Accordion.Collapse eventKey={this.state.ukey} >
 
 					<Card.Body>
 
-						<Form action="">
+						<Form action="" >
 
 							<Form.Group controlId="formLayerName">
 								<Form.Label>Name</Form.Label>
@@ -343,21 +476,13 @@ class Layer extends Component {
 									onChange={this.handleLayerTypeChange}
 									name="layerTypeCypher"
 								/>
-								<Form.Check
-									type="radio"
-									id={LAYER_TYPE_SPATIAL}
-									label={"Spatial"}
-									value={LAYER_TYPE_SPATIAL}
-									checked={this.state.layerType === LAYER_TYPE_SPATIAL}
-									// hidden={this.state.spatialLayers === undefined }
-									onChange={this.handleLayerTypeChange}
-									name="layerTypeSpatial"
-								/>
 							</Form.Group>
 
-							{this.renderDataConfig()}
+							{this.renderConfigDefault()}
+							{this.renderConfigCypher()}
 
-							<h4> > Map rendering</h4>
+
+							<h4>  > Map rendering</h4>
 
 							<Form.Group controlId="formRendering">
 								<Form.Label>Rendering</Form.Label>
@@ -381,9 +506,9 @@ class Layer extends Component {
 								/>
 								<Form.Check
 									type="radio"
-									id={RENDERING_CLUSTERS}
-									label={"Clusters (not implemented yet)"}
-									value={RENDERING_CLUSTERS}
+									id={ RENDERING_CLUSTERS }
+									label={ "Clusters (not implemented yet)" }
+									value={ RENDERING_CLUSTERS }
 									checked={this.state.rendering === RENDERING_CLUSTERS}
 									onChange={this.handleRenderingChange}
 									name="mapRenderingCluster"
@@ -391,8 +516,7 @@ class Layer extends Component {
 								/>
 							</Form.Group>
 
-							<Form.Group controlId="formColor" hidden={this.state.rendering !== RENDERING_MARKERS}
-										name="formgroupColor">
+							<Form.Group controlId="formColor" hidden={this.state.rendering !== RENDERING_MARKERS} name="formgroupColor" >
 								<Form.Label>Color</Form.Label>
 								<Select
 									className="form-control select"
@@ -403,7 +527,7 @@ class Layer extends Component {
 								/>
 							</Form.Group>
 
-							<Form.Group controlId="formRadius" hidden={this.state.rendering !== RENDERING_HEATMAP}>
+							<Form.Group controlId="formRadius" hidden={this.state.rendering !== RENDERING_HEATMAP} >
 								<Form.Label>Heatmap radius</Form.Label>
 								<Form.Control
 									type="range"
@@ -417,17 +541,15 @@ class Layer extends Component {
 							</Form.Group>
 
 
-							<Button variant="danger" type="submit" onClick={this.deleteLayer}
-									hidden={this.props.layer === undefined}>
+							<Button variant="danger" type="submit"  onClick={this.deleteLayer} hidden={this.props.layer === undefined}>
 								Delete Layer
 							</Button>
 
-							<Button variant="info" type="submit" onClick={this.showQuery}
-									hidden={this.state.layerType === LAYER_TYPE_CYPHER}>
+							<Button variant="info" type="submit"  onClick={this.showQuery} hidden={this.state.layerType !== LAYER_TYPE_LATLON}>
 								Show query
 							</Button>
 
-							<Button variant="success" type="submit" onClick={this.sendData}>
+							<Button variant="success" type="submit"  onClick={this.sendData} >
 								Update map
 							</Button>
 
@@ -440,7 +562,7 @@ class Layer extends Component {
 
 		);
 	}
-}
+};
 
 
 export default Layer;

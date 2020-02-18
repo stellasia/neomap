@@ -3,72 +3,37 @@ import "./App.css";
 import Map from "./components/Map";
 import SideBar from "./components/SideBar";
 
-const neo4j = require("neo4j-driver/lib/browser/neo4j-web.min.js");
-const DEFAULT_DRIVER = {
-	uri: "bolt://localhost:7687",
-	user: "neo4j",
-	password: "neo4j",
-};
+import neo4jService from './services/neo4jService'
 
-
-const neo4jDesktopApi = window.neo4jDesktopApi;
 
 class App extends Component {
 
 	constructor(props) {
 		super(props);
 
-		/*Get connection to the active graph
-
-           TODO: what happens if the active graph changes?
-        */
-		if (window.neo4jDesktopApi) {
-			neo4jDesktopApi.getContext().then((context) => {
-				for (let project of context.projects) {
-					for (let graph of project.graphs) {
-						if (graph.status === 'ACTIVE') {
-							console.log("Active graph is; " + graph.name + " (" + graph.description + ")");
-							let boltProtocol = graph.connection.configuration.protocols.bolt;
-							let driver = neo4j.v1.driver(
-								boltProtocol.url,
-								neo4j.v1.auth.basic(boltProtocol.username, boltProtocol.password)
-							);
-							this.driver = driver;
-						}
-					}
-				}
-			});
-		} else {
-			this.driver = this.getDriver();
-		}
-
-		//console.log(this.driver);
-
-		this.state = {
+	    this.state = {
 			layers: {},
+			ready: false
 		};
 
 		this.layersChanged = this.layersChanged.bind(this);
 
 	};
 
-
 	getDriver() {
-		/*Get a default driver based on hard coded credential above
-           TODO: remove or make this configurable through env vars or...
-        */
-		var uri = DEFAULT_DRIVER.uri;
-		var usr = DEFAULT_DRIVER.user;
-		var pwd = DEFAULT_DRIVER.password;
-		return neo4j.v1.driver(
-			uri,
-			neo4j.v1.auth.basic(
-				usr,
-				pwd
-			)
-		);
-	};
+		let driver = neo4jService.getNeo4jDriver();
+		return driver;
+	}
 
+	componentDidMount() {
+		this.getDriver().then( result => {
+			this.driver = result;
+		}).then( () => {
+			this.setState({
+				ready: true,
+			});
+		});
+	};
 
 	layersChanged(childData) {
 		/* Something changed in the layer definition,
@@ -78,7 +43,6 @@ class App extends Component {
 			layers: childData.layers
 		});
 	};
-
 
 	renderUI() {
 		return (
@@ -104,11 +68,11 @@ class App extends Component {
 
 	render() {
 		// wait until driver is ready...
-		return this.driver ? this.renderUI() : (
+		return this.state.ready ? this.renderUI() : (
 			<span>Loading...</span>
 		)
 	};
-}
+};
 
 
 export default App;

@@ -13,8 +13,6 @@ class Map extends Component {
 		this.renderHeatmapLayer = this.renderHeatmapLayer.bind(this);
 		this.renderClusterLayer = this.renderClusterLayer.bind(this);
 		this.onFeatureGroupAdd = this.onFeatureGroupAdd.bind(this);
-
-		this.mapRef = React.createRef();
 	};
 
 
@@ -88,7 +86,7 @@ class Map extends Component {
 
 	onFeatureGroupAdd(e) {
 		if (e.target.getBounds()._northEast !== undefined)
-			this.mapRef.current.leafletElement.fitBounds(e.target.getBounds());
+			this.refs.map.leafletElement.fitBounds(e.target.getBounds());
 	};
 
 
@@ -103,7 +101,7 @@ class Map extends Component {
 		var zoom = 4;
 
 		return (
-			<LeafletMap center={center} zoom={zoom} ref={this.mapRef}>
+			<LeafletMap center={center} zoom={zoom} ref="map">
 				<LayersControl>
 					<LayersControl.BaseLayer name="Base" checked>
 						<TileLayer
@@ -129,7 +127,7 @@ class Map extends Component {
 			</LeafletMap>
 		)
 	}
-}
+};
 
 
 export default  Map;
