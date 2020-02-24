@@ -2,7 +2,8 @@
 
 ## 0.4 (WIP)
 
-- Enforce tooltip is a string (fix rendering issue in some weird cases)
+- Added support for [neo4j-spatial plugin](https://github.com/neo4j-contrib/spatial) SimplePoint layers
+- Bug fix: enforce tooltip is a string (fix rendering issue in some weird cases)
 - Fix CI
 - Code refactoring
 

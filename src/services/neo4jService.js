@@ -68,8 +68,7 @@ export default {
         await session
             .run(
                 query
-            )
-            .then(function (result) {
+            ).then(function (result) {
                 result.records.forEach(function (record) {
                     var el = {
                         value: record.get("propertyKey"),
@@ -82,6 +81,45 @@ export default {
             .catch(function (error) {
                 console.log(error);
             });
+        return res;
+    },
+
+    hasSpatial: async function(driver) {
+        if (driver === undefined)
+            return false;
+
+        let res = false;
+        const session = driver.session();
+        await session.run("CALL spatial.procedures() YIELD name RETURN name LIMIT 1").then(r => {
+            res = true;
+            session.close();
+        }).catch( error => {
+            console.log(error);
+        });
+        return res;
+    },
+
+    getSpatialLayers: async function(driver) {
+        if (driver === undefined)
+            return [];
+
+        var res = [];
+        const session = driver.session();
+        session.run(
+            "CALL spatial.layers() YIELD name, signature WITH name, signature " +
+            "WHERE signature =~ '.*SimplePoint.*' RETURN name"
+        ).then(result => {
+            result.records.forEach(record => {
+                var el = {
+                    value: record.get("name"),
+                    label: record.get("name")
+                };
+                res.push(el);
+                session.close();
+            })
+        }).catch(function (error) {
+            console.log(error);
+        });
         return res;
     },
 
