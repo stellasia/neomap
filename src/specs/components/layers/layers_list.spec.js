@@ -1,6 +1,6 @@
 import LayersList from './../../../components/layers/layers_list';
 import React from 'react';
-import { shallow } from './../../enzyme';
+import {shallow} from './../../enzyme';
 
 describe('<LayersList />', () => {
   it('render the component', () => {
@@ -20,7 +20,7 @@ describe('<LayersList />', () => {
             {
               ukey: 'ukey'
             }
-          ])
+          ]);
 
           const wrapper = shallow(<LayersList layers={layers} />);
           const layersComponent = wrapper.find('Layer[data-id="layers"]');

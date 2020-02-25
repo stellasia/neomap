@@ -22,7 +22,7 @@
     - Inform the user when query returns no result
     - Warning when switching from advanced to simple query
     - Warning before deleting a layer (definitive action)
-- Possibility to switch from simple to advanced layer with prefilled query
+- Possibility to switch from simple to advanced layer with pre-filled query
 - Possibility to show the generated query for simple mode layer
 - Display the selected marker color in the layer header (left side bar)
 - Maximum number of points shown on the map is customizable (marker layer)

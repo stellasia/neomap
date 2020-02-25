@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, {Component} from "react";
 import "./App.css";
 import Map from "./components/Map";
 import SideBar from "./components/SideBar";
@@ -20,8 +20,7 @@ class App extends Component {
 	};
 
 	getDriver() {
-		let driver = neo4jService.getNeo4jDriver();
-		return driver;
+		return neo4jService.getNeo4jDriver();
 	}
 
 	componentDidMount() {
@@ -71,7 +70,7 @@ class App extends Component {
 			<span>Loading...</span>
 		)
 	};
-};
+}
 
 
 export default App;

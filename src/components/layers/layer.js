@@ -2,18 +2,17 @@
 
  TODO: split into several files?
  */
-import React, { Component } from 'react';
+import React, {Component} from 'react';
 import Select from 'react-select'
 import Accordion from 'react-bootstrap/Accordion';
 import Card from 'react-bootstrap/Card';
-import { Form, Button } from 'react-bootstrap';
-import { CypherEditor } from "graph-app-kit/components/Editor"
-import { confirmAlert } from 'react-confirm-alert'; // Import
+import {Button, Form} from 'react-bootstrap';
+import {CypherEditor} from "graph-app-kit/components/Editor"
+import {confirmAlert} from 'react-confirm-alert'; // Import
 import neo4jService from '../../services/neo4jService'
 
 
 import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
-
 // css needed for CypherEditor
 import "codemirror/lib/codemirror.css";
 import "codemirror/addon/lint/lint.css";
@@ -115,14 +114,14 @@ class Layer extends Component {
 	updatePosition() {
 		/*Set the map center based on `this.state.data`
          */
-		var arr = this.state.data;
-		var pos = [47, 3];
+		let arr = this.state.data;
+		let pos = [47, 3];
 		if (arr.length > 0) {
-			var latMean = 0;
-			var lonMean = 0;
-			arr.map( (item, i) => {
-				var lat = item.pos[0];
-				var lon = item.pos[1];
+			let latMean = 0;
+			let lonMean = 0;
+			arr.map((item,) => {
+				let lat = item.pos[0];
+				let lon = item.pos[1];
 				latMean += parseFloat(lat);
 				lonMean += parseFloat(lon);
 				return undefined;
@@ -147,11 +146,11 @@ class Layer extends Component {
 
 
 	getNodeFilter() {
-		var filter = '';
+		let filter = '';
 		// filter wanted node labels
 		if (this.state.nodeLabel !== null && this.state.nodeLabel.length > 0) {
-			var sub_q = "(false";
-			this.state.nodeLabel.forEach( (value, key) => {
+			let sub_q = "(false";
+			this.state.nodeLabel.forEach((value,) => {
 				let lab = value.label;
 				sub_q += ` OR n:${lab}`;
 			});
@@ -163,12 +162,13 @@ class Layer extends Component {
 
 
 	getSpatialQuery() {
-		var query = `CALL spatial.layer('${this.state.spatialLayer.value}') YIELD node `;
+		let query = `CALL spatial.layer('${this.state.spatialLayer.value}') YIELD node `;
 		query += "WITH node ";
-		query += "MATCH (node)-[:RTREE_ROOT]-()-[:RTREE_CHILD]-()-[:RTREE_REFERENCE]-(n) " ;
-		query += "RETURN n.longitude as longitude, n.latitude as latitude ";
+		query += "MATCH (node)-[:RTREE_ROOT]-()-[:RTREE_CHILD]-()-[:RTREE_REFERENCE]-(n) ";
+		query += "WHERE n.point.srid = 4326 ";
+		query += "RETURN n.point.x as longitude, n.point.y as latitude ";
 		if (this.state.tooltipProperty.value !== '')
-			query += `, n.${this.state.tooltipProperty.value} as tooltip`;
+			query += `, n.${this.state.tooltipProperty.value} as tooltip `;
 		query += `\nLIMIT ${this.state.limit}`;
 		return query;
 	};
@@ -186,8 +186,7 @@ class Layer extends Component {
 
 		// lat lon query
 		// TODO: improve this method...
-		var query = "";
-		query = 'MATCH (n) WHERE true';
+		let query = 'MATCH (n) WHERE true';
 		// filter wanted node labels
 		query += this.getNodeFilter();
 		// filter out nodes with null latitude or longitude
@@ -212,7 +211,7 @@ class Layer extends Component {
          */
 		neo4jService.getData(this.driver, this.getQuery(), {}).then( res => {
 			if (res.status === "ERROR") {
-				var message = "Invalid cypher query.";
+				let message = "Invalid cypher query.";
 				if (this.state.layerType === LAYER_TYPE_LATLON) {
 					message += "\nContact the development team";
 				} else {
@@ -240,15 +239,14 @@ class Layer extends Component {
 
 
 	handleLayerTypeChange(e) {
-		var old_type = this.state.layerType;
-		var new_type = e.target.value;
+		let old_type = this.state.layerType;
+		let new_type = e.target.value;
 		if (old_type === new_type) {
 			return;
 		}
 		if (new_type === LAYER_TYPE_CYPHER) {
 			this.setState({cypher: this.getQuery()});
-		}
-		else if (old_type === LAYER_TYPE_CYPHER) {
+		} else if (old_type === LAYER_TYPE_CYPHER) {
 			if (
 				window.confirm(
 					'You will loose your cypher query, is that what you want?'
@@ -670,7 +668,7 @@ class Layer extends Component {
 
 		);
 	}
-};
+}
 
 
 export default Layer;
