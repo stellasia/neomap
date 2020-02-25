@@ -2,18 +2,17 @@
 
  TODO: split into several files?
  */
-import React, { Component } from 'react';
+import React, {Component} from 'react';
 import Select from 'react-select'
 import Accordion from 'react-bootstrap/Accordion';
 import Card from 'react-bootstrap/Card';
-import { Form, Button } from 'react-bootstrap';
-import { CypherEditor } from "graph-app-kit/components/Editor"
-import { confirmAlert } from 'react-confirm-alert'; // Import
+import {Button, Form} from 'react-bootstrap';
+import {CypherEditor} from "graph-app-kit/components/Editor"
+import {confirmAlert} from 'react-confirm-alert'; // Import
 import neo4jService from '../../services/neo4jService'
 
 
 import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
-
 // css needed for CypherEditor
 import "codemirror/lib/codemirror.css";
 import "codemirror/addon/lint/lint.css";
@@ -40,6 +39,7 @@ const POSSIBLE_COLORS = [
 // layer type: either from node labels or cypher
 const LAYER_TYPE_LATLON = "latlon";
 const LAYER_TYPE_CYPHER = "cypher";
+const LAYER_TYPE_SPATIAL = "spatial";
 
 const RENDERING_MARKERS = "markers";
 const RENDERING_HEATMAP = "heatmap";
@@ -52,16 +52,20 @@ const DEFAULT_LAYER = {
 	layerType: LAYER_TYPE_LATLON,
 	latitudeProperty: {value: "latitude", label: "latitude"},
 	longitudeProperty: {value: "longitude", label: "longitude"},
-	tooltipProperty: {value: "id", label: "id"},
+	tooltipProperty: {value: "", label: ""},
 	nodeLabel: [],
 	propertyNames: [],
+	spatialLayers: [],
 	data: [],
 	position: [],
 	color: {value: "blue", label: "Blue"},
 	limit: LIMIT,
 	rendering: RENDERING_MARKERS,
 	radius: 30,
-	cypher: ""
+	cypher: "",
+	// TODO: this should not be in Layer state?
+	hasSpatialPlugin: false,
+	spatialLayer: {value: "", label: ""},
 };
 
 
@@ -93,27 +97,31 @@ class Layer extends Component {
 		this.handleRenderingChange = this.handleRenderingChange.bind(this);
 		this.handleRadiusChange = this.handleRadiusChange.bind(this);
 		this.handleCypherChange = this.handleCypherChange.bind(this);
+		this.handleSpatialLayerChanged = this.handleSpatialLayerChanged.bind(this);
 
 	};
+
 
 	componentDidMount() {
 		// list of available nodes
 		this.getNodes();
 		this.getPropertyNames();
+		this.hasSpatialPlugin();
+		this.getSpatialLayers();
 	}
 
 
 	updatePosition() {
 		/*Set the map center based on `this.state.data`
          */
-		var arr = this.state.data;
-		var pos = [47, 3];
+		let arr = this.state.data;
+		let pos = [47, 3];
 		if (arr.length > 0) {
-			var latMean = 0;
-			var lonMean = 0;
-			arr.map( (item, i) => {
-				var lat = item.pos[0];
-				var lon = item.pos[1];
+			let latMean = 0;
+			let lonMean = 0;
+			arr.map((item,) => {
+				let lat = item.pos[0];
+				let lon = item.pos[1];
 				latMean += parseFloat(lat);
 				lonMean += parseFloat(lon);
 				return undefined;
@@ -138,11 +146,11 @@ class Layer extends Component {
 
 
 	getNodeFilter() {
-		var filter = '';
+		let filter = '';
 		// filter wanted node labels
 		if (this.state.nodeLabel !== null && this.state.nodeLabel.length > 0) {
-			var sub_q = "(false";
-			this.state.nodeLabel.forEach( (value, key) => {
+			let sub_q = "(false";
+			this.state.nodeLabel.forEach((value,) => {
 				let lab = value.label;
 				sub_q += ` OR n:${lab}`;
 			});
@@ -153,6 +161,19 @@ class Layer extends Component {
 	};
 
 
+	getSpatialQuery() {
+		let query = `CALL spatial.layer('${this.state.spatialLayer.value}') YIELD node `;
+		query += "WITH node ";
+		query += "MATCH (node)-[:RTREE_ROOT]-()-[:RTREE_CHILD]-()-[:RTREE_REFERENCE]-(n) ";
+		query += "WHERE n.point.srid = 4326 ";
+		query += "RETURN n.point.x as longitude, n.point.y as latitude ";
+		if (this.state.tooltipProperty.value !== '')
+			query += `, n.${this.state.tooltipProperty.value} as tooltip `;
+		query += `\nLIMIT ${this.state.limit}`;
+		return query;
+	};
+
+
 	getQuery() {
 		/*If layerType==cypher, query is inside the CypherEditor,
            otherwise, we need to build the query manually.
@@ -160,10 +181,12 @@ class Layer extends Component {
 		if (this.state.layerType === LAYER_TYPE_CYPHER)
 			return this.getCypherQuery();
 
+		if (this.state.layerType === LAYER_TYPE_SPATIAL)
+			return this.getSpatialQuery();
+
 		// lat lon query
 		// TODO: improve this method...
-		var query = "";
-		query = 'MATCH (n) WHERE true';
+		let query = 'MATCH (n) WHERE true';
 		// filter wanted node labels
 		query += this.getNodeFilter();
 		// filter out nodes with null latitude or longitude
@@ -172,7 +195,7 @@ class Layer extends Component {
 		query += `\nRETURN n.${this.state.latitudeProperty.value} as latitude, n.${this.state.longitudeProperty.value} as longitude`;
 
 		// if tooltip is not null, also return tooltip
-		if (this.state.tooltipProperty !== '')
+		if (this.state.tooltipProperty.value !== '')
 			query += `, n.${this.state.tooltipProperty.value} as tooltip`;
 
 		// TODO: is that really needed???
@@ -188,7 +211,7 @@ class Layer extends Component {
          */
 		neo4jService.getData(this.driver, this.getQuery(), {}).then( res => {
 			if (res.status === "ERROR") {
-				var message = "Invalid cypher query.";
+				let message = "Invalid cypher query.";
 				if (this.state.layerType === LAYER_TYPE_LATLON) {
 					message += "\nContact the development team";
 				} else {
@@ -216,15 +239,14 @@ class Layer extends Component {
 
 
 	handleLayerTypeChange(e) {
-		var old_type = this.state.layerType;
-		var new_type = e.target.value;
+		let old_type = this.state.layerType;
+		let new_type = e.target.value;
 		if (old_type === new_type) {
 			return;
 		}
-		if (old_type === LAYER_TYPE_LATLON & new_type === LAYER_TYPE_CYPHER) {
+		if (new_type === LAYER_TYPE_CYPHER) {
 			this.setState({cypher: this.getQuery()});
-		}
-		else {
+		} else if (old_type === LAYER_TYPE_CYPHER) {
 			if (
 				window.confirm(
 					'You will loose your cypher query, is that what you want?'
@@ -247,9 +269,11 @@ class Layer extends Component {
 		this.setState({longitudeProperty: e});
 	};
 
+
 	handleTooltipPropertyChange(e) {
 		this.setState({tooltipProperty: e});
 	};
+
 
 	handleNodeLabelChange(e) {
 		this.setState({nodeLabel: e}, function() {
@@ -257,11 +281,20 @@ class Layer extends Component {
 		});
 	};
 
+
 	handleColorChange(e) {
 		this.setState({
 			color: e,
 		});
 	};
+
+
+	handleSpatialLayerChanged(e) {
+		this.setState({
+			spatialLayer: e,
+		});
+	};
+
 
 	handleRenderingChange(e) {
 		this.setState({rendering: e.target.value});
@@ -300,6 +333,7 @@ class Layer extends Component {
 		this.props.deleteLayer(this.state.ukey);
 	};
 
+
 	showQuery(event) {
 		confirmAlert({
 			message: this.getQuery(),
@@ -311,6 +345,16 @@ class Layer extends Component {
 		});
 		event.preventDefault();
 	};
+
+
+	hasSpatialPlugin() {
+		neo4jService.hasSpatial(this.driver).then(result => {
+			this.setState({
+				hasSpatialPlugin: result
+			});
+		});
+	};
+
 
 	getNodes() {
 		/*This will be updated quite often,
@@ -326,8 +370,49 @@ class Layer extends Component {
 
 	getPropertyNames() {
 		neo4jService.getProperties(this.driver, this.getNodeFilter()).then( result => {
+			result.push({value: "", label: ""}); // This is the default: no tooltip
 			this.setState({propertyNames: result});
 		});
+	};
+
+
+	getSpatialLayers() {
+		neo4jService.getSpatialLayers(this.driver).then(result => {
+			this.setState({spatialLayers: result});
+		});
+	};
+
+
+	renderConfigSpatial() {
+		if (this.state.layerType !== LAYER_TYPE_SPATIAL)
+			return "";
+
+		return (
+			<div>
+				<Form.Group controlId="formSpatialLayer">
+					<Form.Label>Spatial layer</Form.Label>
+					<Select
+						className="form-control select"
+						options={this.state.spatialLayers}
+						onChange={this.handleSpatialLayerChanged}
+						isMulti={false}
+						defaultValue={this.state.spatialLayer}
+						name="nodeLabel"
+					/>
+				</Form.Group>
+				<Form.Group controlId="formTooltipProperty" hidden={(this.state.rendering !== RENDERING_MARKERS)}  name="formgroupTooltip">
+					<Form.Label>Tooltip property</Form.Label>
+					<Select
+						className="form-control select"
+						options={this.state.propertyNames}
+						onChange={this.handleTooltipPropertyChange}
+						isMulti={false}
+						defaultValue={this.state.tooltipProperty.value}
+						name="tooltipProperty"
+					/>
+				</Form.Group>
+			</div>
+		)
 	};
 
 
@@ -335,7 +420,7 @@ class Layer extends Component {
 		/*If layerType==cypher, then we display the CypherEditor
          */
 		if (this.state.layerType !== LAYER_TYPE_CYPHER)
-			return ""
+			return "";
 		return (
 			<Form.Group controlId="formCypher">
 				<Form.Label>Query</Form.Label>
@@ -358,7 +443,7 @@ class Layer extends Component {
            node labels and properties to be used.
          */
 		if (this.state.layerType !== LAYER_TYPE_LATLON)
-			return ""
+			return "";
 
 		return (
 			<div>
@@ -486,10 +571,21 @@ class Layer extends Component {
 									onChange={this.handleLayerTypeChange}
 									name="layerTypeCypher"
 								/>
+								<Form.Check
+									type="radio"
+									id={ LAYER_TYPE_SPATIAL }
+									label={ "Spatial" }
+									value={ LAYER_TYPE_SPATIAL }
+									checked={this.state.layerType === LAYER_TYPE_SPATIAL}
+									onChange={this.handleLayerTypeChange}
+									name="layerTypeSpatial"
+									disabled={ !this.state.hasSpatialPlugin }
+								/>
 							</Form.Group>
 
 							{this.renderConfigDefault()}
 							{this.renderConfigCypher()}
+							{this.renderConfigSpatial()}
 
 
 							<h4>  > Map rendering</h4>
@@ -555,7 +651,7 @@ class Layer extends Component {
 								Delete Layer
 							</Button>
 
-							<Button variant="info" type="submit"  onClick={this.showQuery} hidden={this.state.layerType !== LAYER_TYPE_LATLON}>
+							<Button variant="info" type="submit"  onClick={this.showQuery} hidden={this.state.layerType === LAYER_TYPE_CYPHER}>
 								Show query
 							</Button>
 
@@ -572,7 +668,7 @@ class Layer extends Component {
 
 		);
 	}
-};
+}
 
 
 export default Layer;
