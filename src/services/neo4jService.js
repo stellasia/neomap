@@ -105,6 +105,12 @@ export default {
 
         var res = [];
         const session = driver.session();
+        /* Alt query:
+        MATCH (n:ReferenceNode)-[:LAYER]->(l)
+        RETURN l
+        WHERE l.class = 'org.neo4j.gis.spatial.SimplePointLayer"
+
+         */
         session.run(
             "CALL spatial.layers() YIELD name, signature WITH name, signature " +
             "WHERE signature =~ '.*SimplePoint.*' RETURN name"
