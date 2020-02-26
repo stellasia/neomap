@@ -1,4 +1,4 @@
-# neo-map release notes
+# neomap release notes
 
 ## 0.4.0 (WIP)
 
