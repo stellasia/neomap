@@ -2,6 +2,7 @@
 
 ## 0.4 (WIP)
 
+- Add "Save As" and "Open" basic functionality
 - Enforce tooltip is a string (fix rendering issue in some weird cases)
 - Fix CI
 - Code refactoring
