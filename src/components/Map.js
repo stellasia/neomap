@@ -1,5 +1,5 @@
 import React, {Component} from 'react'
-import {FeatureGroup, LayersControl, Map as LeafletMap, Marker, TileLayer, Tooltip} from 'react-leaflet'
+import {FeatureGroup, LayersControl, Map as LeafletMap, Marker, Polyline, TileLayer, Tooltip} from 'react-leaflet'
 import HeatmapLayer from 'react-leaflet-heatmap-layer';
 import L from 'leaflet';
 
@@ -84,6 +84,25 @@ class Map extends Component {
 	};
 
 
+	renderPolylineLayer(layer) {
+		/*Will show one marker per items in `layer.data`
+         */
+		let data = layer.data;
+		let color = layer.color.value;
+		let positions = [];
+		data.forEach(el => {
+			positions.push(el.pos);
+		});
+		return (
+			<LayersControl.Overlay key={layer.ukey} name={layer.name} checked>
+				<FeatureGroup onAdd={this.onFeatureGroupAdd}>
+					<Polyline color={color} positions={positions}/>
+				</FeatureGroup>
+			</LayersControl.Overlay>
+		);
+	};
+
+
 	onFeatureGroupAdd(e) {
 		if (e.target.getBounds()._northEast !== undefined)
 			this.refs.map.leafletElement.fitBounds(e.target.getBounds());
@@ -112,6 +131,8 @@ class Map extends Component {
 					{
 						layers.map(([, layer]) => {
 							if (layer.ukey !== undefined) {
+								if (layer.rendering === "polyline")
+									return this.renderPolylineLayer(layer);
 								if (layer.rendering === "markers")
 									return this.renderMarkerLayer(layer);
 								if (layer.rendering === "heatmap")

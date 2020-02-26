@@ -42,6 +42,7 @@ const LAYER_TYPE_CYPHER = "cypher";
 const LAYER_TYPE_SPATIAL = "spatial";
 
 const RENDERING_MARKERS = "markers";
+const RENDERING_POLYLINE = "polyline";
 const RENDERING_HEATMAP = "heatmap";
 const RENDERING_CLUSTERS = "clusters";
 
@@ -594,27 +595,36 @@ class Layer extends Component {
 								<Form.Label>Rendering</Form.Label>
 								<Form.Check
 									type="radio"
-									id={ RENDERING_MARKERS }
-									label={ "Markers" }
-									value={ RENDERING_MARKERS }
+									id={RENDERING_MARKERS}
+									label={"Markers"}
+									value={RENDERING_MARKERS}
 									checked={this.state.rendering === RENDERING_MARKERS}
 									onChange={this.handleRenderingChange}
 									name="mapRenderingMarker"
 								/>
 								<Form.Check
 									type="radio"
-									id={ RENDERING_HEATMAP }
-									label={ "Heatmap" }
-									value={ RENDERING_HEATMAP }
+									id={RENDERING_POLYLINE}
+									label={"Polyline"}
+									value={RENDERING_POLYLINE}
+									checked={this.state.rendering === RENDERING_POLYLINE}
+									onChange={this.handleRenderingChange}
+									name="mapRenderingMarker"
+								/>
+								<Form.Check
+									type="radio"
+									id={RENDERING_HEATMAP}
+									label={"Heatmap"}
+									value={RENDERING_HEATMAP}
 									checked={this.state.rendering === RENDERING_HEATMAP}
 									onChange={this.handleRenderingChange}
 									name="mapRenderingHeatmap"
 								/>
 								<Form.Check
 									type="radio"
-									id={ RENDERING_CLUSTERS }
-									label={ "Clusters (not implemented yet)" }
-									value={ RENDERING_CLUSTERS }
+									id={RENDERING_CLUSTERS}
+									label={"Clusters (not implemented yet)"}
+									value={RENDERING_CLUSTERS}
 									checked={this.state.rendering === RENDERING_CLUSTERS}
 									onChange={this.handleRenderingChange}
 									name="mapRenderingCluster"
@@ -622,7 +632,9 @@ class Layer extends Component {
 								/>
 							</Form.Group>
 
-							<Form.Group controlId="formColor" hidden={this.state.rendering !== RENDERING_MARKERS} name="formgroupColor" >
+							<Form.Group controlId="formColor"
+										hidden={this.state.rendering !== RENDERING_MARKERS && this.state.rendering !== RENDERING_POLYLINE}
+										name="formgroupColor">
 								<Form.Label>Color</Form.Label>
 								<Select
 									className="form-control select"
