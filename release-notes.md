@@ -2,10 +2,11 @@
 
 ## 0.4 (WIP)
 
-- Added support for [neo4j-spatial plugin](https://github.com/neo4j-contrib/spatial) SimplePoint layers
+- Introduction of a "Polyline" rendering. So far, only supports single polyline.
+- Added support for [neo4j-spatial plugin](https://github.com/neo4j-contrib/spatial) SimplePoint layers (#5)
 - Bug fix: enforce tooltip is a string (fix rendering issue in some weird cases)
-- Fix CI
-- Code refactoring
+- Fix CI on GitHub
+- Code refactoring in introducing a neo4jService to isolate the DB queries
 
 
 ## 0.3.1 (2019-11-19)
