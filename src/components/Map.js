@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Map as LeafletMap, Marker, TileLayer, LayersControl, FeatureGroup, Tooltip } from 'react-leaflet'
+import { Map as LeafletMap, Marker, TileLayer, LayersControl, FeatureGroup, Popup } from 'react-leaflet'
 import HeatmapLayer from 'react-leaflet-heatmap-layer';
 import L from 'leaflet';
 
@@ -22,7 +22,7 @@ class Map extends Component {
 		if (d.tooltip) {
 			return (
 				<Marker key={j} position={d.pos} icon={icon} >
-					<Tooltip>{d.tooltip}</Tooltip>
+					<Popup>{d.tooltip}</Popup>
 				</Marker>
 			)
 		}

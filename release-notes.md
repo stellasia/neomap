@@ -2,6 +2,7 @@
 
 ## 0.4 (WIP)
 
+- Change marker tooltips to popup (so that one can copy/paste the content)
 - Enforce tooltip is a string (fix rendering issue in some weird cases)
 - Fix CI
 - Code refactoring
