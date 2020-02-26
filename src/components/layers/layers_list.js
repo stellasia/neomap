@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, {Component} from 'react';
 import Accordion from 'react-bootstrap/Accordion';
 import Layer from './layer';
 
@@ -23,10 +23,10 @@ class LayersList extends Component {
 
 	sendData(data) {
 		/*Receives new data from child layer
-           and propagete it to parent
+           and propagate it to parent
         */
-		var new_layer = data.layer;
-		var layers = this.state.layers;
+		let new_layer = data.layer;
+		let layers = this.state.layers;
 		layers[new_layer.ukey] = new_layer;
 		this.setState({
 			layers: layers
@@ -42,7 +42,7 @@ class LayersList extends Component {
            `this.state.layers` map
            and re-render map component
         */
-		var layers = this.state.layers;
+		let layers = this.state.layers;
 		delete layers[ukey];
 		this.setState({
 			layers: layers
@@ -54,19 +54,21 @@ class LayersList extends Component {
 
 
 	renderLayers() {
-		var layers = Object.entries(this.state.layers);
-		return layers.map( ([key,layer]) => {
+		let layers = Object.entries(this.state.layers);
+		return layers.map(([, layer]) => {
 			return (
-				<Layer data-id="layers" key={layer.ukey} ukey={layer.ukey} layer={layer} deleteLayer={this.deleteLayer} sendData={this.sendData} driver={this.state.driver} />
+				<Layer data-id="layers" key={layer.ukey} ukey={layer.ukey} layer={layer} deleteLayer={this.deleteLayer}
+					   sendData={this.sendData} driver={this.state.driver}/>
 			);
 		});
 	};
 
 
 	renderNewLayer() {
-		var uid = (new Date().getTime() + Math.random()).toString(36);
+		let uid = (new Date().getTime() + Math.random()).toString(36);
 		return (
-			<Layer key={uid} data-id="new-layer" ukey={uid} layer={undefined} sendData={this.sendData} driver={this.state.driver} />
+			<Layer key={uid} data-id="new-layer" ukey={uid} layer={undefined} sendData={this.sendData}
+				   driver={this.state.driver}/>
 		);
 	};
 
@@ -85,7 +87,7 @@ class LayersList extends Component {
 			</Accordion>
 		)
 	};
-};
+}
 
 
 export default LayersList;

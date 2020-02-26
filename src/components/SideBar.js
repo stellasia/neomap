@@ -23,7 +23,7 @@ class SideBar extends Component {
 
 	sendData(layers) {
 		/*Receives data from child layer
-           and propagete it to parent
+           and propagate it to parent
          */
 		this.setState({
 			layers: layers.layers
@@ -98,7 +98,7 @@ class SideBar extends Component {
 			</div>
 		);
 	};
-};
+}
 
 
 export default SideBar;
