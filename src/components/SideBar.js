@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, {Component} from 'react';
 import LayersList from './layers/layers_list';
 
 
@@ -19,7 +19,7 @@ class SideBar extends Component {
 
 	sendData(layers) {
 		/*Receives data from child layer
-           and propagete it to parent
+           and propagate it to parent
          */
 		this.setState({
 			layers: layers.layers
@@ -39,7 +39,7 @@ class SideBar extends Component {
 			/>
 		);
 	};
-};
+}
 
 
 export default SideBar;

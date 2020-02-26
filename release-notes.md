@@ -3,9 +3,11 @@
 ## 0.4 (WIP)
 
 - Change marker tooltips to popup (so that one can copy/paste the content)
-- Enforce tooltip is a string (fix rendering issue in some weird cases)
-- Fix CI
-- Code refactoring
+- Introduction of a "Polyline" rendering. So far, only supports single polyline.
+- Added support for [neo4j-spatial plugin](https://github.com/neo4j-contrib/spatial) SimplePoint layers (#5)
+- Bug fix: enforce tooltip is a string (fix rendering issue in some weird cases)
+- Fix CI on GitHub
+- Code refactoring by introducing a neo4jService to isolate the DB queries
 
 
 ## 0.3.1 (2019-11-19)
@@ -22,7 +24,7 @@
     - Inform the user when query returns no result
     - Warning when switching from advanced to simple query
     - Warning before deleting a layer (definitive action)
-- Possibility to switch from simple to advanced layer with prefilled query
+- Possibility to switch from simple to advanced layer with pre-filled query
 - Possibility to show the generated query for simple mode layer
 - Display the selected marker color in the layer header (left side bar)
 - Maximum number of points shown on the map is customizable (marker layer)

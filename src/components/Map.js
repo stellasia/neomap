@@ -1,5 +1,5 @@
-import React, { Component } from 'react'
-import { Map as LeafletMap, Marker, TileLayer, LayersControl, FeatureGroup, Popup } from 'react-leaflet'
+import React, {Component} from 'react'
+import {FeatureGroup, LayersControl, Map as LeafletMap, Marker, Polyline, TileLayer, Popup} from 'react-leaflet'
 import HeatmapLayer from 'react-leaflet-heatmap-layer';
 import L from 'leaflet';
 
@@ -36,17 +36,17 @@ class Map extends Component {
 	renderMarkerLayer(layer) {
 		/*Will show one marker per items in `layer.data`
          */
-		var data = layer.data;
-		var color = layer.color.value;
-		var url = `https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-${color}.png`;
-		var icon = new L.Icon({
+		let data = layer.data;
+		let color = layer.color.value;
+		let url = `https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-${color}.png`;
+		let icon = new L.Icon({
 			iconUrl: url
 		});
 		return (
 			<LayersControl.Overlay key={layer.ukey} name={layer.name} checked>
 				<FeatureGroup onAdd={this.onFeatureGroupAdd}>
 					{
-						data.map( (d, j) => {
+						data.map((d, j) => {
 							return this.renderMarker(d, j, icon);
 						})
 					}
@@ -59,15 +59,15 @@ class Map extends Component {
 	renderHeatmapLayer(layer) {
 		/* Create heatmap based on items in `layer.data`, each with weight 1.
          */
-		var data = layer.data;
+		let data = layer.data;
 		return (
-			<LayersControl.Overlay key={layer.ukey} name={layer.name} checked >
+			<LayersControl.Overlay key={layer.ukey} name={layer.name} checked>
 				<HeatmapLayer
 					fitBoundsOnLoad
 					points={data}
 					latitudeExtractor={m => m.pos[0]}
 					longitudeExtractor={m => m.pos[1]}
-					intensityExtractor={m => 1}
+					intensityExtractor={() => 1}
 					radius={layer.radius}
 					minOpacity={0.1}
 					max={10}
@@ -77,10 +77,29 @@ class Map extends Component {
 	};
 
 
-	renderClusterLayer(layer) {
+	renderClusterLayer() {
 		/*TODO: cluster layer
          */
 		return "Cluster layer not supported for now";
+	};
+
+
+	renderPolylineLayer(layer) {
+		/*Will show one marker per items in `layer.data`
+         */
+		let data = layer.data;
+		let color = layer.color.value;
+		let positions = [];
+		data.forEach(el => {
+			positions.push(el.pos);
+		});
+		return (
+			<LayersControl.Overlay key={layer.ukey} name={layer.name} checked>
+				<FeatureGroup onAdd={this.onFeatureGroupAdd}>
+					<Polyline color={color} positions={positions}/>
+				</FeatureGroup>
+			</LayersControl.Overlay>
+		);
 	};
 
 
@@ -91,14 +110,14 @@ class Map extends Component {
 
 
 	render() {
-		var layers = Object.entries(this.props.layers);
+		let layers = Object.entries(this.props.layers);
 
 		/*Map center will be the one of the last layer...
            TODO: compute zoom or use leaflet tools to set it automatically?
          */
 
-		var center = [47, 3];
-		var zoom = 4;
+		let center = [47, 3];
+		let zoom = 4;
 
 		return (
 			<LeafletMap center={center} zoom={zoom} ref="map">
@@ -110,14 +129,16 @@ class Map extends Component {
 						/>
 					</LayersControl.BaseLayer>
 					{
-						layers.map( ([key, layer]) => {
+						layers.map(([, layer]) => {
 							if (layer.ukey !== undefined) {
+								if (layer.rendering === "polyline")
+									return this.renderPolylineLayer(layer);
 								if (layer.rendering === "markers")
 									return this.renderMarkerLayer(layer);
 								if (layer.rendering === "heatmap")
 									return this.renderHeatmapLayer(layer);
 								if (layer.rendering === "clusters")
-									return this.renderClusterLayer(layer);
+									return this.renderClusterLayer();
 								return "";
 							}
 							return "";
@@ -127,7 +148,7 @@ class Map extends Component {
 			</LeafletMap>
 		)
 	}
-};
+}
 
 
 export default  Map;

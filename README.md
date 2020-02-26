@@ -1,4 +1,4 @@
-# neo-map
+# neomap
 
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/Naereen/StrapDown.js/graphs/commit-activity)
 
@@ -40,7 +40,7 @@ Read the [tutorial](https://github.com/stellasia/neomap/wiki/NeoMap-Tutorial/) o
 I am a data scientist, not a front-end developer. If someone with expertise with React wants to take a look and suggest improvements, that would be very welcome!
 
 
-### Developper mode
+### Developer mode
 
 1. Clone this repo
 2. Install dependencies:
@@ -51,7 +51,7 @@ I am a data scientist, not a front-end developer. If someone with expertise with
 
         npm run start
 
-4. Configure Neo4jDesktop by enabling the development mode in settings with the following paramters:
+4. Configure Neo4jDesktop by enabling the development mode in settings with the following parameters:
     - Entry point: `http://localhost:3000`
     - Root path: root of this repository
 
