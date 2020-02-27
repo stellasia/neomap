@@ -18,23 +18,11 @@ import "codemirror/lib/codemirror.css";
 import "codemirror/addon/lint/lint.css";
 import "codemirror/addon/hint/show-hint.css";
 import "cypher-codemirror/dist/cypher-codemirror-syntax.css";
+import ColorPicker from "../ColorPicker";
 
 
 // maximum number of points to show
-const LIMIT = 2000;
-
-// marker colors
-const POSSIBLE_COLORS = [
-	{value: "blue", label: "Blue"},
-	{value: "red", label: "Red"},
-	{value: "green", label: "Green"},
-	{value: "orange", label: "Orange"},
-	{value: "yellow", label: "Yellow"},
-	{value: "violet", label: "Violet"},
-	{value: "grey", label: "Grey"},
-	{value: "black", label: "Black"}
-];
-
+const LIMIT = 10000;
 
 // layer type: either from node labels or cypher
 const LAYER_TYPE_LATLON = "latlon";
@@ -59,7 +47,7 @@ const DEFAULT_LAYER = {
 	spatialLayers: [],
 	data: [],
 	position: [],
-	color: {value: "blue", label: "Blue"},
+	color: {r: 0, g:0, b:255, a:1},
 	limit: LIMIT,
 	rendering: RENDERING_MARKERS,
 	radius: 30,
@@ -283,9 +271,9 @@ class Layer extends Component {
 	};
 
 
-	handleColorChange(e) {
+	handleColorChange(color) {
 		this.setState({
-			color: e,
+			color: color,
 		});
 	};
 
@@ -516,6 +504,8 @@ class Layer extends Component {
 
 
 	render() {
+		let color = `rgba(${this.state.color.r}, ${this.state.color.g}, ${this.state.color.b}, ${this.state.color.a})`;
+
 		return (
 
 			<Card>
@@ -524,10 +514,8 @@ class Layer extends Component {
 					<h3>{this.state.name}
 						<small hidden>({this.state.ukey})</small>
 						<span
-							hidden={this.state.rendering !== RENDERING_MARKERS}
-							style={{background: this.state.color.value, float: 'right'}}>
-	    {this.state.color.label}
-	    </span>
+							hidden={this.state.rendering === RENDERING_HEATMAP}
+							style={{background: color, float: 'right', height: '20px', width: '50px'}}> </span>
 					</h3>
 				</Accordion.Toggle>
 
@@ -638,12 +626,9 @@ class Layer extends Component {
 										hidden={this.state.rendering !== RENDERING_MARKERS && this.state.rendering !== RENDERING_POLYLINE}
 										name="formgroupColor">
 								<Form.Label>Color</Form.Label>
-								<Select
-									className="form-control select"
-									options={POSSIBLE_COLORS}
-									defaultValue={this.state.color}
-									onChange={this.handleColorChange}
-									name="color"
+								<ColorPicker
+									color={ this.state.color }
+									handleColorChange={this.handleColorChange}
 								/>
 							</Form.Group>
 

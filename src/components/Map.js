@@ -1,7 +1,6 @@
 import React, {Component} from 'react'
-import {FeatureGroup, LayersControl, Map as LeafletMap, Marker, Polyline, TileLayer, Popup} from 'react-leaflet'
+import {FeatureGroup, LayersControl, Map as LeafletMap, CircleMarker, Polyline, TileLayer, Popup} from 'react-leaflet'
 import HeatmapLayer from 'react-leaflet-heatmap-layer';
-import L from 'leaflet';
 
 
 class Map extends Component {
@@ -16,19 +15,33 @@ class Map extends Component {
 	};
 
 
-	renderMarker(d, j, icon) {
+	renderMarker(d, j, color, opacity) {
 		/*Render maker with optional tooltip
          */
 		if (d.tooltip) {
 			return (
-				<Marker key={j} position={d.pos} icon={icon} >
+				<CircleMarker key={j}
+							  center={d.pos}
+							  radius={5}
+							  color={color}
+							  fill={true}
+							  fillColor={color}
+							  fillOpacity={opacity}
+				>
 					<Popup>{d.tooltip}</Popup>
-				</Marker>
+				</CircleMarker>
 			)
 		}
 		return (
-			<Marker key={j} position={d.pos} icon={icon} >
-			</Marker>
+			<CircleMarker key={j}
+						  center={d.pos}
+						  radius={5}
+						  color={color}
+						  fill={true}
+						  fillColor={color}
+						  fillOpacity={opacity}
+			>
+			</CircleMarker>
 		)
 	};
 
@@ -37,20 +50,15 @@ class Map extends Component {
 		/*Will show one marker per items in `layer.data`
          */
 		let data = layer.data;
-		let color = layer.color.value;
-		let url = `https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-${color}.png`;
-		let icon = new L.Icon({
-			iconUrl: url,
-			iconSize: [25, 41],
-			iconAnchor: [12, 41],
-			popupAnchor: [1, -34],
-		});
+		let color = `rgb(${layer.color.r}, ${layer.color.g}, ${layer.color.b})`;
+		let opacity = layer.color.a;
+
 		return (
 			<LayersControl.Overlay key={layer.ukey} name={layer.name} checked>
 				<FeatureGroup onAdd={this.onFeatureGroupAdd}>
 					{
 						data.map((d, j) => {
-							return this.renderMarker(d, j, icon);
+							return this.renderMarker(d, j, color, opacity);
 						})
 					}
 				</FeatureGroup>
@@ -91,7 +99,7 @@ class Map extends Component {
 		/*Will show one marker per items in `layer.data`
          */
 		let data = layer.data;
-		let color = layer.color.value;
+		let color = layer.color;
 		let positions = [];
 		data.forEach(el => {
 			positions.push(el.pos);
@@ -99,7 +107,7 @@ class Map extends Component {
 		return (
 			<LayersControl.Overlay key={layer.ukey} name={layer.name} checked>
 				<FeatureGroup onAdd={this.onFeatureGroupAdd}>
-					<Polyline color={color} positions={positions}/>
+					<Polyline color={color} positions={positions} />
 				</FeatureGroup>
 			</LayersControl.Overlay>
 		);
@@ -123,7 +131,7 @@ class Map extends Component {
 		let zoom = 4;
 
 		return (
-			<LeafletMap center={center} zoom={zoom} ref="map">
+			<LeafletMap center={center} zoom={zoom} ref="map" preferCanvas={true} >
 				<LayersControl>
 					<LayersControl.BaseLayer name="Base" checked>
 						<TileLayer
