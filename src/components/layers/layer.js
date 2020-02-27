@@ -569,6 +569,7 @@ class Layer extends Component {
 									onChange={this.handleLayerTypeChange}
 									name="layerTypeSpatial"
 									disabled={ !this.state.hasSpatialPlugin }
+									className="beta"
 								/>
 							</Form.Group>
 
@@ -607,6 +608,7 @@ class Layer extends Component {
 									checked={this.state.rendering === RENDERING_HEATMAP}
 									onChange={this.handleRenderingChange}
 									name="mapRenderingHeatmap"
+									className="beta"
 								/>
 								<Form.Check
 									type="radio"

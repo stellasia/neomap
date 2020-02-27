@@ -13,6 +13,7 @@ class LayersList extends Component {
 			layers: props.layers
 		};
 
+		this.updateLayers = this.updateLayers.bind(this);
 		this.sendData = this.sendData.bind(this);
 		this.renderLayers = this.renderLayers.bind(this);
 		this.renderNewLayer = this.renderNewLayer.bind(this);
@@ -71,6 +72,12 @@ class LayersList extends Component {
 		);
 	};
 
+
+	updateLayers(layers) {
+		this.setState({
+			layers: layers,
+		});
+	};
 
 	render() {
 		return (
