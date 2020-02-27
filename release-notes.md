@@ -1,7 +1,8 @@
-# neo-map release notes
+# neomap release notes
 
-## 0.4 (WIP)
+## 0.4.0 (WIP)
 
+- Add "Save As" and "Open" basic functionality
 - Change marker tooltips to popup (so that one can copy/paste the content)
 - Introduction of a "Polyline" rendering. So far, only supports single polyline.
 - Added support for [neo4j-spatial plugin](https://github.com/neo4j-contrib/spatial) SimplePoint layers (#5)

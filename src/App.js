@@ -1,8 +1,10 @@
 import React, {Component} from "react";
 import "./App.css";
 import Map from "./components/Map";
+import Menu from "./components/Menu";
 import SideBar from "./components/SideBar";
 import neo4jService from './services/neo4jService'
+import download from "downloadjs";
 
 
 class App extends Component {
@@ -16,7 +18,8 @@ class App extends Component {
 		};
 
 		this.layersChanged = this.layersChanged.bind(this);
-
+		this.saveConfigToFile = this.saveConfigToFile.bind(this);
+		this.loadConfigFromFile = this.loadConfigFromFile.bind(this);
 	};
 
 	getDriver() {
@@ -42,10 +45,38 @@ class App extends Component {
 		});
 	};
 
+	saveConfigToFile(e) {
+		let config = JSON.stringify(this.state.layers);
+		let fileName = "neomap_config.json";
+		download(config, fileName, "application/json");
+		e.preventDefault();
+	};
+
+
+	loadConfigFromFile(e) {
+		const fileSelector = document.createElement('input');
+		fileSelector.setAttribute('type', 'file');
+		fileSelector.click();
+		fileSelector.onchange = (ev) => {
+			const file = ev.target.files[0];
+			let fileReader = new FileReader();
+			fileReader.onloadend = (e) => {
+				const content = e.target.result;
+				const layers = JSON.parse(content);
+				// send data upward (to the Map)
+				this.layersChanged({layers: layers});
+			};
+			fileReader.readAsText(file);
+		};
+		e.preventDefault();
+	};
+
+
 	renderUI() {
 		return (
 			<div id="wrapper" className="row">
 				<div id="sidebar" className="col-md-4">
+					<Menu saveConfigToFile={this.saveConfigToFile} loadConfigFromFile={this.loadConfigFromFile} />
 					<SideBar
 						key="sidebar"
 						layersChanged = {this.layersChanged}
