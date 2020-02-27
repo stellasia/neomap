@@ -15,6 +15,7 @@
 		"neo4j-driver": "^1.7.2",
 		"react": "^16.3.2",
 		"react-bootstrap": "^1.0.0-beta.14",
+		"react-color": "^2.18.0",
 		"react-confirm-alert": "^2.4.1",
 		"react-dom": "^16.3.2",
 		"react-leaflet": "^2.4.0",
