@@ -271,10 +271,9 @@ class Layer extends Component {
 	};
 
 
-	handleColorChange(color, opacity) {
+	handleColorChange(color) {
 		this.setState({
 			color: color,
-			opacity: opacity
 		});
 	};
 
