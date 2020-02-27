@@ -40,7 +40,10 @@ class Map extends Component {
 		let color = layer.color.value;
 		let url = `https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-${color}.png`;
 		let icon = new L.Icon({
-			iconUrl: url
+			iconUrl: url,
+			iconSize: [25, 41],
+			iconAnchor: [12, 41],
+			popupAnchor: [1, -34],
 		});
 		return (
 			<LayersControl.Overlay key={layer.ukey} name={layer.name} checked>
