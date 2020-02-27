@@ -99,7 +99,7 @@ class Map extends Component {
 		/*Will show one marker per items in `layer.data`
          */
 		let data = layer.data;
-		let color = layer.color;
+		let color = `rgb(${layer.color.r}, ${layer.color.g}, ${layer.color.b})`;
 		let positions = [];
 		data.forEach(el => {
 			positions.push(el.pos);

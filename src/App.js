@@ -63,8 +63,9 @@ class App extends Component {
 			fileReader.onloadend = (e) => {
 				const content = e.target.result;
 				const layers = JSON.parse(content);
-				// send data upward (to the Map)
-				this.layersChanged({layers: layers});
+				this.setState({layers: layers}, () => {
+					this.refs.sidebar.forceUpdateLayers(layers);
+				});
 			};
 			fileReader.readAsText(file);
 		};
@@ -79,6 +80,7 @@ class App extends Component {
 					<Menu saveConfigToFile={this.saveConfigToFile} loadConfigFromFile={this.loadConfigFromFile} />
 					<SideBar
 						key="sidebar"
+						ref="sidebar"
 						layersChanged = {this.layersChanged}
 						layers = {this.state.layers}
 						driver = {this.driver}

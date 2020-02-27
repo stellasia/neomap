@@ -13,11 +13,16 @@ class LayersList extends Component {
 			layers: props.layers
 		};
 
-		this.updateLayers = this.updateLayers.bind(this);
+		this.forceUpdateLayers = this.forceUpdateLayers.bind(this);
 		this.sendData = this.sendData.bind(this);
 		this.renderLayers = this.renderLayers.bind(this);
 		this.renderNewLayer = this.renderNewLayer.bind(this);
 		this.deleteLayer = this.deleteLayer.bind(this);
+	};
+
+
+	forceUpdateLayers(layers) {
+		this.setState({layers: layers});
 	};
 
 
@@ -72,12 +77,6 @@ class LayersList extends Component {
 		);
 	};
 
-
-	updateLayers(layers) {
-		this.setState({
-			layers: layers,
-		});
-	};
 
 	render() {
 		return (

@@ -13,6 +13,7 @@ class SideBar extends Component {
 		};
 
 		this.sendData = this.sendData.bind(this);
+		this.forceUpdateLayers = this.forceUpdateLayers.bind(this);
 
 	};
 
@@ -26,14 +27,20 @@ class SideBar extends Component {
 	};
 
 
+	forceUpdateLayers(layers) {
+		this.setState({layers: layers});
+		this.refs.layerlist.forceUpdateLayers(layers);
+	};
+
 
 	render() {
 		return (
-				<LayersList
-					layers = {this.state.layers}
-					sendData = {this.sendData}
-					driver = {this.state.driver}
-				/>
+			<LayersList
+				ref="layerlist"
+				layers = {this.state.layers}
+				sendData = {this.sendData}
+				driver = {this.state.driver}
+			/>
 		);
 	};
 }
