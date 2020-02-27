@@ -1,11 +1,13 @@
 # neomap release notes
 
-## 0.4.0 (WIP)
+## 0.4.0 (2020-02-27)
 
-- Add "Save As" and "Open" basic functionality
-- Change marker tooltips to popup (so that one can copy/paste the content)
-- Introduction of a "Polyline" rendering. So far, only supports single polyline.
-- Added support for [neo4j-spatial plugin](https://github.com/neo4j-contrib/spatial) SimplePoint layers (#5)
+- Performance improvements for map display (#32)
+- Use a color picker to choose marker color in the full palette (#11)
+- Change marker tooltips to popup (so that one can copy/paste the content) and icon markers to circle markers
+- Introduction of a "Polyline" rendering. So far, only supports single polyline (beta)
+- Added support for [neo4j-spatial plugin](https://github.com/neo4j-contrib/spatial) SimplePoint layers (#5) (beta)
+- Add "Save As" and "Open" basic functionality (beta)
 - Bug fix: enforce tooltip is a string (fix rendering issue in some weird cases)
 - Fix CI on GitHub
 - Code refactoring by introducing a neo4jService to isolate the DB queries
