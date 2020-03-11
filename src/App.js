@@ -1,114 +1,109 @@
-import React, { Component } from "react";
+import React, {Component} from "react";
 import "./App.css";
 import Map from "./components/Map";
+import Menu from "./components/Menu";
 import SideBar from "./components/SideBar";
+import neo4jService from './services/neo4jService'
+import download from "downloadjs";
 
-const neo4j = require("neo4j-driver/lib/browser/neo4j-web.min.js");
-const DEFAULT_DRIVER = {
-    uri: "bolt://localhost:7687",
-    user: "neo4j",
-    password: "neo4j",
-};
-
-
-const neo4jDesktopApi = window.neo4jDesktopApi;
 
 class App extends Component {
 
-    constructor(props) {
-	super(props);
+	constructor(props) {
+		super(props);
 
-	/*Get connection to the active graph
+		this.state = {
+			layers: {},
+			ready: false
+		};
 
-	   TODO: what happens if the active graph changes?
-	*/
-	if (window.neo4jDesktopApi) {
-	    neo4jDesktopApi.getContext().then((context) => {
-		for (let project of context.projects) {
-		    for (let graph of project.graphs) {
-			if (graph.status === 'ACTIVE') {
-			    console.log("Active graph is; " + graph.name + " (" + graph.description + ")");
-			    let boltProtocol = graph.connection.configuration.protocols.bolt;
-			    let driver = neo4j.v1.driver(
-				boltProtocol.url,
-				neo4j.v1.auth.basic(boltProtocol.username, boltProtocol.password)
-			    );
-			    this.driver = driver;
-			}
-		    }
-		}
-	    });
-	} else {
-	    this.driver = this.getDriver();
-	}
-
-	//console.log(this.driver);
-
-	this.state = {
-	    layers: {},
+		this.layersChanged = this.layersChanged.bind(this);
+		this.saveConfigToFile = this.saveConfigToFile.bind(this);
+		this.loadConfigFromFile = this.loadConfigFromFile.bind(this);
 	};
 
-	this.layersChanged = this.layersChanged.bind(this);
+	getDriver() {
+		return neo4jService.getNeo4jDriver();
+	}
 
-    };
+	componentDidMount() {
+		this.getDriver().then( result => {
+			this.driver = result;
+		}).then( () => {
+			this.setState({
+				ready: true,
+			});
+		});
+	}
 
+	layersChanged(childData) {
+		/* Something changed in the layer definition,
+           need to update map
+        */
+		this.setState({
+			layers: childData.layers
+		});
+	};
 
-    getDriver() {
-	/*Get a default driver based on hard coded credential above
-	   TODO: remove or make this configurable through env vars or...
-	*/
-	var uri = DEFAULT_DRIVER.uri;
-	var usr = DEFAULT_DRIVER.user;
-	var pwd = DEFAULT_DRIVER.password;
-	return neo4j.v1.driver(
-	    uri,
-	    neo4j.v1.auth.basic(
-		usr,
-		pwd
-	    )
-	);
-    };
-
-    
-    layersChanged(childData) {
-	/* Something changed in the layer definition,
-	   need to update map
-	*/
-	this.setState({
-	    layers: childData.layers
-	});
-    };
-
-
-    renderUI() {
-	return (
-	    <div id="wrapper" className="row">
-            <div id="sidebar" className="col-md-4">
-            <SideBar
-	    key="sidebar"
-	    layersChanged = {this.layersChanged}
-	    layers = {this.state.layers}
-	    driver = {this.driver}
-            />
-            </div>
-            <div id="app-maparea" className="col-md-8">
-            <Map
-	    key="map"
-	    layers = {this.state.layers}
-            />
-            </div>
-            </div>
-	);
-    };
+	saveConfigToFile(e) {
+		let config = JSON.stringify(this.state.layers);
+		let fileName = "neomap_config.json";
+		download(config, fileName, "application/json");
+		e.preventDefault();
+	};
 
 
-    render() {
-	// wait until driver is ready...
-	return this.driver ? this.renderUI() : (
-	    <span>Loading...</span>
-	)
-    };
-};
+	loadConfigFromFile(e) {
+		const fileSelector = document.createElement('input');
+		fileSelector.setAttribute('type', 'file');
+		fileSelector.click();
+		fileSelector.onchange = (ev) => {
+			const file = ev.target.files[0];
+			let fileReader = new FileReader();
+			fileReader.onloadend = (e) => {
+				const content = e.target.result;
+				const layers = JSON.parse(content);
+				this.setState({layers: layers}, () => {
+					this.refs.sidebar.forceUpdateLayers(layers);
+				});
+			};
+			fileReader.readAsText(file);
+		};
+		e.preventDefault();
+	};
+
+
+	renderUI() {
+		return (
+			<div id="wrapper" className="row">
+				<div id="sidebar" className="col-md-4">
+					<Menu saveConfigToFile={this.saveConfigToFile} loadConfigFromFile={this.loadConfigFromFile} />
+					<SideBar
+						key="sidebar"
+						ref="sidebar"
+						layersChanged = {this.layersChanged}
+						layers = {this.state.layers}
+						driver = {this.driver}
+					/>
+				</div>
+				<div id="app-maparea" className="col-md-8">
+					<Map
+						key="map"
+						layers = {this.state.layers}
+					/>
+				</div>
+			</div>
+		);
+	};
+
+
+	render() {
+		// wait until driver is ready...
+		return this.state.ready ? this.renderUI() : (
+			<span>Loading...</span>
+		)
+	};
+}
 
 
 export default App;

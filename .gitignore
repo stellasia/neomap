@@ -5,3 +5,4 @@
 # node dependencies
 /node_modules
 
+.idea
