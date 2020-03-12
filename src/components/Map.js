@@ -18,7 +18,7 @@ class Map extends Component {
 	}
 	componentDidUpdate() {
 		let layers = Object.entries(this.props.layers);
-		let globalBounds = new L.LatLngBounds([[10,40],[50,90]]);
+		let globalBounds = new L.LatLngBounds();
 		let ukeyArray = [];
 		// Iterate through layers
 		layers.map(([, layer]) => {
@@ -34,6 +34,9 @@ class Map extends Component {
 			}
 			return null;
 		});
+		// Check if globalBounds is defined
+		if (!globalBounds.isValid())
+			globalBounds = new L.LatLngBounds([[10,40],[50,90]]);
 		// Find and clean deleted layers
 		let deletedUkeyLayers = Object.keys(this.leafletLayers).filter(function(key) {
 			return !ukeyArray.includes(key);
