@@ -66,6 +66,7 @@ class Map extends Component {
 		});
 		deletedMarkerUkeyLayers.map((key) => {
 			this.map.removeLayer(this.leafletMarkerLayers[key]);
+			delete this.leafletMarkerLayers[key];
 			return null;
 		});
 		let deletedHeatmapUkeyLayers = Object.keys(this.leafletHeatmapLayers).filter(function(key) {
@@ -73,6 +74,7 @@ class Map extends Component {
 		});
 		deletedHeatmapUkeyLayers.map((key) => {
 			this.map.removeLayer(this.leafletHeatmapLayers[key]);
+			delete this.leafletHeatmapLayers[key];
 			return null;
 		});
 		let deletedClusterUkeyLayers = Object.keys(this.leafletClusterLayers).filter(function(key) {
@@ -80,6 +82,7 @@ class Map extends Component {
 		});
 		deletedClusterUkeyLayers.map((key) => {
 			this.map.removeLayer(this.leafletClusterLayers[key]);
+			delete this.leafletClusterLayers[key];
 			return null;
 		});
 		this.map.flyToBounds(globalBounds);
