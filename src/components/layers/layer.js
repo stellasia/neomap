@@ -613,7 +613,6 @@ class Layer extends Component {
 									onChange={this.handleRenderingChange}
 									name="mapRenderingHeatmap"
 									className="beta"
-									disabled
 								/>
 								<Form.Check
 									type="radio"
@@ -649,7 +648,6 @@ class Layer extends Component {
 									className="slider"
 									onChange={this.handleRadiusChange}
 									name="radius"
-									disabled
 								/>
 							</Form.Group>
 
