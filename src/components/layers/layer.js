@@ -10,6 +10,7 @@ import {Button, Form} from 'react-bootstrap';
 import {CypherEditor} from "graph-app-kit/components/Editor"
 import {confirmAlert} from 'react-confirm-alert'; // Import
 import neo4jService from '../../services/neo4jService'
+import L from 'leaflet';
 
 
 import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
@@ -18,7 +19,7 @@ import "codemirror/lib/codemirror.css";
 import "codemirror/addon/lint/lint.css";
 import "codemirror/addon/hint/show-hint.css";
 import "cypher-codemirror/dist/cypher-codemirror-syntax.css";
-import ColorPicker from "../ColorPicker";
+// import ColorPicker from "../ColorPicker";
 
 
 // maximum number of points to show
@@ -46,8 +47,8 @@ const DEFAULT_LAYER = {
 	propertyNames: [],
 	spatialLayers: [],
 	data: [],
-	position: [],
-	color: {r: 0, g:0, b:255, a:1},
+	bounds: [],
+	// color: {r: 0, g:0, b:255, a:1},
 	limit: LIMIT,
 	rendering: RENDERING_MARKERS,
 	radius: 30,
@@ -82,7 +83,7 @@ class Layer extends Component {
 		this.handleLonPropertyChange = this.handleLonPropertyChange.bind(this);
 		this.handleTooltipPropertyChange = this.handleTooltipPropertyChange.bind(this);
 		this.handleLimitChange = this.handleLimitChange.bind(this);
-		this.handleColorChange = this.handleColorChange.bind(this);
+		// this.handleColorChange = this.handleColorChange.bind(this);
 		this.handleRenderingChange = this.handleRenderingChange.bind(this);
 		this.handleRadiusChange = this.handleRadiusChange.bind(this);
 		this.handleCypherChange = this.handleCypherChange.bind(this);
@@ -100,26 +101,20 @@ class Layer extends Component {
 	}
 
 
-	updatePosition() {
-		/*Set the map center based on `this.state.data`
+	updateBounds() {
+		/* Compute the map bounds based on `this.state.data`
          */
 		let arr = this.state.data;
-		let pos = [47, 3];
+		let arrOfLatLngs = [];
+		let bounds = new L.LatLngBounds();
 		if (arr.length > 0) {
-			let latMean = 0;
-			let lonMean = 0;
 			arr.map((item,) => {
-				let lat = item.pos[0];
-				let lon = item.pos[1];
-				latMean += parseFloat(lat);
-				lonMean += parseFloat(lon);
+				arrOfLatLngs.push(item.pos);
 				return undefined;
 			});
-			latMean = latMean / arr.length;
-			lonMean = lonMean / arr.length;
-			pos = [latMean, lonMean];
+			bounds = new L.LatLngBounds(arrOfLatLngs);
 		}
-		this.setState({position: pos}, function() {
+		this.setState({bounds: bounds}, function() {
 			this.props.sendData({
 				ukey: this.state.ukey,
 				layer: this.state
@@ -210,7 +205,7 @@ class Layer extends Component {
 				alert(message);
 			} else {
 				this.setState({data: res.result}, function () {
-					this.updatePosition()
+					this.updateBounds()
 				});
 			}
 		});
@@ -271,11 +266,11 @@ class Layer extends Component {
 	};
 
 
-	handleColorChange(color) {
-		this.setState({
-			color: color,
-		});
-	};
+	// handleColorChange(color) {
+	// 	this.setState({
+	// 		color: color,
+	// 	});
+	// };
 
 
 	handleSpatialLayerChanged(e) {
@@ -389,7 +384,11 @@ class Layer extends Component {
 						name="nodeLabel"
 					/>
 				</Form.Group>
-				<Form.Group controlId="formTooltipProperty" hidden={(this.state.rendering !== RENDERING_MARKERS)}  name="formgroupTooltip">
+				<Form.Group 
+					controlId="formTooltipProperty" 
+					hidden={this.state.rendering !== RENDERING_MARKERS && this.state.rendering !== RENDERING_CLUSTERS}  
+					name="formgroupTooltip"
+				>
 					<Form.Label>Tooltip property</Form.Label>
 					<Select
 						className="form-control select"
@@ -472,7 +471,11 @@ class Layer extends Component {
 					/>
 				</Form.Group>
 
-				<Form.Group controlId="formTooltipProperty" hidden={(this.state.rendering !== RENDERING_MARKERS)}  name="formgroupTooltip">
+				<Form.Group 
+					controlId="formTooltipProperty" 
+					hidden={this.state.rendering !== RENDERING_MARKERS  && this.state.rendering !== RENDERING_CLUSTERS}  
+					name="formgroupTooltip"
+				>
 					<Form.Label>Tooltip property</Form.Label>
 					<Select
 						className="form-control select"
@@ -504,7 +507,7 @@ class Layer extends Component {
 
 
 	render() {
-		let color = `rgba(${this.state.color.r}, ${this.state.color.g}, ${this.state.color.b}, ${this.state.color.a})`;
+		// let color = `rgba(${this.state.color.r}, ${this.state.color.g}, ${this.state.color.b}, ${this.state.color.a})`;
 
 		return (
 
@@ -513,9 +516,9 @@ class Layer extends Component {
 				<Accordion.Toggle as={Card.Header} eventKey={this.state.ukey} >
 					<h3>{this.state.name}
 						<small hidden>({this.state.ukey})</small>
-						<span
+						{/* <span
 							hidden={this.state.rendering === RENDERING_HEATMAP}
-							style={{background: color, float: 'right', height: '20px', width: '50px'}}> </span>
+							style={{background: color, float: 'right', height: '20px', width: '50px'}}> </span> */}
 					</h3>
 				</Accordion.Toggle>
 
@@ -599,6 +602,7 @@ class Layer extends Component {
 									checked={this.state.rendering === RENDERING_POLYLINE}
 									onChange={this.handleRenderingChange}
 									name="mapRenderingMarker"
+									disabled
 								/>
 								<Form.Check
 									type="radio"
@@ -609,11 +613,12 @@ class Layer extends Component {
 									onChange={this.handleRenderingChange}
 									name="mapRenderingHeatmap"
 									className="beta"
+									disabled
 								/>
 								<Form.Check
 									type="radio"
 									id={RENDERING_CLUSTERS}
-									label={"Clusters (not implemented yet)"}
+									label={"Clusters"}
 									value={RENDERING_CLUSTERS}
 									checked={this.state.rendering === RENDERING_CLUSTERS}
 									onChange={this.handleRenderingChange}
@@ -622,15 +627,17 @@ class Layer extends Component {
 								/>
 							</Form.Group>
 
-							<Form.Group controlId="formColor"
-										hidden={this.state.rendering !== RENDERING_MARKERS && this.state.rendering !== RENDERING_POLYLINE}
+							{/* <Form.Group controlId="formColor"
+										hidden={this.state.rendering !== RENDERING_MARKERS && 
+											this.state.rendering !== RENDERING_POLYLINE && 
+											this.state.rendering !== RENDERING_CLUSTERS}
 										name="formgroupColor">
 								<Form.Label>Color</Form.Label>
 								<ColorPicker
 									color={ this.state.color }
 									handleColorChange={this.handleColorChange}
 								/>
-							</Form.Group>
+							</Form.Group> */}
 
 							<Form.Group controlId="formRadius" hidden={this.state.rendering !== RENDERING_HEATMAP} >
 								<Form.Label>Heatmap radius</Form.Label>
@@ -642,6 +649,7 @@ class Layer extends Component {
 									className="slider"
 									onChange={this.handleRadiusChange}
 									name="radius"
+									disabled
 								/>
 							</Form.Group>
 

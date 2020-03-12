@@ -3,53 +3,61 @@ import L from 'leaflet';
 
 class Map extends Component {
 
-	constructor(props) {
-		super(props);
-
-		this.renderMarkerLayer = this.renderMarkerLayer.bind(this);
-		this.renderHeatmapLayer = this.renderHeatmapLayer.bind(this);
-		this.renderClusterLayer = this.renderClusterLayer.bind(this);
-	};
-
 	componentDidMount() {
-		// create map
+		// init an empty map
 		this.map = L.map('map', {
-		  center: [49.8419, 24.0315],
-		  zoom: 16,
-		  layers: [
+			center: [49.8419, 24.0315],
+			zoom: 4,
+			layers: [
 			L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-			  attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+				attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
 			}),
-		  ]
+			]
 		});
-	  }
-	renderMarker(d, j, color, opacity) {
-		/*Render maker with optional tooltip
-         */
-		return null;
-	};
-	renderMarkerLayer(layer) {
-		/*Will show one marker per items in `layer.data`
-         */
-		return null;
-	};
-	renderHeatmapLayer(layer) {
-		/* Create heatmap based on items in `layer.data`, each with weight 1.
-         */
-		return null;
-	};
-	renderClusterLayer(layer) {
-		/*Will show one marker per items in `layer.data`
-         */
-		return null;;
-	};
-	renderPolylineLayer(layer) {
-		/*Will show one marker per items in `layer.data`
-         */
-		return null;
-	};
+		this.leafletLayers = {};
+	}
+	componentDidUpdate() {
+		let layers = Object.entries(this.props.layers);
+		let globalBounds = new L.LatLngBounds([[10,40],[50,90]]);
+		let ukeyArray = [];
+		// Iterate through layers
+		layers.map(([, layer]) => {
+			if (layer.ukey !== undefined) {
+				ukeyArray.push(layer.ukey);
+				globalBounds.extend(layer.bounds);
+				if (layer.rendering === "markers") {
+					if (!this.leafletLayers[layer.ukey]) {
+						this.leafletLayers[layer.ukey] = L.layerGroup().addTo(this.map);
+					}
+					this.updateMarkerLayer(layer.data, layer.ukey);
+				}
+			}
+			return null;
+		});
+		// Find and clean deleted layers
+		let deletedUkeyLayers = Object.keys(this.leafletLayers).filter(function(key) {
+			return !ukeyArray.includes(key);
+		});
+		deletedUkeyLayers.map((key) => {
+			this.map.removeLayer(this.leafletLayers[key]);
+			return null;
+		});
+		this.map.flyToBounds(globalBounds);
+	}
+	updateMarkerLayer(data, ukey) {
+		// todo check if the layer as change before rerendering it
+		this.leafletLayers[ukey].clearLayers();
+		let m = null;
+		data.forEach(entry => {
+			m = L.marker(
+				entry.pos,
+				{ title: entry.tooltip }
+			).addTo(this.leafletLayers[ukey]);
+			m.bindTooltip(entry.tooltip);
+		});
+	}
 	render() {	
-		return <div id="map"></div>
+		return <div id="map"></div>;
 	}
 }
 
