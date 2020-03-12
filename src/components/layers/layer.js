@@ -622,7 +622,7 @@ class Layer extends Component {
 									checked={this.state.rendering === RENDERING_CLUSTERS}
 									onChange={this.handleRenderingChange}
 									name="mapRenderingCluster"
-									disabled
+									className="beta"
 								/>
 							</Form.Group>
 

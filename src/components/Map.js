@@ -1,6 +1,10 @@
 import React, {Component} from 'react'
 import L from 'leaflet';
 import 'leaflet.heat';
+import 'leaflet.markercluster';
+
+import 'leaflet.markercluster/dist/MarkerCluster.css';
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 
 class Map extends Component {
 
@@ -17,12 +21,14 @@ class Map extends Component {
 		});
 		this.leafletMarkerLayers = {};
 		this.leafletHeatmapLayers = {};
+		this.leafletClusterLayers = {};
 	}
 	componentDidUpdate() {
 		let layers = Object.entries(this.props.layers);
 		let globalBounds = new L.LatLngBounds();
 		let ukeyMarkerArray = [];
 		let ukeyHeatmapArray = [];
+		let ukeyClusterArray = [];
 		// Iterate through layers
 		layers.map(([, layer]) => {
 			if (layer.ukey !== undefined) {
@@ -40,6 +46,13 @@ class Map extends Component {
 						this.map.removeLayer(this.leafletHeatmapLayers[layer.ukey]);
 					}
 					this.updateHeatmapLayer(layer.data, layer.radius, layer.ukey)
+				} else if (layer.rendering === "clusters") {
+					ukeyClusterArray.push(layer.ukey);
+					if (!this.leafletClusterLayers[layer.ukey]) {
+						this.leafletClusterLayers[layer.ukey] = L.markerClusterGroup();
+						this.map.addLayer(this.leafletClusterLayers[layer.ukey]);
+					}
+					this.updateClusterLayer(layer.data, layer.ukey);
 				}
 			}
 			return null;
@@ -60,6 +73,13 @@ class Map extends Component {
 		});
 		deletedHeatmapUkeyLayers.map((key) => {
 			this.map.removeLayer(this.leafletHeatmapLayers[key]);
+			return null;
+		});
+		let deletedClusterUkeyLayers = Object.keys(this.leafletClusterLayers).filter(function(key) {
+			return !ukeyClusterArray.includes(key);
+		});
+		deletedClusterUkeyLayers.map((key) => {
+			this.map.removeLayer(this.leafletClusterLayers[key]);
 			return null;
 		});
 		this.map.flyToBounds(globalBounds);
@@ -90,6 +110,16 @@ class Map extends Component {
 			}).addTo(this.map);
 		// this.leafletHeatmapLayers[ukey].setLatLngs(heatData);
 		// this.leafletHeatmapLayers[ukey].setConfig({ radius });
+	}
+	updateClusterLayer(data, ukey) {
+		// todo check if the layer as change before rerendering it
+		this.leafletClusterLayers[ukey].clearLayers();
+		let m = null;
+		data.forEach(entry => {
+			m = L.marker(entry.pos,{ title: entry.tooltip });
+			m.bindTooltip(entry.tooltip);
+			this.leafletClusterLayers[ukey].addLayer(m);
+		});
 	}
 	render() {	
 		return <div id="map"></div>;
