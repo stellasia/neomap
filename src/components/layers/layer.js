@@ -19,7 +19,7 @@ import "codemirror/lib/codemirror.css";
 import "codemirror/addon/lint/lint.css";
 import "codemirror/addon/hint/show-hint.css";
 import "cypher-codemirror/dist/cypher-codemirror-syntax.css";
-// import ColorPicker from "../ColorPicker";
+import ColorPicker from "../ColorPicker";
 
 
 // maximum number of points to show
@@ -48,7 +48,7 @@ const DEFAULT_LAYER = {
 	spatialLayers: [],
 	data: [],
 	bounds: [],
-	// color: {r: 0, g:0, b:255, a:1},
+	color: {r: 0, g:0, b:255, a:1},
 	limit: LIMIT,
 	rendering: RENDERING_MARKERS,
 	radius: 30,
@@ -83,7 +83,7 @@ class Layer extends Component {
 		this.handleLonPropertyChange = this.handleLonPropertyChange.bind(this);
 		this.handleTooltipPropertyChange = this.handleTooltipPropertyChange.bind(this);
 		this.handleLimitChange = this.handleLimitChange.bind(this);
-		// this.handleColorChange = this.handleColorChange.bind(this);
+		this.handleColorChange = this.handleColorChange.bind(this);
 		this.handleRenderingChange = this.handleRenderingChange.bind(this);
 		this.handleRadiusChange = this.handleRadiusChange.bind(this);
 		this.handleCypherChange = this.handleCypherChange.bind(this);
@@ -266,11 +266,11 @@ class Layer extends Component {
 	};
 
 
-	// handleColorChange(color) {
-	// 	this.setState({
-	// 		color: color,
-	// 	});
-	// };
+	handleColorChange(color) {
+		this.setState({
+			color: color,
+		});
+	};
 
 
 	handleSpatialLayerChanged(e) {
@@ -507,7 +507,7 @@ class Layer extends Component {
 
 
 	render() {
-		// let color = `rgba(${this.state.color.r}, ${this.state.color.g}, ${this.state.color.b}, ${this.state.color.a})`;
+		let color = `rgba(${this.state.color.r}, ${this.state.color.g}, ${this.state.color.b}, ${this.state.color.a})`;
 
 		return (
 
@@ -516,9 +516,13 @@ class Layer extends Component {
 				<Accordion.Toggle as={Card.Header} eventKey={this.state.ukey} >
 					<h3>{this.state.name}
 						<small hidden>({this.state.ukey})</small>
-						{/* <span
-							hidden={this.state.rendering === RENDERING_HEATMAP}
-							style={{background: color, float: 'right', height: '20px', width: '50px'}}> </span> */}
+						<span
+							hidden={
+								this.state.rendering === RENDERING_MARKERS || 
+								this.state.rendering === RENDERING_HEATMAP || 
+								this.state.rendering === RENDERING_CLUSTERS
+							}
+							style={{background: color, float: 'right', height: '20px', width: '50px'}}> </span>
 					</h3>
 				</Accordion.Toggle>
 
@@ -601,8 +605,7 @@ class Layer extends Component {
 									value={RENDERING_POLYLINE}
 									checked={this.state.rendering === RENDERING_POLYLINE}
 									onChange={this.handleRenderingChange}
-									name="mapRenderingMarker"
-									disabled
+									name="mapRenderingPolyline"
 								/>
 								<Form.Check
 									type="radio"
@@ -626,17 +629,15 @@ class Layer extends Component {
 								/>
 							</Form.Group>
 
-							{/* <Form.Group controlId="formColor"
-										hidden={this.state.rendering !== RENDERING_MARKERS && 
-											this.state.rendering !== RENDERING_POLYLINE && 
-											this.state.rendering !== RENDERING_CLUSTERS}
+							<Form.Group controlId="formColor"
+										hidden={this.state.rendering !== RENDERING_POLYLINE}
 										name="formgroupColor">
 								<Form.Label>Color</Form.Label>
 								<ColorPicker
 									color={ this.state.color }
 									handleColorChange={this.handleColorChange}
 								/>
-							</Form.Group> */}
+							</Form.Group>
 
 							<Form.Group controlId="formRadius" hidden={this.state.rendering !== RENDERING_HEATMAP} >
 								<Form.Label>Heatmap radius</Form.Label>

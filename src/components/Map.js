@@ -20,6 +20,7 @@ class Map extends Component {
 			]
 		});
 		this.leafletMarkerLayers = {};
+		this.leafletPolylineLayers = {};
 		this.leafletHeatmapLayers = {};
 		this.leafletClusterLayers = {};
 	}
@@ -27,6 +28,7 @@ class Map extends Component {
 		let layers = Object.entries(this.props.layers);
 		let globalBounds = new L.LatLngBounds();
 		let ukeyMarkerArray = [];
+		let ukeyPolylineArray = [];
 		let ukeyHeatmapArray = [];
 		let ukeyClusterArray = [];
 		// Iterate through layers
@@ -39,10 +41,17 @@ class Map extends Component {
 						this.leafletMarkerLayers[layer.ukey] = L.layerGroup().addTo(this.map);
 					}
 					this.updateMarkerLayer(layer.data, layer.ukey);
+				} else if (layer.rendering === "polyline") {
+					ukeyPolylineArray.push(layer.ukey);
+					if (this.leafletPolylineLayers[layer.ukey]) {
+						// todo find a way of updating the polyline layer instead of delete & recreate
+						this.map.removeLayer(this.leafletPolylineLayers[layer.ukey]);
+					}
+					this.updatePolylineLayer(layer.data, layer.color, layer.ukey);
 				} else if (layer.rendering === "heatmap") {
 					ukeyHeatmapArray.push(layer.ukey);
 					if (this.leafletHeatmapLayers[layer.ukey]) {
-						// todo find a way of updating the layer instead of delete & recreate
+						// todo find a way of updating the heat layer instead of delete & recreate
 						this.map.removeLayer(this.leafletHeatmapLayers[layer.ukey]);
 					}
 					this.updateHeatmapLayer(layer.data, layer.radius, layer.ukey)
@@ -67,6 +76,14 @@ class Map extends Component {
 		deletedMarkerUkeyLayers.map((key) => {
 			this.map.removeLayer(this.leafletMarkerLayers[key]);
 			delete this.leafletMarkerLayers[key];
+			return null;
+		});
+		let deletedPolylineUkeyLayers = Object.keys(this.leafletPolylineLayers).filter(function(key) {
+			return !ukeyPolylineArray.includes(key);
+		});
+		deletedPolylineUkeyLayers.map((key) => {
+			this.map.removeLayer(this.leafletPolylineLayers[key]);
+			delete this.leafletPolylineLayers[key];
 			return null;
 		});
 		let deletedHeatmapUkeyLayers = Object.keys(this.leafletHeatmapLayers).filter(function(key) {
@@ -98,6 +115,18 @@ class Map extends Component {
 			).addTo(this.leafletMarkerLayers[ukey]);
 			m.bindTooltip(entry.tooltip);
 		});
+	}
+	updatePolylineLayer(data, color, ukey) {
+		// todo check if the layer as change before rerendering it
+		// this.leafletLayers[ukey].clearLayers();
+		let rgbColor = `rgb(${color.r}, ${color.g}, ${color.b})`;
+		let polylineData = [];
+		polylineData = data.map((entry) => {
+			return entry.pos;
+		});
+		this.leafletPolylineLayers[ukey] = L.polyline(polylineData, { color: rgbColor }).addTo(this.map);
+		// this.leafletPolylineLayers[ukey].setLatLngs(polylineData);
+		// this.leafletPolylineLayers[ukey].setConfig??({ color });
 	}
 	updateHeatmapLayer(data, radius,  ukey) {
 		// todo check if the layer as change before rerendering it
