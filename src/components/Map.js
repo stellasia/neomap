@@ -11,6 +11,7 @@ class Map extends Component {
 	componentDidMount() {
 		// init an empty map
 		this.map = L.map('map', {
+			preferCanvas: true,
 			center: [49.8419, 24.0315],
 			zoom: 4,
 			layers: [
@@ -40,7 +41,7 @@ class Map extends Component {
 					if (!this.leafletMarkerLayers[layer.ukey]) {
 						this.leafletMarkerLayers[layer.ukey] = L.layerGroup().addTo(this.map);
 					}
-					this.updateMarkerLayer(layer.data, layer.ukey);
+					this.updateMarkerLayer(layer.data, layer.color, layer.ukey);
 				} else if (layer.rendering === "polyline") {
 					ukeyPolylineArray.push(layer.ukey);
 					if (this.leafletPolylineLayers[layer.ukey]) {
@@ -61,7 +62,7 @@ class Map extends Component {
 						this.leafletClusterLayers[layer.ukey] = L.markerClusterGroup();
 						this.map.addLayer(this.leafletClusterLayers[layer.ukey]);
 					}
-					this.updateClusterLayer(layer.data, layer.ukey);
+					this.updateClusterLayer(layer.data, layer.color, layer.ukey);
 				}
 			}
 			return null;
@@ -104,14 +105,23 @@ class Map extends Component {
 		});
 		this.map.flyToBounds(globalBounds);
 	}
-	updateMarkerLayer(data, ukey) {
+	updateMarkerLayer(data, color, ukey) {
 		// todo check if the layer as change before rerendering it
 		this.leafletMarkerLayers[ukey].clearLayers();
 		let m = null;
+		let rgbColor = `rgb(${color.r}, ${color.g}, ${color.b})`;
 		data.forEach(entry => {
-			m = L.marker(
+			m = L.circleMarker(
 				entry.pos,
-				{ title: entry.tooltip }
+				{ 
+					title: entry.tooltip,
+					fill: true,
+					radius: 5,
+					color: rgbColor,
+					fillColor: rgbColor,
+					opacity: color.a,
+					fillOpacity: color.a
+				}
 			).addTo(this.leafletMarkerLayers[ukey]);
 			m.bindTooltip(entry.tooltip);
 		});
@@ -143,12 +153,21 @@ class Map extends Component {
 		// this.leafletHeatmapLayers[ukey].setLatLngs(heatData);
 		// this.leafletHeatmapLayers[ukey].setConfig({ radius });
 	}
-	updateClusterLayer(data, ukey) {
+	updateClusterLayer(data, color, ukey) {
 		// todo check if the layer as change before rerendering it
 		this.leafletClusterLayers[ukey].clearLayers();
 		let m = null;
+		let rgbColor = `rgb(${color.r}, ${color.g}, ${color.b})`;
 		data.forEach(entry => {
-			m = L.marker(entry.pos,{ title: entry.tooltip });
+			m = L.circleMarker(entry.pos,{
+				 title: entry.tooltip,
+				 fill: true,
+				 radius: 5,
+				 color: rgbColor,
+				 fillColor: rgbColor,
+				 opacity: color.a,
+				 fillOpacity: color.a
+			});
 			m.bindTooltip(entry.tooltip);
 			this.leafletClusterLayers[ukey].addLayer(m);
 		});

@@ -517,12 +517,9 @@ class Layer extends Component {
 					<h3>{this.state.name}
 						<small hidden>({this.state.ukey})</small>
 						<span
-							hidden={
-								this.state.rendering === RENDERING_MARKERS || 
-								this.state.rendering === RENDERING_HEATMAP || 
-								this.state.rendering === RENDERING_CLUSTERS
-							}
-							style={{background: color, float: 'right', height: '20px', width: '50px'}}> </span>
+							hidden={ this.state.rendering === RENDERING_HEATMAP }
+							style={{background: color, float: 'right', height: '20px', width: '50px'}}> 
+						</span>
 					</h3>
 				</Accordion.Toggle>
 
@@ -630,7 +627,7 @@ class Layer extends Component {
 							</Form.Group>
 
 							<Form.Group controlId="formColor"
-										hidden={this.state.rendering !== RENDERING_POLYLINE}
+										hidden={this.state.rendering === RENDERING_HEATMAP}
 										name="formgroupColor">
 								<Form.Label>Color</Form.Label>
 								<ColorPicker
