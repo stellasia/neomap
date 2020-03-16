@@ -1,165 +1,180 @@
 import React, {Component} from 'react'
-import {FeatureGroup, LayersControl, Map as LeafletMap, CircleMarker, Polyline, TileLayer, Popup} from 'react-leaflet'
-import HeatmapLayer from 'react-leaflet-heatmap-layer';
+import L from 'leaflet';
+import 'leaflet.heat';
+import 'leaflet.markercluster';
 
+import 'leaflet.markercluster/dist/MarkerCluster.css';
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 
 class Map extends Component {
 
-	constructor(props) {
-		super(props);
-
-		this.renderMarkerLayer = this.renderMarkerLayer.bind(this);
-		this.renderHeatmapLayer = this.renderHeatmapLayer.bind(this);
-		this.renderClusterLayer = this.renderClusterLayer.bind(this);
-		this.onFeatureGroupAdd = this.onFeatureGroupAdd.bind(this);
-	};
-
-
-	renderMarker(d, j, color, opacity) {
-		/*Render maker with optional tooltip
-         */
-		if (d.tooltip) {
-			return (
-				<CircleMarker key={j}
-							  center={d.pos}
-							  radius={5}
-							  color={color}
-							  fill={true}
-							  fillColor={color}
-							  fillOpacity={opacity}
-				>
-					<Popup>{d.tooltip}</Popup>
-				</CircleMarker>
-			)
-		}
-		return (
-			<CircleMarker key={j}
-						  center={d.pos}
-						  radius={5}
-						  color={color}
-						  fill={true}
-						  fillColor={color}
-						  fillOpacity={opacity}
-			>
-			</CircleMarker>
-		)
-	};
-
-
-	renderMarkerLayer(layer) {
-		/*Will show one marker per items in `layer.data`
-         */
-		let data = layer.data;
-		let color = `rgb(${layer.color.r}, ${layer.color.g}, ${layer.color.b})`;
-		let opacity = layer.color.a;
-
-		return (
-			<LayersControl.Overlay key={layer.ukey} name={layer.name} checked>
-				<FeatureGroup onAdd={this.onFeatureGroupAdd}>
-					{
-						data.map((d, j) => {
-							return this.renderMarker(d, j, color, opacity);
-						})
-					}
-				</FeatureGroup>
-			</LayersControl.Overlay>
-		);
-	};
-
-
-	renderHeatmapLayer(layer) {
-		/* Create heatmap based on items in `layer.data`, each with weight 1.
-         */
-		let data = layer.data;
-		return (
-			<LayersControl.Overlay key={layer.ukey} name={layer.name} checked>
-				<HeatmapLayer
-					fitBoundsOnLoad
-					points={data}
-					latitudeExtractor={m => m.pos[0]}
-					longitudeExtractor={m => m.pos[1]}
-					intensityExtractor={() => 1}
-					radius={layer.radius}
-					minOpacity={0.1}
-					max={10}
-				/>
-			</LayersControl.Overlay>
-		);
-	};
-
-
-	renderClusterLayer() {
-		/*TODO: cluster layer
-         */
-		return "Cluster layer not supported for now";
-	};
-
-
-	renderPolylineLayer(layer) {
-		/*Will show one marker per items in `layer.data`
-         */
-		let data = layer.data;
-		let color = `rgb(${layer.color.r}, ${layer.color.g}, ${layer.color.b})`;
-		let positions = [];
-		data.forEach(el => {
-			positions.push(el.pos);
+	componentDidMount() {
+		// init an empty map
+		this.map = L.map('map', {
+			preferCanvas: true,
+			center: [49.8419, 24.0315],
+			zoom: 4,
+			layers: [
+			L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+				attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+			}),
+			]
 		});
-		return (
-			<LayersControl.Overlay key={layer.ukey} name={layer.name} checked>
-				<FeatureGroup onAdd={this.onFeatureGroupAdd}>
-					<Polyline color={color} positions={positions} />
-				</FeatureGroup>
-			</LayersControl.Overlay>
-		);
-	};
-
-
-	onFeatureGroupAdd(e) {
-		if (e.target.getBounds()._northEast !== undefined)
-			this.refs.map.leafletElement.fitBounds(e.target.getBounds());
-	};
-
-
-	render() {
+		this.leafletMarkerLayers = {};
+		this.leafletPolylineLayers = {};
+		this.leafletHeatmapLayers = {};
+		this.leafletClusterLayers = {};
+	}
+	componentDidUpdate() {
 		let layers = Object.entries(this.props.layers);
-
-		/*Map center will be the one of the last layer...
-           TODO: compute zoom or use leaflet tools to set it automatically?
-         */
-
-		let center = [47, 3];
-		let zoom = 4;
-
-		return (
-			<LeafletMap center={center} zoom={zoom} ref="map" preferCanvas={true} >
-				<LayersControl>
-					<LayersControl.BaseLayer name="Base" checked>
-						<TileLayer
-							attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-							url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-						/>
-					</LayersControl.BaseLayer>
-					{
-						layers.map(([, layer]) => {
-							if (layer.ukey !== undefined) {
-								if (layer.rendering === "polyline")
-									return this.renderPolylineLayer(layer);
-								if (layer.rendering === "markers")
-									return this.renderMarkerLayer(layer);
-								if (layer.rendering === "heatmap")
-									return this.renderHeatmapLayer(layer);
-								if (layer.rendering === "clusters")
-									return this.renderClusterLayer();
-								return "";
-							}
-							return "";
-						})
+		let globalBounds = new L.LatLngBounds();
+		let ukeyMarkerArray = [];
+		let ukeyPolylineArray = [];
+		let ukeyHeatmapArray = [];
+		let ukeyClusterArray = [];
+		// Iterate through layers
+		layers.map(([, layer]) => {
+			if (layer.ukey !== undefined) {
+				globalBounds.extend(layer.bounds);
+				if (layer.rendering === "markers") {
+					ukeyMarkerArray.push(layer.ukey);
+					if (!this.leafletMarkerLayers[layer.ukey]) {
+						this.leafletMarkerLayers[layer.ukey] = L.layerGroup().addTo(this.map);
 					}
-				</LayersControl>
-			</LeafletMap>
-		)
+					this.updateMarkerLayer(layer.data, layer.color, layer.ukey);
+				} else if (layer.rendering === "polyline") {
+					ukeyPolylineArray.push(layer.ukey);
+					if (this.leafletPolylineLayers[layer.ukey]) {
+						// todo find a way of updating the polyline layer instead of delete & recreate
+						this.map.removeLayer(this.leafletPolylineLayers[layer.ukey]);
+					}
+					this.updatePolylineLayer(layer.data, layer.color, layer.ukey);
+				} else if (layer.rendering === "heatmap") {
+					ukeyHeatmapArray.push(layer.ukey);
+					if (this.leafletHeatmapLayers[layer.ukey]) {
+						// todo find a way of updating the heat layer instead of delete & recreate
+						this.map.removeLayer(this.leafletHeatmapLayers[layer.ukey]);
+					}
+					this.updateHeatmapLayer(layer.data, layer.radius, layer.ukey)
+				} else if (layer.rendering === "clusters") {
+					ukeyClusterArray.push(layer.ukey);
+					if (!this.leafletClusterLayers[layer.ukey]) {
+						this.leafletClusterLayers[layer.ukey] = L.markerClusterGroup();
+						this.map.addLayer(this.leafletClusterLayers[layer.ukey]);
+					}
+					this.updateClusterLayer(layer.data, layer.color, layer.ukey);
+				}
+			}
+			return null;
+		});
+		// Check if globalBounds is defined
+		if (!globalBounds.isValid())
+			globalBounds = new L.LatLngBounds([[10,40],[50,90]]);
+		// Find and clean deleted layers
+		let deletedMarkerUkeyLayers = Object.keys(this.leafletMarkerLayers).filter(function(key) {
+			return !ukeyMarkerArray.includes(key);
+		});
+		deletedMarkerUkeyLayers.map((key) => {
+			this.map.removeLayer(this.leafletMarkerLayers[key]);
+			delete this.leafletMarkerLayers[key];
+			return null;
+		});
+		let deletedPolylineUkeyLayers = Object.keys(this.leafletPolylineLayers).filter(function(key) {
+			return !ukeyPolylineArray.includes(key);
+		});
+		deletedPolylineUkeyLayers.map((key) => {
+			this.map.removeLayer(this.leafletPolylineLayers[key]);
+			delete this.leafletPolylineLayers[key];
+			return null;
+		});
+		let deletedHeatmapUkeyLayers = Object.keys(this.leafletHeatmapLayers).filter(function(key) {
+			return !ukeyHeatmapArray.includes(key);
+		});
+		deletedHeatmapUkeyLayers.map((key) => {
+			this.map.removeLayer(this.leafletHeatmapLayers[key]);
+			delete this.leafletHeatmapLayers[key];
+			return null;
+		});
+		let deletedClusterUkeyLayers = Object.keys(this.leafletClusterLayers).filter(function(key) {
+			return !ukeyClusterArray.includes(key);
+		});
+		deletedClusterUkeyLayers.map((key) => {
+			this.map.removeLayer(this.leafletClusterLayers[key]);
+			delete this.leafletClusterLayers[key];
+			return null;
+		});
+		this.map.flyToBounds(globalBounds);
+	}
+	updateMarkerLayer(data, color, ukey) {
+		// todo check if the layer as change before rerendering it
+		this.leafletMarkerLayers[ukey].clearLayers();
+		let m = null;
+		let rgbColor = `rgb(${color.r}, ${color.g}, ${color.b})`;
+		data.forEach(entry => {
+			m = L.circleMarker(
+				entry.pos,
+				{ 
+					title: entry.tooltip,
+					fill: true,
+					radius: 5,
+					color: rgbColor,
+					fillColor: rgbColor,
+					opacity: color.a,
+					fillOpacity: color.a
+				}
+			).addTo(this.leafletMarkerLayers[ukey]);
+			m.bindTooltip(entry.tooltip);
+		});
+	}
+	updatePolylineLayer(data, color, ukey) {
+		// todo check if the layer as change before rerendering it
+		// this.leafletLayers[ukey].clearLayers();
+		let rgbColor = `rgb(${color.r}, ${color.g}, ${color.b})`;
+		let polylineData = [];
+		polylineData = data.map((entry) => {
+			return entry.pos;
+		});
+		this.leafletPolylineLayers[ukey] = L.polyline(polylineData, { color: rgbColor }).addTo(this.map);
+		// this.leafletPolylineLayers[ukey].setLatLngs(polylineData);
+		// this.leafletPolylineLayers[ukey].setConfig??({ color });
+	}
+	updateHeatmapLayer(data, radius,  ukey) {
+		// todo check if the layer as change before rerendering it
+		let heatData = [];
+		heatData = data.map((entry) => {
+			return entry.pos.concat(1.0);
+		});
+		this.leafletHeatmapLayers[ukey] = L.heatLayer(heatData, {
+			radius: radius,
+			 minOpacity: 0.1,
+			  blur: 15,
+			   max: 10.0
+			}).addTo(this.map);
+		// this.leafletHeatmapLayers[ukey].setLatLngs(heatData);
+		// this.leafletHeatmapLayers[ukey].setConfig({ radius });
+	}
+	updateClusterLayer(data, color, ukey) {
+		// todo check if the layer as change before rerendering it
+		this.leafletClusterLayers[ukey].clearLayers();
+		let m = null;
+		let rgbColor = `rgb(${color.r}, ${color.g}, ${color.b})`;
+		data.forEach(entry => {
+			m = L.circleMarker(entry.pos,{
+				 title: entry.tooltip,
+				 fill: true,
+				 radius: 5,
+				 color: rgbColor,
+				 fillColor: rgbColor,
+				 opacity: color.a,
+				 fillOpacity: color.a
+			});
+			m.bindTooltip(entry.tooltip);
+			this.leafletClusterLayers[ukey].addLayer(m);
+		});
+	}
+	render() {	
+		return <div id="map"></div>;
 	}
 }
-
 
 export default  Map;
