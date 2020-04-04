@@ -15,16 +15,19 @@ class Map extends Component {
 			center: [49.8419, 24.0315],
 			zoom: 4,
 			layers: [
-			L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-				attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-			}),
+				L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+					attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+				}),
 			]
 		});
+
 		this.leafletMarkerLayers = {};
 		this.leafletPolylineLayers = {};
 		this.leafletHeatmapLayers = {};
 		this.leafletClusterLayers = {};
 	}
+
+
 	componentDidUpdate() {
 		let layers = Object.entries(this.props.layers);
 		let globalBounds = new L.LatLngBounds();
@@ -34,36 +37,39 @@ class Map extends Component {
 		let ukeyClusterArray = [];
 		// Iterate through layers
 		layers.map(([, layer]) => {
-			if (layer.ukey !== undefined) {
-				globalBounds.extend(layer.bounds);
-				if (layer.rendering === "markers") {
-					ukeyMarkerArray.push(layer.ukey);
-					if (!this.leafletMarkerLayers[layer.ukey]) {
-						this.leafletMarkerLayers[layer.ukey] = L.layerGroup().addTo(this.map);
-					}
-					this.updateMarkerLayer(layer.data, layer.color, layer.ukey);
-				} else if (layer.rendering === "polyline") {
-					ukeyPolylineArray.push(layer.ukey);
-					if (this.leafletPolylineLayers[layer.ukey]) {
-						// todo find a way of updating the polyline layer instead of delete & recreate
-						this.map.removeLayer(this.leafletPolylineLayers[layer.ukey]);
-					}
-					this.updatePolylineLayer(layer.data, layer.color, layer.ukey);
-				} else if (layer.rendering === "heatmap") {
-					ukeyHeatmapArray.push(layer.ukey);
-					if (this.leafletHeatmapLayers[layer.ukey]) {
-						// todo find a way of updating the heat layer instead of delete & recreate
-						this.map.removeLayer(this.leafletHeatmapLayers[layer.ukey]);
-					}
-					this.updateHeatmapLayer(layer.data, layer.radius, layer.ukey)
-				} else if (layer.rendering === "clusters") {
-					ukeyClusterArray.push(layer.ukey);
-					if (!this.leafletClusterLayers[layer.ukey]) {
-						this.leafletClusterLayers[layer.ukey] = L.markerClusterGroup();
-						this.map.addLayer(this.leafletClusterLayers[layer.ukey]);
-					}
-					this.updateClusterLayer(layer.data, layer.color, layer.ukey);
+			if (layer.ukey === undefined)
+				return null;
+			globalBounds.extend(layer.bounds);
+			if (layer.rendering === "markers") {
+
+				ukeyMarkerArray.push(layer.ukey);
+				if (!this.leafletMarkerLayers[layer.ukey]) {
+					this.leafletMarkerLayers[layer.ukey] = L.layerGroup().addTo(this.map);
 				}
+				this.updateMarkerLayer(layer.data, layer.color, layer.ukey);
+			} else if (layer.rendering === "polyline") {
+				ukeyPolylineArray.push(layer.ukey);
+				if (this.leafletPolylineLayers[layer.ukey]) {
+					// todo find a way of updating the polyline layer instead of delete & recreate
+					this.map.removeLayer(this.leafletPolylineLayers[layer.ukey]);
+				}
+				this.updatePolylineLayer(layer.data, layer.color, layer.ukey);
+				this.mapLayerControl.addOverlay(this.leafletPolylineLayers[layer.ukey], layer.name);
+			} else if (layer.rendering === "heatmap") {
+				ukeyHeatmapArray.push(layer.ukey);
+				if (this.leafletHeatmapLayers[layer.ukey]) {
+					// todo find a way of updating the heat layer instead of delete & recreate
+					this.map.removeLayer(this.leafletHeatmapLayers[layer.ukey]);
+				}
+				this.updateHeatmapLayer(layer.data, layer.radius, layer.ukey);
+				this.mapLayerControl.addOverlay(this.leafletHeatmapLayers[layer.ukey], layer.name);
+			} else if (layer.rendering === "clusters") {
+				ukeyClusterArray.push(layer.ukey);
+				if (!this.leafletClusterLayers[layer.ukey]) {
+					this.leafletClusterLayers[layer.ukey] = L.markerClusterGroup();
+					this.map.addLayer(this.leafletClusterLayers[layer.ukey]);
+				}
+				this.updateClusterLayer(layer.data, layer.color, layer.ukey);
 			}
 			return null;
 		});
@@ -105,15 +111,17 @@ class Map extends Component {
 		});
 		this.map.flyToBounds(globalBounds);
 	}
+
+
 	updateMarkerLayer(data, color, ukey) {
-		// todo check if the layer as change before rerendering it
+		// todo check if the layer has changed before rerendering it
 		this.leafletMarkerLayers[ukey].clearLayers();
 		let m = null;
 		let rgbColor = `rgb(${color.r}, ${color.g}, ${color.b})`;
 		data.forEach(entry => {
 			m = L.circleMarker(
 				entry.pos,
-				{ 
+				{
 					title: entry.tooltip,
 					fill: true,
 					radius: 5,
@@ -123,56 +131,68 @@ class Map extends Component {
 					fillOpacity: color.a
 				}
 			).addTo(this.leafletMarkerLayers[ukey]);
-			m.bindTooltip(entry.tooltip);
+			if (entry.tooltip !== undefined)
+				m.bindPopup(entry.tooltip);
 		});
 	}
+
+
 	updatePolylineLayer(data, color, ukey) {
-		// todo check if the layer as change before rerendering it
+		// todo check if the layer has changed before rerendering it
 		// this.leafletLayers[ukey].clearLayers();
 		let rgbColor = `rgb(${color.r}, ${color.g}, ${color.b})`;
 		let polylineData = [];
 		polylineData = data.map((entry) => {
 			return entry.pos;
 		});
-		this.leafletPolylineLayers[ukey] = L.polyline(polylineData, { color: rgbColor }).addTo(this.map);
+		var mapLayer = L.polyline(polylineData, { color: rgbColor }).addTo(this.map);
+		this.leafletPolylineLayers[ukey] = mapLayer;
 		// this.leafletPolylineLayers[ukey].setLatLngs(polylineData);
 		// this.leafletPolylineLayers[ukey].setConfig??({ color });
 	}
+
+
 	updateHeatmapLayer(data, radius,  ukey) {
-		// todo check if the layer as change before rerendering it
+		// todo check if the layer has changed before rerendering it
 		let heatData = [];
 		heatData = data.map((entry) => {
 			return entry.pos.concat(1.0);
 		});
-		this.leafletHeatmapLayers[ukey] = L.heatLayer(heatData, {
+		var mapLayer = L.heatLayer(heatData, {
 			radius: radius,
-			 minOpacity: 0.1,
-			  blur: 15,
-			   max: 10.0
-			}).addTo(this.map);
+			minOpacity: 0.1,
+			blur: 15,
+			max: 10.0
+		}).addTo(this.map);
+		this.leafletHeatmapLayers[ukey] = mapLayer;
 		// this.leafletHeatmapLayers[ukey].setLatLngs(heatData);
 		// this.leafletHeatmapLayers[ukey].setConfig({ radius });
 	}
+
+
 	updateClusterLayer(data, color, ukey) {
-		// todo check if the layer as change before rerendering it
+		// todo check if the layer has changed before rerendering it
 		this.leafletClusterLayers[ukey].clearLayers();
 		let m = null;
 		let rgbColor = `rgb(${color.r}, ${color.g}, ${color.b})`;
 		data.forEach(entry => {
 			m = L.circleMarker(entry.pos,{
-				 title: entry.tooltip,
-				 fill: true,
-				 radius: 5,
-				 color: rgbColor,
-				 fillColor: rgbColor,
-				 opacity: color.a,
-				 fillOpacity: color.a
+				title: entry.tooltip,
+				fill: true,
+				radius: 5,
+				color: rgbColor,
+				fillColor: rgbColor,
+				opacity: color.a,
+				fillOpacity: color.a
 			});
-			m.bindTooltip(entry.tooltip);
+			if (entry.tooltip !== undefined)
+				m.bindPopup(entry.tooltip);
 			this.leafletClusterLayers[ukey].addLayer(m);
 		});
 	}
-	render() {	
+
+
+	render() {
 		return <div id="map"></div>;
 	}
 }
