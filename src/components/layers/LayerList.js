@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
 import Accordion from 'react-bootstrap/Accordion';
 import Layer from './layer';
+import { connect } from 'react-redux';
 
 
 class LayersList extends Component {
@@ -88,5 +89,9 @@ class LayersList extends Component {
 	};
 }
 
-
-export default LayersList;
+export default connect((state) => {
+	return {
+		driver: state.driver.driver,
+		layers: state.layers
+	}
+})(LayersList);

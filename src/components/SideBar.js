@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import LayersList from './layers/layers_list';
+import LayersList from './layers/LayerList';
 
 
 class SideBar extends Component {

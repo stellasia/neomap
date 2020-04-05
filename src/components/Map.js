@@ -1,10 +1,14 @@
+/* Main map component based on leaflet map.
+ *
+ *
+ */
 import React, {Component} from 'react'
 import L from 'leaflet';
 import 'leaflet.heat';
 import 'leaflet.markercluster';
-
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
+
 
 class Map extends Component {
 
@@ -41,7 +45,6 @@ class Map extends Component {
 				return null;
 			globalBounds.extend(layer.bounds);
 			if (layer.rendering === "markers") {
-
 				ukeyMarkerArray.push(layer.ukey);
 				if (!this.leafletMarkerLayers[layer.ukey]) {
 					this.leafletMarkerLayers[layer.ukey] = L.layerGroup().addTo(this.map);
@@ -108,6 +111,24 @@ class Map extends Component {
 			return null;
 		});
 		this.map.flyToBounds(globalBounds);
+	}
+
+
+	addMarkerLayer(layer) {
+		if (!this.leafletMarkerLayers[layer.ukey]) {
+			this.leafletMarkerLayers[layer.ukey] = L.layerGroup().addTo(this.map);
+		}
+		this.updateMarkerLayer(layer.data, layer.color, layer.ukey);
+	}
+
+
+	deletaMarkerLayer(key) {
+		if (this.leafletMarkerLayers.includes(key)) {
+			this.map.removeLayer(this.leafletMarkerLayers[key]);
+			delete this.leafletMarkerLayers[key];
+			return true;
+		}
+		return false;
 	}
 
 
