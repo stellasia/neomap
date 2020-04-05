@@ -54,7 +54,6 @@ class Map extends Component {
 					this.map.removeLayer(this.leafletPolylineLayers[layer.ukey]);
 				}
 				this.updatePolylineLayer(layer.data, layer.color, layer.ukey);
-				this.mapLayerControl.addOverlay(this.leafletPolylineLayers[layer.ukey], layer.name);
 			} else if (layer.rendering === "heatmap") {
 				ukeyHeatmapArray.push(layer.ukey);
 				if (this.leafletHeatmapLayers[layer.ukey]) {
@@ -62,7 +61,6 @@ class Map extends Component {
 					this.map.removeLayer(this.leafletHeatmapLayers[layer.ukey]);
 				}
 				this.updateHeatmapLayer(layer.data, layer.radius, layer.ukey);
-				this.mapLayerControl.addOverlay(this.leafletHeatmapLayers[layer.ukey], layer.name);
 			} else if (layer.rendering === "clusters") {
 				ukeyClusterArray.push(layer.ukey);
 				if (!this.leafletClusterLayers[layer.ukey]) {
