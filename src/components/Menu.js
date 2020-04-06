@@ -6,7 +6,7 @@ class Menu extends Component {
 
     render() {
         return (
-            <Navbar>
+            <Navbar bg="dark" variant="dark">
                 <Navbar.Collapse id="basic-navbar-nav">
                     <Nav className="mr-auto">
                         <NavDropdown title="File" id="basic-nav-dropdown">

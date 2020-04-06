@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import Accordion from 'react-bootstrap/Accordion';
-import Layer from './layer';
+import Layer from './Layer';
 import { connect } from 'react-redux';
 
 
@@ -9,10 +9,8 @@ class LayersList extends Component {
 	constructor(props) {
 		super(props);
 
-		this.state = {
-			driver: props.driver,
-			layers: props.layers
-		};
+		// FIXME
+		this.state = props;
 
 		this.forceUpdateLayers = this.forceUpdateLayers.bind(this);
 		this.sendData = this.sendData.bind(this);
@@ -89,9 +87,11 @@ class LayersList extends Component {
 	};
 }
 
-export default connect((state) => {
+const mapStateToProps = (state, ownProps) => {
 	return {
-		driver: state.driver.driver,
-		layers: state.layers
+		layers: state.layers,
+		...ownProps
 	}
-})(LayersList);
+};
+
+export default connect(mapStateToProps)(LayersList);

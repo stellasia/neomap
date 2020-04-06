@@ -115,6 +115,7 @@ class Layer extends Component {
 			bounds = new L.LatLngBounds(arrOfLatLngs);
 		}
 		this.setState({bounds: bounds}, function() {
+			// TODO: send info to store
 			this.props.sendData({
 				ukey: this.state.ukey,
 				layer: this.state
