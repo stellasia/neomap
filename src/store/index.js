@@ -1,13 +1,12 @@
-import { createStore, combineReducers } from 'redux';
+import {combineReducers, createStore} from 'redux';
 import layerReducer from "../reducers/layers";
-import driverReducer from "../reducers/driver";
+// import driverReducer from "../reducers/driver";
 
 export default () => {
-    const store = createStore(
+    return createStore(
         combineReducers({
             layers: layerReducer,
-            driver: driverReducer,
+            // driver: driverReducer,
         })
     );
-    return store
 };

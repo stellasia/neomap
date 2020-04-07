@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, {Component} from 'react';
 import LayersList from './layers/LayerList';
 
 
@@ -7,23 +7,8 @@ class SideBar extends Component {
 	constructor(props) {
 		super(props);
 
-		this.state = {
-			layers: props.layers,
-			driver: props.driver
-		};
-
-		this.sendData = this.sendData.bind(this);
 		this.forceUpdateLayers = this.forceUpdateLayers.bind(this);
 
-	};
-
-
-	sendData(layers) {
-		/*Receives data from child layer
-           and propagate it to parent
-         */
-		this.setState({layers: layers.layers});
-		this.props.layersChanged({layers: layers.layers});
 	};
 
 
@@ -37,9 +22,7 @@ class SideBar extends Component {
 		return (
 			<LayersList
 				ref="layerlist"
-				layers = {this.state.layers}
-				sendData = {this.sendData}
-				driver = {this.state.driver}
+				driver={this.props.driver}
 			/>
 		);
 	};

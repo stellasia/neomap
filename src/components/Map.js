@@ -3,6 +3,7 @@
  *
  */
 import React, {Component} from 'react'
+import {connect} from 'react-redux';
 import L from 'leaflet';
 import 'leaflet.heat';
 import 'leaflet.markercluster';
@@ -33,14 +34,14 @@ class Map extends Component {
 
 
 	componentDidUpdate() {
-		let layers = Object.entries(this.props.layers);
+		let layers = this.props.layers;
 		let globalBounds = new L.LatLngBounds();
 		let ukeyMarkerArray = [];
 		let ukeyPolylineArray = [];
 		let ukeyHeatmapArray = [];
 		let ukeyClusterArray = [];
 		// Iterate through layers
-		layers.map(([, layer]) => {
+		layers.map((layer) => {
 			if (layer.ukey === undefined)
 				return null;
 			globalBounds.extend(layer.bounds);
@@ -122,7 +123,7 @@ class Map extends Component {
 	}
 
 
-	deletaMarkerLayer(key) {
+	deleteMarkerLayer(key) {
 		if (this.leafletMarkerLayers.includes(key)) {
 			this.map.removeLayer(this.leafletMarkerLayers[key]);
 			delete this.leafletMarkerLayers[key];
@@ -160,11 +161,10 @@ class Map extends Component {
 		// todo check if the layer has changed before rerendering it
 		// this.leafletLayers[ukey].clearLayers();
 		let rgbColor = `rgb(${color.r}, ${color.g}, ${color.b})`;
-		let polylineData = [];
-		polylineData = data.map((entry) => {
+		let polylineData = data.map((entry) => {
 			return entry.pos;
 		});
-		var mapLayer = L.polyline(polylineData, { color: rgbColor }).addTo(this.map);
+		var mapLayer = L.polyline(polylineData, {color: rgbColor}).addTo(this.map);
 		this.leafletPolylineLayers[ukey] = mapLayer;
 		// this.leafletPolylineLayers[ukey].setLatLngs(polylineData);
 		// this.leafletPolylineLayers[ukey].setConfig??({ color });
@@ -173,8 +173,7 @@ class Map extends Component {
 
 	updateHeatmapLayer(data, radius,  ukey) {
 		// todo check if the layer has changed before rerendering it
-		let heatData = [];
-		heatData = data.map((entry) => {
+		let heatData = data.map((entry) => {
 			return entry.pos.concat(1.0);
 		});
 		var mapLayer = L.heatLayer(heatData, {
@@ -216,4 +215,13 @@ class Map extends Component {
 	}
 }
 
-export default  Map;
+
+const mapStateToProps = (state, ownProps) => {
+	return {
+		layers: state.layers,
+		...ownProps
+	}
+};
+
+
+export default connect(mapStateToProps)(Map);

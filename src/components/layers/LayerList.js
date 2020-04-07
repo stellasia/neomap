@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import Accordion from 'react-bootstrap/Accordion';
 import Layer from './Layer';
-import { connect } from 'react-redux';
+import {connect} from 'react-redux';
 
 
 class LayersList extends Component {
@@ -9,11 +9,11 @@ class LayersList extends Component {
 	constructor(props) {
 		super(props);
 
-		// FIXME
-		this.state = props;
+		this.state = {
+			driver: props.driver
+		};
 
 		this.forceUpdateLayers = this.forceUpdateLayers.bind(this);
-		this.sendData = this.sendData.bind(this);
 		this.renderLayers = this.renderLayers.bind(this);
 		this.renderNewLayer = this.renderNewLayer.bind(this);
 		this.deleteLayer = this.deleteLayer.bind(this);
@@ -24,21 +24,6 @@ class LayersList extends Component {
 		this.setState({layers: layers});
 	};
 
-
-	sendData(data) {
-		/*Receives new data from child layer
-           and propagate it to parent
-        */
-		let new_layer = data.layer;
-		let layers = this.state.layers;
-		layers[new_layer.ukey] = new_layer;
-		this.setState({
-			layers: layers
-		});
-		this.props.sendData({
-			layers: layers
-		});
-	};
 
 
 	deleteLayer(ukey) {
@@ -58,8 +43,8 @@ class LayersList extends Component {
 
 
 	renderLayers() {
-		let layers = Object.entries(this.state.layers);
-		return layers.map(([, layer]) => {
+		// let layers = Object.entries(this.state.layers);
+		return this.props.layers.map((layer) => {
 			return (
 				<Layer data-id="layers" key={layer.ukey} ukey={layer.ukey} layer={layer} deleteLayer={this.deleteLayer}
 					   sendData={this.sendData} driver={this.state.driver}/>
