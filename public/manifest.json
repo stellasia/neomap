@@ -1,7 +1,7 @@
 {
-    "short_name": "Neomap",
-    "start_url": ".",
-    "display": "standalone",
-    "homepage": "http://github.com/stellasia/neomap",
-    "apiVersion": "^1.2"
+  "short_name": "Neomap",
+  "start_url": ".",
+  "display": "standalone",
+  "homepage": "http://github.com/stellasia/neomap",
+  "apiVersion": ">=1.2.x <2.0.0"
 }
