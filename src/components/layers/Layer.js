@@ -28,6 +28,7 @@ const LIMIT = 10000;
 
 // layer type: either from node labels or cypher
 const LAYER_TYPE_LATLON = "latlon";
+const LAYER_TYPE_POINT = "point";
 const LAYER_TYPE_CYPHER = "cypher";
 const LAYER_TYPE_SPATIAL = "spatial";
 
@@ -43,13 +44,14 @@ const DEFAULT_LAYER = {
 	layerType: LAYER_TYPE_LATLON,
 	latitudeProperty: {value: "latitude", label: "latitude"},
 	longitudeProperty: {value: "longitude", label: "longitude"},
+	pointProperty: {value: "point", label: "point"},
 	tooltipProperty: {value: "", label: ""},
 	nodeLabel: [],
 	propertyNames: [],
 	spatialLayers: [],
 	data: [],
 	bounds: [],
-	color: {r: 0, g:0, b:255, a:1},
+	color: {r: 0, g: 0, b: 255, a: 1},
 	limit: LIMIT,
 	rendering: RENDERING_MARKERS,
 	radius: 30,
@@ -82,6 +84,7 @@ class Layer extends Component {
 		this.handleNodeLabelChange = this.handleNodeLabelChange.bind(this);
 		this.handleLatPropertyChange = this.handleLatPropertyChange.bind(this);
 		this.handleLonPropertyChange = this.handleLonPropertyChange.bind(this);
+		this.handlePointPropertyChange = this.handlePointPropertyChange.bind(this);
 		this.handleTooltipPropertyChange = this.handleTooltipPropertyChange.bind(this);
 		this.handleLimitChange = this.handleLimitChange.bind(this);
 		this.handleColorChange = this.handleColorChange.bind(this);
@@ -196,9 +199,15 @@ class Layer extends Component {
 		// filter wanted node labels
 		query += this.getNodeFilter();
 		// filter out nodes with null latitude or longitude
-		query += `\nAND exists(n.${this.state.latitudeProperty.value}) AND exists(n.${this.state.longitudeProperty.value})`;
-		// return latitude, longitude
-		query += `\nRETURN n.${this.state.latitudeProperty.value} as latitude, n.${this.state.longitudeProperty.value} as longitude`;
+		if (this.state.layerType === LAYER_TYPE_LATLON) {
+			query += `\nAND exists(n.${this.state.latitudeProperty.value}) AND exists(n.${this.state.longitudeProperty.value})`;
+			// return latitude, longitude
+			query += `\nRETURN n.${this.state.latitudeProperty.value} as latitude, n.${this.state.longitudeProperty.value} as longitude`;
+		} else if (this.state.layerType === LAYER_TYPE_POINT) {
+			query += `\nAND exists(n.${this.state.pointProperty.value})`;
+			// return latitude, longitude
+			query += `\nRETURN n.${this.state.pointProperty.value}.y as latitude, n.${this.state.pointProperty.value}.x as longitude`;
+		}
 
 		// if tooltip is not null, also return tooltip
 		if (this.state.tooltipProperty.value !== '')
@@ -218,7 +227,7 @@ class Layer extends Component {
 		neo4jService.getData(this.driver, this.getQuery(), {}).then( res => {
 			if (res.status === "ERROR") {
 				let message = "Invalid cypher query.";
-				if (this.state.layerType === LAYER_TYPE_LATLON) {
+				if (this.state.layerType !== LAYER_TYPE_CYPHER) {
 					message += "\nContact the development team";
 				} else {
 					message += "\nFix your query and try again";
@@ -276,13 +285,18 @@ class Layer extends Component {
 	};
 
 
+	handlePointPropertyChange(e) {
+		this.setState({pointProperty: e});
+	};
+
+
 	handleTooltipPropertyChange(e) {
 		this.setState({tooltipProperty: e});
 	};
 
 
 	handleNodeLabelChange(e) {
-		this.setState({nodeLabel: e}, function() {
+		this.setState({nodeLabel: e}, function () {
 			this.getPropertyNames();
 		});
 	};
@@ -451,6 +465,66 @@ class Layer extends Component {
 	};
 
 
+	renderConfigPoint() {
+		if (this.state.layerType !== LAYER_TYPE_POINT)
+			return "";
+		return (
+			<div>
+				<Form.Group controlId="formNodeLabel">
+					<Form.Label>Node label(s)</Form.Label>
+					<Select
+						className="form-control select"
+						options={this.state.nodes}
+						onChange={this.handleNodeLabelChange}
+						isMulti={true}
+						defaultValue={this.state.nodeLabel}
+						name="nodeLabel"
+					/>
+				</Form.Group>
+
+				<Form.Group controlId="formPointProperty">
+					<Form.Label>Point property</Form.Label>
+					<Select
+						className="form-control select"
+						options={this.state.propertyNames}
+						onChange={this.handlePointPropertyChange}
+						isMulti={false}
+						defaultValue={this.state.pointProperty}
+						name="pointProperty"
+					/>
+				</Form.Group>
+
+				<Form.Group
+					controlId="formTooltipProperty"
+					hidden={this.state.rendering !== RENDERING_MARKERS && this.state.rendering !== RENDERING_CLUSTERS}
+					name="formgroupTooltip"
+				>
+					<Form.Label>Tooltip property</Form.Label>
+					<Select
+						className="form-control select"
+						options={this.state.propertyNames}
+						onChange={this.handleTooltipPropertyChange}
+						isMulti={false}
+						defaultValue={this.state.tooltipProperty}
+						name="tooltipProperty"
+					/>
+				</Form.Group>
+
+				<Form.Group controlId="formLimit">
+					<Form.Label>Max. nodes</Form.Label>
+					<Form.Control
+						type="text"
+						className="form-control"
+						placeholder="limit"
+						defaultValue={this.state.limit}
+						onChange={this.handleLimitChange}
+						name="limit"
+					/>
+				</Form.Group>
+			</div>
+		)
+	}
+
 	renderConfigDefault() {
 		/*If layerType==latlon, then we display the elements to choose
            node labels and properties to be used.
@@ -514,9 +588,6 @@ class Layer extends Component {
 
 				<Form.Group controlId="formLimit">
 					<Form.Label>Max. nodes</Form.Label>
-					<Form.Text>
-						<p className="font-italic">Be careful, the browser can only display a limited number of nodes (less than a few 10000)</p>
-					</Form.Text>
 					<Form.Control
 						type="text"
 						className="form-control"
@@ -573,41 +644,51 @@ class Layer extends Component {
 								<Form.Label>Layer type</Form.Label>
 								<Form.Check
 									type="radio"
-									id={ LAYER_TYPE_LATLON }
-									label={ "Simple" }
-									value={ LAYER_TYPE_LATLON }
+									id={LAYER_TYPE_LATLON}
+									label={"Lat/Lon"}
+									value={LAYER_TYPE_LATLON}
 									checked={this.state.layerType === LAYER_TYPE_LATLON}
 									onChange={this.handleLayerTypeChange}
 									name="layerTypeLatLon"
 								/>
 								<Form.Check
 									type="radio"
-									id={ LAYER_TYPE_CYPHER }
-									label={ "Advanced" }
-									value={ LAYER_TYPE_CYPHER }
+									id={LAYER_TYPE_POINT}
+									label={"Point (neo4j built-in)"}
+									value={LAYER_TYPE_POINT}
+									checked={this.state.layerType === LAYER_TYPE_POINT}
+									onChange={this.handleLayerTypeChange}
+									name="layerTypePoint"
+								/>
+								<Form.Check
+									type="radio"
+									id={LAYER_TYPE_SPATIAL}
+									label={"Point (neo4j-spatial plugin)"}
+									value={LAYER_TYPE_SPATIAL}
+									checked={this.state.layerType === LAYER_TYPE_SPATIAL}
+									onChange={this.handleLayerTypeChange}
+									name="layerTypeSpatial"
+									disabled={!this.state.hasSpatialPlugin}
+									className="beta"
+								/>
+								<Form.Check
+									type="radio"
+									id={LAYER_TYPE_CYPHER}
+									label={"Advanced (cypher query)"}
+									value={LAYER_TYPE_CYPHER}
 									checked={this.state.layerType === LAYER_TYPE_CYPHER}
 									onChange={this.handleLayerTypeChange}
 									name="layerTypeCypher"
 								/>
-								<Form.Check
-									type="radio"
-									id={ LAYER_TYPE_SPATIAL }
-									label={ "Spatial" }
-									value={ LAYER_TYPE_SPATIAL }
-									checked={this.state.layerType === LAYER_TYPE_SPATIAL}
-									onChange={this.handleLayerTypeChange}
-									name="layerTypeSpatial"
-									disabled={ !this.state.hasSpatialPlugin }
-									className="beta"
-								/>
 							</Form.Group>
 
 							{this.renderConfigDefault()}
+							{this.renderConfigPoint()}
 							{this.renderConfigCypher()}
 							{this.renderConfigSpatial()}
 
 
-							<h4>  > Map rendering</h4>
+							<h4> > Map rendering</h4>
 
 							<Form.Group controlId="formRendering">
 								<Form.Label>Rendering</Form.Label>
