@@ -5,7 +5,7 @@ const SERVICE_INIT = "SERVICE_INIT";
 const driverReducer = (state = {driver: undefined, ready: false}, action) => {
     switch (action.type) {
         case SERVICE_INIT:
-            const driver = neo4jService.getNeo4jDriver().then(
+            return neo4jService.getNeo4jDriver().then(
                 (result) => {
                     return {
                         ...state,
@@ -14,7 +14,6 @@ const driverReducer = (state = {driver: undefined, ready: false}, action) => {
                     }
                 }
             );
-            return driver;
 
         default:
             return state;

@@ -1,5 +1,5 @@
 // TODO: Update when version bumped the neo4j driver
-import { v1 as neo4j } from "neo4j-driver";
+import {v1 as neo4j} from "neo4j-driver";
 
 /**
  * Hooks into the neo4jDesktopApi
@@ -152,36 +152,35 @@ export default {
 
   getData: async function (driver, query, params) {
     const session = driver.session();
-    let result = await session
-      .run(query, params)
-      .then((response) => {
-        let res = [];
-        if (response.records === undefined || response.records.length === 0) {
-          alert("No result found, please check your query");
-          return {
-            status: "ERROR",
-            result: query,
-          };
-        }
-        response.records.forEach((record) => {
-          let el = {
-            pos: [record.get("latitude"), record.get("longitude")],
-          };
-          if (record.has("tooltip") && record.get("tooltip") !== null) {
-            // make sure tooltip is a string, otherwise leaflet is not happy AT ALL!
-            el["tooltip"] = record.get("tooltip").toString();
+    return await session
+        .run(query, params)
+        .then((response) => {
+          let res = [];
+          if (response.records === undefined || response.records.length === 0) {
+            alert("No result found, please check your query");
+            return {
+              status: "ERROR",
+              result: query,
+            };
           }
-          res.push(el);
+          response.records.forEach((record) => {
+            let el = {
+              pos: [record.get("latitude"), record.get("longitude")],
+            };
+            if (record.has("tooltip") && record.get("tooltip") !== null) {
+              // make sure tooltip is a string, otherwise leaflet is not happy AT ALL!
+              el["tooltip"] = record.get("tooltip").toString();
+            }
+            res.push(el);
+          });
+          session.close();
+          return {
+            status: "OK",
+            result: res,
+          };
+        })
+        .catch((error) => {
+          return {status: "ERROR", result: error};
         });
-        session.close();
-        return {
-          status: "OK",
-          result: res,
-        };
-      })
-      .catch((error) => {
-        return { status: "ERROR", result: error };
-      });
-    return result;
   },
 };

@@ -17,8 +17,8 @@ class Map extends Component {
 		// init an empty map
 		this.map = L.map('map', {
 			preferCanvas: true,
-			center: [49.8419, 24.0315],
-			zoom: 4,
+			center: [0, 0],
+			zoom: 2,
 			layers: [
 				L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
 					attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
@@ -44,7 +44,9 @@ class Map extends Component {
 		layers.map((layer) => {
 			if (layer.ukey === undefined)
 				return null;
-			globalBounds.extend(layer.bounds);
+			let bds = new L.LatLngBounds(layer.bounds);
+			if (bds.isValid())
+				globalBounds.extend(bds);
 			if (layer.rendering === "markers") {
 				ukeyMarkerArray.push(layer.ukey);
 				if (!this.leafletMarkerLayers[layer.ukey]) {
@@ -77,7 +79,7 @@ class Map extends Component {
 		});
 		// Check if globalBounds is defined
 		if (!globalBounds.isValid())
-			globalBounds = new L.LatLngBounds([[10,40],[50,90]]);
+			globalBounds = new L.LatLngBounds([[90, -180], [-90, 180]]);
 		// Find and clean deleted layers
 		let deletedMarkerUkeyLayers = Object.keys(this.leafletMarkerLayers).filter(function(key) {
 			return !ukeyMarkerArray.includes(key);
@@ -87,7 +89,7 @@ class Map extends Component {
 			delete this.leafletMarkerLayers[key];
 			return null;
 		});
-		let deletedPolylineUkeyLayers = Object.keys(this.leafletPolylineLayers).filter(function(key) {
+		let deletedPolylineUkeyLayers = Object.keys(this.leafletPolylineLayers).filter(function (key) {
 			return !ukeyPolylineArray.includes(key);
 		});
 		deletedPolylineUkeyLayers.map((key) => {
@@ -113,25 +115,6 @@ class Map extends Component {
 		});
 		this.map.flyToBounds(globalBounds);
 	}
-
-
-	addMarkerLayer(layer) {
-		if (!this.leafletMarkerLayers[layer.ukey]) {
-			this.leafletMarkerLayers[layer.ukey] = L.layerGroup().addTo(this.map);
-		}
-		this.updateMarkerLayer(layer.data, layer.color, layer.ukey);
-	}
-
-
-	deleteMarkerLayer(key) {
-		if (this.leafletMarkerLayers.includes(key)) {
-			this.map.removeLayer(this.leafletMarkerLayers[key]);
-			delete this.leafletMarkerLayers[key];
-			return true;
-		}
-		return false;
-	}
-
 
 	updateMarkerLayer(data, color, ukey) {
 		// todo check if the layer has changed before rerendering it
@@ -164,8 +147,7 @@ class Map extends Component {
 		let polylineData = data.map((entry) => {
 			return entry.pos;
 		});
-		var mapLayer = L.polyline(polylineData, {color: rgbColor}).addTo(this.map);
-		this.leafletPolylineLayers[ukey] = mapLayer;
+		this.leafletPolylineLayers[ukey] = L.polyline(polylineData, {color: rgbColor}).addTo(this.map);
 		// this.leafletPolylineLayers[ukey].setLatLngs(polylineData);
 		// this.leafletPolylineLayers[ukey].setConfig??({ color });
 	}
@@ -182,7 +164,6 @@ class Map extends Component {
 			blur: 15,
 			max: 10.0
 		}).addTo(this.map);
-		this.leafletHeatmapLayers[ukey] = mapLayer;
 		// this.leafletHeatmapLayers[ukey].setLatLngs(heatData);
 		// this.leafletHeatmapLayers[ukey].setConfig({ radius });
 	}
