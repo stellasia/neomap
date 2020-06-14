@@ -1,4 +1,4 @@
-import LayersList from '../../../components/layers/LayerList';
+import LayersList from '../../../components/layers/LayersList';
 import React from 'react';
 import {shallow} from './../../enzyme';
 
