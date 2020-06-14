@@ -1,9 +1,11 @@
-import {ADD_OR_UPDATE_LAYER, REMOVE_LAYER} from '../actions'
+import {ADD_OR_UPDATE_LAYER, REMOVE_LAYER, SET_LAYERS} from '../actions'
 
 const layerDefaultState = [];
 
 const layerReducer = (state = layerDefaultState, action) => {
     switch (action.type) {
+        case SET_LAYERS:
+            return action.layers;
         case ADD_OR_UPDATE_LAYER:
             let res = [];
             let added = false;
@@ -15,7 +17,7 @@ const layerReducer = (state = layerDefaultState, action) => {
                     res.push(layer);
                 }
             }
-            if (added === false)
+            if (added === false)  // new layer are not yet in the layer list
                 res.push(action.layer);
             return res;
         case REMOVE_LAYER:

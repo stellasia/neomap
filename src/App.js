@@ -5,6 +5,8 @@ import Menu from "./components/Menu";
 import SideBar from "./components/SideBar";
 import neo4jService from './services/neo4jService'
 import download from "downloadjs";
+import {connect} from "react-redux";
+import {setLayers} from "./actions";
 
 
 class App extends Component {
@@ -36,7 +38,7 @@ class App extends Component {
 
 
 	saveConfigToFile(e) {
-		let config = JSON.stringify(this.state.layers);
+		let config = JSON.stringify(this.props.layers);
 		let fileName = "neomap_config.json";
 		download(config, fileName, "application/json");
 		e.preventDefault();
@@ -53,9 +55,9 @@ class App extends Component {
 			fileReader.onloadend = (e) => {
 				const content = e.target.result;
 				const layers = JSON.parse(content);
-				this.setState({layers: layers}, () => {
-					this.refs.sidebar.forceUpdateLayers(layers);
-				});
+				this.props.dispatch(
+					setLayers({layers: layers})
+				);
 			};
 			fileReader.readAsText(file);
 		};
@@ -93,4 +95,11 @@ class App extends Component {
 }
 
 
-export default App;
+const mapStateToProps = (state, ownProps) => {
+	return {
+		layers: state.layers,
+		...ownProps
+	}
+};
+
+export default connect(mapStateToProps)(App);

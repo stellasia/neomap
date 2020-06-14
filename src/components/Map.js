@@ -44,7 +44,9 @@ class Map extends Component {
 		layers.map((layer) => {
 			if (layer.ukey === undefined)
 				return null;
-			globalBounds.extend(layer.bounds);
+			let bds = new L.LatLngBounds(layer.bounds);
+			if (bds.isValid())
+				globalBounds.extend(bds);
 			if (layer.rendering === "markers") {
 				ukeyMarkerArray.push(layer.ukey);
 				if (!this.leafletMarkerLayers[layer.ukey]) {
@@ -77,7 +79,7 @@ class Map extends Component {
 		});
 		// Check if globalBounds is defined
 		if (!globalBounds.isValid())
-			globalBounds = new L.LatLngBounds([[10,40],[50,90]]);
+			globalBounds = new L.LatLngBounds([[90, -180], [-90, 180]]);
 		// Find and clean deleted layers
 		let deletedMarkerUkeyLayers = Object.keys(this.leafletMarkerLayers).filter(function(key) {
 			return !ukeyMarkerArray.includes(key);
@@ -112,24 +114,6 @@ class Map extends Component {
 			return null;
 		});
 		this.map.flyToBounds(globalBounds);
-	}
-
-
-	addMarkerLayer(layer) {
-		if (!this.leafletMarkerLayers[layer.ukey]) {
-			this.leafletMarkerLayers[layer.ukey] = L.layerGroup().addTo(this.map);
-		}
-		this.updateMarkerLayer(layer.data, layer.color, layer.ukey);
-	}
-
-
-	deleteMarkerLayer(key) {
-		if (this.leafletMarkerLayers.includes(key)) {
-			this.map.removeLayer(this.leafletMarkerLayers[key]);
-			delete this.leafletMarkerLayers[key];
-			return true;
-		}
-		return false;
 	}
 
 

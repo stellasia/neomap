@@ -13,17 +13,10 @@ class LayersList extends Component {
 			driver: props.driver
 		};
 
-		this.forceUpdateLayers = this.forceUpdateLayers.bind(this);
 		this.renderLayers = this.renderLayers.bind(this);
 		this.renderNewLayer = this.renderNewLayer.bind(this);
 		this.deleteLayer = this.deleteLayer.bind(this);
 	};
-
-
-	forceUpdateLayers(layers) {
-		this.setState({layers: layers});
-	};
-
 
 
 	deleteLayer(ukey) {

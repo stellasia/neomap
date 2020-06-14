@@ -11,7 +11,6 @@ import {Button, Form} from 'react-bootstrap';
 import {CypherEditor} from "graph-app-kit/components/Editor"
 import {confirmAlert} from 'react-confirm-alert'; // Import
 import neo4jService from '../../services/neo4jService'
-import L from 'leaflet';
 import {addOrUpdateLayer, removeLayer} from "../../actions";
 
 
@@ -107,16 +106,32 @@ class Layer extends Component {
 		/* Compute the map bounds based on `this.state.data`
          */
 		let arr = this.state.data;
-		let arrOfLatLngs = [];
-		let bounds = new L.LatLngBounds();
+		// TODO: delegate this job to leaflet
+		let minLat = Number.MAX_VALUE;
+		let maxLat = -Number.MAX_VALUE;
+		let minLon = Number.MAX_VALUE;
+		let maxLon = -Number.MAX_VALUE;
 		if (arr.length > 0) {
 			arr.map((item,) => {
-				arrOfLatLngs.push(item.pos);
+				let lat = item.pos[0];
+				let lon = item.pos[1];
+				if (lat > maxLat) {
+					maxLat = lat;
+				}
+				if (lat < minLat) {
+					minLat = lat;
+				}
+				if (lon > maxLon) {
+					maxLon = lon;
+				}
+				if (lon < minLon) {
+					minLon = lon;
+				}
 				return undefined;
 			});
-			bounds = new L.LatLngBounds(arrOfLatLngs);
 		}
-		this.setState({bounds: bounds}, function() {
+		let bounds = [[minLat, minLon], [maxLat, maxLon]];
+		this.setState({bounds: bounds}, function () {
 			this.props.dispatch(
 				addOrUpdateLayer({layer: this.state})
 			);
