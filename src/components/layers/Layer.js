@@ -12,7 +12,7 @@ import {CypherEditor} from "graph-app-kit/components/Editor"
 import {confirmAlert} from 'react-confirm-alert'; // Import
 import neo4jService from '../../services/neo4jService'
 import L from 'leaflet';
-import {addLayer} from "../../actions";
+import {addOrUpdateLayer, removeLayer} from "../../actions";
 
 
 import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
@@ -117,9 +117,8 @@ class Layer extends Component {
 			bounds = new L.LatLngBounds(arrOfLatLngs);
 		}
 		this.setState({bounds: bounds}, function() {
-			// TODO: send info to store
 			this.props.dispatch(
-				addLayer({layer: this.state})
+				addOrUpdateLayer({layer: this.state})
 			);
 			/*
 			this.props.sendData({
@@ -322,7 +321,10 @@ class Layer extends Component {
 		) {
 			return;
 		}
-		this.props.deleteLayer(this.state.ukey);
+		this.props.dispatch(
+			removeLayer({ukey: this.state.ukey})
+		);
+		// this.props.deleteLayer(this.state.ukey);
 	};
 
 

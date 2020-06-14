@@ -14,14 +14,14 @@ class SideBar extends Component {
 
 	forceUpdateLayers(layers) {
 		this.setState({layers: layers});
-		this.refs.layerlist.forceUpdateLayers(layers);
+		// this.refs.layerlist.forceUpdateLayers(layers);
 	};
 
 
 	render() {
 		return (
 			<LayersList
-				ref="layerlist"
+				// ref="layerlist"
 				driver={this.props.driver}
 			/>
 		);

@@ -1,8 +1,8 @@
-export const ADD_LAYER = "ADD_LAYER";
+export const ADD_OR_UPDATE_LAYER = "ADD_LAYER";
 export const REMOVE_LAYER = "REMOVE_LAYER";
 
-export const addLayer = ({ layer }) => ({
-    type: ADD_LAYER,
+export const addOrUpdateLayer = ({layer}) => ({
+    type: ADD_OR_UPDATE_LAYER,
     layer
 });
 
