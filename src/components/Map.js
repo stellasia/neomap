@@ -17,8 +17,8 @@ class Map extends Component {
 		// init an empty map
 		this.map = L.map('map', {
 			preferCanvas: true,
-			center: [49.8419, 24.0315],
-			zoom: 4,
+			center: [0, 0],
+			zoom: 2,
 			layers: [
 				L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
 					attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
