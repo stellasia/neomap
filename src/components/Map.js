@@ -148,8 +148,7 @@ class Map extends Component {
 		let polylineData = data.map((entry) => {
 			return entry.pos;
 		});
-		var mapLayer = L.polyline(polylineData, {color: rgbColor}).addTo(this.map);
-		this.leafletPolylineLayers[ukey] = mapLayer;
+		this.leafletPolylineLayers[ukey] = L.polyline(polylineData, {color: rgbColor}).addTo(this.map);
 		// this.leafletPolylineLayers[ukey].setLatLngs(polylineData);
 		// this.leafletPolylineLayers[ukey].setConfig??({ color });
 	}
@@ -160,13 +159,12 @@ class Map extends Component {
 		let heatData = data.map((entry) => {
 			return entry.pos.concat(1.0);
 		});
-		var mapLayer = L.heatLayer(heatData, {
+		this.leafletHeatmapLayers[ukey] = L.heatLayer(heatData, {
 			radius: radius,
 			minOpacity: 0.1,
 			blur: 15,
 			max: 10.0
 		}).addTo(this.map);
-		this.leafletHeatmapLayers[ukey] = mapLayer;
 		// this.leafletHeatmapLayers[ukey].setLatLngs(heatData);
 		// this.leafletHeatmapLayers[ukey].setConfig({ radius });
 	}

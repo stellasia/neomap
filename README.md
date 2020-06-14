@@ -1,12 +1,12 @@
-<p align="center">
+<div align="center">
   <img alt="logo:Neomap" src="https://raw.githubusercontent.com/stellasia/neomap/master/public/icon.png" height="96" />
   <h2 align="center">neomap</h2>
   <p align="center">
-    <a href="https://github.com/stellasia/neomap/actions"><img src="https://github.com/stellasia/neomap/workflows/Node%20CI/badge.svg"></a>
-    <a href="https://github.com/stellasia/neomap/releases/"><img src="https://img.shields.io/github/release/stellasia/neomap.svg"></a>
-    <a href="https://github.com/Naereen/StrapDown.js/graphs/commit-activity"><img src="https://img.shields.io/badge/Maintained%3F-yes-green.svg"></a>
+    <a href="https://github.com/stellasia/neomap/actions"><img src="https://github.com/stellasia/neomap/workflows/Node%20CI/badge.svg" /></a>
+    <a href="https://github.com/stellasia/neomap/releases/"><img src="https://img.shields.io/github/release/stellasia/neomap.svg" /></a>
+    <a href="https://github.com/Naereen/StrapDown.js/graphs/commit-activity"><img src="https://img.shields.io/badge/Maintained%3F-yes-green.svg" /></a>
   </p>
-</p>
+</div>
 
 A Neo4J Desktop (React-based) application to visualize nodes with geographical attributes on a map.
 
