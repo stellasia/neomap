@@ -91,7 +91,7 @@ class Map extends Component {
 		});
 		let deletedPolylineUkeyLayers = Object.keys(this.leafletPolylineLayers).filter(function(key) {
 			return !ukeyPolylineArray.includes(key);
-		});
+		});Fix some warnings
 		deletedPolylineUkeyLayers.map((key) => {
 			this.map.removeLayer(this.leafletPolylineLayers[key]);
 			delete this.leafletPolylineLayers[key];
@@ -115,7 +115,6 @@ class Map extends Component {
 		});
 		this.map.flyToBounds(globalBounds);
 	}
-
 
 	updateMarkerLayer(data, color, ukey) {
 		// todo check if the layer has changed before rerendering it
@@ -159,7 +158,7 @@ class Map extends Component {
 		let heatData = data.map((entry) => {
 			return entry.pos.concat(1.0);
 		});
-		this.leafletHeatmapLayers[ukey] = L.heatLayer(heatData, {
+		var mapLayer = L.heatLayer(heatData, {
 			radius: radius,
 			minOpacity: 0.1,
 			blur: 15,

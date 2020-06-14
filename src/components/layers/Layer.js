@@ -14,6 +14,7 @@ import neo4jService from '../../services/neo4jService'
 import {addOrUpdateLayer, removeLayer} from "../../actions";
 
 
+
 import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
 // css needed for CypherEditor
 import "codemirror/lib/codemirror.css";
@@ -138,12 +139,6 @@ class Layer extends Component {
 			this.props.dispatch(
 				addOrUpdateLayer({layer: this.state})
 			);
-			/*
-			this.props.sendData({
-				ukey: this.state.ukey,
-				layer: this.state
-			});
-			 */
 		});
 	};
 
@@ -296,7 +291,7 @@ class Layer extends Component {
 
 
 	handleNodeLabelChange(e) {
-		this.setState({nodeLabel: e}, function () {
+		this.setState({nodeLabel: e}, function() {
 			this.getPropertyNames();
 		});
 	};
@@ -353,7 +348,6 @@ class Layer extends Component {
 		this.props.dispatch(
 			removeLayer({ukey: this.state.ukey})
 		);
-		// this.props.deleteLayer(this.state.ukey);
 	};
 
 
@@ -525,6 +519,7 @@ class Layer extends Component {
 		)
 	}
 
+  
 	renderConfigDefault() {
 		/*If layerType==latlon, then we display the elements to choose
            node labels and properties to be used.
@@ -686,7 +681,6 @@ class Layer extends Component {
 							{this.renderConfigPoint()}
 							{this.renderConfigCypher()}
 							{this.renderConfigSpatial()}
-
 
 							<h4> > Map rendering</h4>
 

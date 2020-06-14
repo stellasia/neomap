@@ -9,7 +9,6 @@ class SideBar extends Component {
 	render() {
 		return (
 			<LayersList
-				// ref="layerlist"
 				driver={this.props.driver}
 			/>
 		);
