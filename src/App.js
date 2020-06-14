@@ -13,11 +13,9 @@ class App extends Component {
 		super(props);
 
 		this.state = {
-			layers: {},
 			ready: false
 		};
 
-		this.layersChanged = this.layersChanged.bind(this);
 		this.saveConfigToFile = this.saveConfigToFile.bind(this);
 		this.loadConfigFromFile = this.loadConfigFromFile.bind(this);
 	};
@@ -34,16 +32,8 @@ class App extends Component {
 				ready: true,
 			});
 		});
-	}
-
-	layersChanged(childData) {
-		/* Something changed in the layer definition,
-           need to update map
-        */
-		this.setState({
-			layers: childData.layers
-		});
 	};
+
 
 	saveConfigToFile(e) {
 		let config = JSON.stringify(this.state.layers);
@@ -81,15 +71,12 @@ class App extends Component {
 					<SideBar
 						key="sidebar"
 						ref="sidebar"
-						layersChanged = {this.layersChanged}
-						layers = {this.state.layers}
 						driver = {this.driver}
 					/>
 				</div>
 				<div id="app-maparea" className="col-md-8">
 					<Map
 						key="map"
-						layers = {this.state.layers}
 					/>
 				</div>
 			</div>

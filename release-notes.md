@@ -1,5 +1,10 @@
 # neomap release notes
 
+
+## 0.5.0 (WIP)
+
+- Support for clusters in map rendering (#50)
+
 ## 0.4.0 (2020-02-27)
 
 - Performance improvements for map display (#32)

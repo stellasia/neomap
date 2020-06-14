@@ -1,6 +1,7 @@
 import React from "react";
 import { Nav, Navbar, NavDropdown } from "react-bootstrap";
 
+
 const Menu = ({ saveConfigToFile, loadConfigFromFile }) => {
   return (
     <Navbar>

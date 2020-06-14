@@ -3,6 +3,7 @@
  TODO: split into several files?
  */
 import React, {Component} from 'react';
+import {connect} from 'react-redux';
 import Select from 'react-select'
 import Accordion from 'react-bootstrap/Accordion';
 import Card from 'react-bootstrap/Card';
@@ -11,6 +12,7 @@ import {CypherEditor} from "graph-app-kit/components/Editor"
 import {confirmAlert} from 'react-confirm-alert'; // Import
 import neo4jService from '../../services/neo4jService'
 import L from 'leaflet';
+import {addLayer} from "../../actions";
 
 
 import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
@@ -115,10 +117,16 @@ class Layer extends Component {
 			bounds = new L.LatLngBounds(arrOfLatLngs);
 		}
 		this.setState({bounds: bounds}, function() {
+			// TODO: send info to store
+			this.props.dispatch(
+				addLayer({layer: this.state})
+			);
+			/*
 			this.props.sendData({
 				ukey: this.state.ukey,
 				layer: this.state
 			});
+			 */
 		});
 	};
 
@@ -674,4 +682,4 @@ class Layer extends Component {
 }
 
 
-export default Layer;
+export default connect()(Layer);
