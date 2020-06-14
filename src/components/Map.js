@@ -89,9 +89,9 @@ class Map extends Component {
 			delete this.leafletMarkerLayers[key];
 			return null;
 		});
-		let deletedPolylineUkeyLayers = Object.keys(this.leafletPolylineLayers).filter(function(key) {
+		let deletedPolylineUkeyLayers = Object.keys(this.leafletPolylineLayers).filter(function (key) {
 			return !ukeyPolylineArray.includes(key);
-		});Fix some warnings
+		});
 		deletedPolylineUkeyLayers.map((key) => {
 			this.map.removeLayer(this.leafletPolylineLayers[key]);
 			delete this.leafletPolylineLayers[key];

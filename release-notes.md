@@ -4,9 +4,9 @@
 ## 0.5.0 (WIP)
 
 - Support for clusters in map rendering (#50)
-- Add support for Neo4j point built-in type (#)
+- Add support for Neo4j point built-in type (#58)
 - Better support for Neo4j Desktop versions (#53)
-- Some code refactoring (#52)
+- Some code refactoring (#52 - #58)
 
 
 ## 0.4.0 (2020-02-27)
