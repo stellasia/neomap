@@ -1,5 +1,4 @@
-// TODO: Update when version bumped the neo4j driver
-import {v1 as neo4j} from "neo4j-driver";
+import neo4j from "neo4j-driver";
 
 /**
  * Hooks into the neo4jDesktopApi
