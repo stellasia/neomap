@@ -259,7 +259,7 @@ class Layer extends Component {
 		} else if (old_type === LAYER_TYPE_CYPHER) {
 			if (
 				window.confirm(
-					'You will loose your cypher query, is that what you want?'
+					'You will lose your cypher query, is that what you want?'
 				) === false
 			) {
 				return;
