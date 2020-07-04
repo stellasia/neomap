@@ -1,17 +1,18 @@
-import Layer from '../../../components/layers/Layer';
 import React from 'react';
+import {UnconnectedLayer} from '../../../components/layers/Layer';
 import {shallow} from './../../enzyme';
 
 
-describe('<Layer />', () => {
+describe('Test Layer component', () => {
 	let wrapper;
 	let ukey = "akey";
 
 	beforeEach(() => {
-		wrapper = shallow(<Layer ukey={ukey}/>);
+		wrapper = shallow(<UnconnectedLayer ukey={ukey}/>);
 	});
 
 	it('render the component', () => {
+
 		expect(wrapper).toBeTruthy();
 	});
 

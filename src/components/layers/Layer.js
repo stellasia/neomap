@@ -60,7 +60,7 @@ const DEFAULT_LAYER = {
 };
 
 
-class Layer extends Component {
+export class UnconnectedLayer extends Component {
 
 	constructor(props) {
 		super(props);
@@ -772,5 +772,4 @@ class Layer extends Component {
 	}
 }
 
-
-export default connect()(Layer);
+export default connect()(UnconnectedLayer);

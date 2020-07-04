@@ -4,7 +4,7 @@ import Layer from './Layer';
 import {connect} from 'react-redux';
 
 
-class LayersList extends Component {
+export class UnconnectedLayersList extends Component {
 
 	constructor(props) {
 		super(props);
@@ -72,4 +72,4 @@ const mapStateToProps = (state, ownProps) => {
 	}
 };
 
-export default connect(mapStateToProps)(LayersList);
+export default connect(mapStateToProps)(UnconnectedLayersList);
