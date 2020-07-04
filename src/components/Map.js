@@ -12,7 +12,7 @@ import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 
 
-class Map extends Component {
+export class UnconnectedMap extends Component {
 
 	componentDidMount() {
 		// init an empty map
@@ -238,4 +238,4 @@ const mapStateToProps = (state, ownProps) => {
 };
 
 
-export default connect(mapStateToProps)(Map);
+export default connect(mapStateToProps)(UnconnectedMap);
