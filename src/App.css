@@ -117,3 +117,11 @@ h4 {
     position: absolute;
     bottom: 3px;
 }
+
+.leaflet-control-layers {
+    font-size: 1.25rem;
+}
+
+.leaflet-control-layers section {
+    padding: 5px 10px;
+}

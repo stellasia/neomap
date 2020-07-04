@@ -14,7 +14,6 @@ import neo4jService from '../../services/neo4jService'
 import {addOrUpdateLayer, removeLayer} from "../../actions";
 
 
-
 import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
 // css needed for CypherEditor
 import "codemirror/lib/codemirror.css";
@@ -24,19 +23,17 @@ import "cypher-codemirror/dist/cypher-codemirror-syntax.css";
 import ColorPicker from "../ColorPicker";
 
 
-// maximum number of points to show
-const LIMIT = 10000;
-
 // layer type: either from node labels or cypher
 const LAYER_TYPE_LATLON = "latlon";
 const LAYER_TYPE_POINT = "point";
 const LAYER_TYPE_CYPHER = "cypher";
 const LAYER_TYPE_SPATIAL = "spatial";
 
-const RENDERING_MARKERS = "markers";
-const RENDERING_POLYLINE = "polyline";
-const RENDERING_HEATMAP = "heatmap";
-const RENDERING_CLUSTERS = "clusters";
+// TODO: move this into a separate configuration/constants file
+export const RENDERING_MARKERS = "markers";
+export const RENDERING_POLYLINE = "polyline";
+export const RENDERING_HEATMAP = "heatmap";
+export const RENDERING_CLUSTERS = "clusters";
 
 
 // default parameters for new layers
@@ -53,7 +50,7 @@ const DEFAULT_LAYER = {
 	data: [],
 	bounds: [],
 	color: {r: 0, g: 0, b: 255, a: 1},
-	limit: LIMIT,
+	limit: null,
 	rendering: RENDERING_MARKERS,
 	radius: 30,
 	cypher: "",
@@ -168,12 +165,13 @@ class Layer extends Component {
 	getSpatialQuery() {
 		let query = `CALL spatial.layer('${this.state.spatialLayer.value}') YIELD node `;
 		query += "WITH node ";
-		query += "MATCH (node)-[:RTREE_ROOT]-()-[:RTREE_CHILD]-()-[:RTREE_REFERENCE]-(n) ";
+		query += "MATCH (node)-[:RTREE_ROOT]-()-[:RTREE_CHILD*1..10]->()-[:RTREE_REFERENCE]-(n) ";
 		query += "WHERE n.point.srid = 4326 ";
 		query += "RETURN n.point.x as longitude, n.point.y as latitude ";
 		if (this.state.tooltipProperty.value !== '')
 			query += `, n.${this.state.tooltipProperty.value} as tooltip `;
-		query += `\nLIMIT ${this.state.limit}`;
+		if (this.state.limit)
+			query += `\nLIMIT ${this.state.limit}`;
 		return query;
 	};
 
@@ -210,7 +208,8 @@ class Layer extends Component {
 
 		// TODO: is that really needed???
 		// limit the number of points to avoid browser crash...
-		query += `\nLIMIT ${this.state.limit}`;
+		if (this.state.limit)
+			query += `\nLIMIT ${this.state.limit}`;
 
 		return query;
 	};
