@@ -1,11 +1,12 @@
 # neomap release notes
 
 
-## 0.5.0 (WIP)
+## 0.5.0
 
 - Support for clusters in map rendering (#50)
 - Add support for Neo4j point built-in type (#58)
 - Better support for Neo4j Desktop versions (#53)
+- Support for Neo4j 4.x (#60)
 - Some code refactoring (#52 - #58)
 
 

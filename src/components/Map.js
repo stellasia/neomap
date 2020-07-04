@@ -4,6 +4,7 @@
  */
 import React, {Component} from 'react'
 import {connect} from 'react-redux';
+import {RENDERING_CLUSTERS, RENDERING_HEATMAP, RENDERING_MARKERS, RENDERING_POLYLINE} from "./layers/Layer";
 import L from 'leaflet';
 import 'leaflet.heat';
 import 'leaflet.markercluster';
@@ -30,6 +31,7 @@ class Map extends Component {
 		this.leafletPolylineLayers = {};
 		this.leafletHeatmapLayers = {};
 		this.leafletClusterLayers = {};
+		this.layerControl = null;
 	}
 
 
@@ -47,27 +49,27 @@ class Map extends Component {
 			let bds = new L.LatLngBounds(layer.bounds);
 			if (bds.isValid())
 				globalBounds.extend(bds);
-			if (layer.rendering === "markers") {
+			if (layer.rendering === RENDERING_MARKERS) {
 				ukeyMarkerArray.push(layer.ukey);
 				if (!this.leafletMarkerLayers[layer.ukey]) {
 					this.leafletMarkerLayers[layer.ukey] = L.layerGroup().addTo(this.map);
 				}
 				this.updateMarkerLayer(layer.data, layer.color, layer.ukey);
-			} else if (layer.rendering === "polyline") {
+			} else if (layer.rendering === RENDERING_POLYLINE) {
 				ukeyPolylineArray.push(layer.ukey);
 				if (this.leafletPolylineLayers[layer.ukey]) {
 					// todo find a way of updating the polyline layer instead of delete & recreate
 					this.map.removeLayer(this.leafletPolylineLayers[layer.ukey]);
 				}
 				this.updatePolylineLayer(layer.data, layer.color, layer.ukey);
-			} else if (layer.rendering === "heatmap") {
+			} else if (layer.rendering === RENDERING_HEATMAP) {
 				ukeyHeatmapArray.push(layer.ukey);
 				if (this.leafletHeatmapLayers[layer.ukey]) {
 					// todo find a way of updating the heat layer instead of delete & recreate
 					this.map.removeLayer(this.leafletHeatmapLayers[layer.ukey]);
 				}
 				this.updateHeatmapLayer(layer.data, layer.radius, layer.ukey);
-			} else if (layer.rendering === "clusters") {
+			} else if (layer.rendering === RENDERING_CLUSTERS) {
 				ukeyClusterArray.push(layer.ukey);
 				if (!this.leafletClusterLayers[layer.ukey]) {
 					this.leafletClusterLayers[layer.ukey] = L.markerClusterGroup();
@@ -97,7 +99,7 @@ class Map extends Component {
 			delete this.leafletPolylineLayers[key];
 			return null;
 		});
-		let deletedHeatmapUkeyLayers = Object.keys(this.leafletHeatmapLayers).filter(function(key) {
+		let deletedHeatmapUkeyLayers = Object.keys(this.leafletHeatmapLayers).filter(function (key) {
 			return !ukeyHeatmapArray.includes(key);
 		});
 		deletedHeatmapUkeyLayers.map((key) => {
@@ -105,7 +107,7 @@ class Map extends Component {
 			delete this.leafletHeatmapLayers[key];
 			return null;
 		});
-		let deletedClusterUkeyLayers = Object.keys(this.leafletClusterLayers).filter(function(key) {
+		let deletedClusterUkeyLayers = Object.keys(this.leafletClusterLayers).filter(function (key) {
 			return !ukeyClusterArray.includes(key);
 		});
 		deletedClusterUkeyLayers.map((key) => {
@@ -114,6 +116,35 @@ class Map extends Component {
 			return null;
 		});
 		this.map.flyToBounds(globalBounds);
+		this.updateLayerControl();
+	}
+
+	updateLayerControl() {
+		if (this.layerControl) {
+			this.layerControl.remove(this.map);
+		}
+		var overlayMaps = {};
+		this.props.layers.map(l => {
+			switch (l.rendering) {
+				case RENDERING_MARKERS:
+					overlayMaps[l.name] = this.leafletMarkerLayers[l.ukey];
+					break;
+				case RENDERING_HEATMAP:
+					overlayMaps[l.name] = this.leafletHeatmapLayers[l.ukey];
+					break;
+				case RENDERING_CLUSTERS:
+					overlayMaps[l.name] = this.leafletClusterLayers[l.ukey];
+					break;
+				case RENDERING_POLYLINE:
+					overlayMaps[l.name] = this.leafletPolylineLayers[l.ukey];
+					break;
+				default:
+					break;
+			}
+			return null;
+		});
+		this.layerControl = L.control.layers([], overlayMaps);
+		this.layerControl.addTo(this.map);
 	}
 
 	updateMarkerLayer(data, color, ukey) {
@@ -158,14 +189,12 @@ class Map extends Component {
 		let heatData = data.map((entry) => {
 			return entry.pos.concat(1.0);
 		});
-		var mapLayer = L.heatLayer(heatData, {
+		this.leafletHeatmapLayers[ukey] = L.heatLayer(heatData, {
 			radius: radius,
 			minOpacity: 0.1,
 			blur: 15,
 			max: 10.0
 		}).addTo(this.map);
-		// this.leafletHeatmapLayers[ukey].setLatLngs(heatData);
-		// this.leafletHeatmapLayers[ukey].setConfig({ radius });
 	}
 
 
@@ -192,7 +221,11 @@ class Map extends Component {
 
 
 	render() {
-		return <div id="map"></div>;
+		return (
+			<div id="map">
+				text that will be replaced by the map
+			</div>
+		);
 	}
 }
 
