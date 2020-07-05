@@ -27,5 +27,5 @@ Right now the documentation is hosted on GitHub wiki: https://github.com/stellas
 2. Clone the repo and start a new branch on your local clone
 3. Develop on your branch
 4. Make sure you are not breaking tests and potentially add new ones (ok, given the state of the tests right now, this is not a big constraint)
-5. Open a PR referencing the issue
+5. Open a PR againt the dev branch referencing the issue
 
