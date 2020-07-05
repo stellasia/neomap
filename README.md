@@ -38,6 +38,8 @@ Read the [tutorial](https://github.com/stellasia/neomap/wiki/NeoMap-Tutorial/) o
 
 ## Want to contribute?
 
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ### WARNING
 
 I am a data scientist, not a front-end developer. If someone with expertise with React wants to take a look and suggest improvements, that would be very welcome!
@@ -62,3 +64,16 @@ I am a data scientist, not a front-end developer. If someone with expertise with
 5.  Run tests: install dev dependencies and
 
         npm run test
+
+### Build for release (TODO: add this to CI?)
+
+1. Make sure the version in package.json is correct
+2. Build:
+
+    npm run build
+
+3. Create tgz package:
+
+    npm pack
+
+    
