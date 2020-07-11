@@ -8,6 +8,7 @@
 		"licenseRequired": false
 	},
 	"dependencies": {
+		"@geoman-io/leaflet-geoman-free": "^2.6.0",
 		"bootstrap": "^4.3.0",
 		"downloadjs": "^1.4.7",
 		"graph-app-kit": "^1.0.4",

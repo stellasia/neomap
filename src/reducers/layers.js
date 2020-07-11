@@ -1,4 +1,4 @@
-import {ADD_OR_UPDATE_LAYER, REMOVE_LAYER, SET_LAYERS} from '../actions'
+import {ADD_OR_UPDATE_LAYER, REMOVE_LAYER, SET_LAYERS} from '../actions/layers'
 
 const layerDefaultState = [];
 

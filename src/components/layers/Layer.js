@@ -11,7 +11,8 @@ import {Button, Form} from 'react-bootstrap';
 import {CypherEditor} from "graph-app-kit/components/Editor"
 import {confirmAlert} from 'react-confirm-alert'; // Import
 import neo4jService from '../../services/neo4jService'
-import {addOrUpdateLayer, removeLayer} from "../../actions";
+import {addOrUpdateLayer, removeLayer} from "../../actions/layers";
+import {showArea} from "../../actions/map";
 
 
 import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
@@ -350,6 +351,16 @@ export class UnconnectedLayer extends Component {
 	};
 
 
+	onLayerClick() {
+		/*
+		this.props.dispatch(
+			setActiveLayer({ukey: this.state.ukey})
+		);
+		// do not prevent default action since we want the accordion to work
+		 */
+	}
+
+
 	showQuery(event) {
 		confirmAlert({
 			message: this.getQuery(),
@@ -595,6 +606,13 @@ export class UnconnectedLayer extends Component {
 		)
 	};
 
+	mapArea(e) {
+		console.log("LAYER", this.props.map);
+		this.props.dispatch(
+			showArea(!this.props.map.showArea, this.state.ukey)
+		);
+		e.preventDefault();
+	}
 
 	render() {
 		let color = `rgba(${this.state.color.r}, ${this.state.color.g}, ${this.state.color.b}, ${this.state.color.a})`;
@@ -603,17 +621,17 @@ export class UnconnectedLayer extends Component {
 
 			<Card>
 
-				<Accordion.Toggle as={Card.Header} eventKey={this.state.ukey} >
+				<Accordion.Toggle as={Card.Header} eventKey={this.state.ukey} onClick={this.onLayerClick.bind(this)}>
 					<h3>{this.state.name}
 						<small hidden>({this.state.ukey})</small>
 						<span
-							hidden={ this.state.rendering === RENDERING_HEATMAP }
+							hidden={this.state.rendering === RENDERING_HEATMAP}
 							style={{background: color, float: 'right', height: '20px', width: '50px'}}> 
 						</span>
 					</h3>
 				</Accordion.Toggle>
 
-				<Accordion.Collapse eventKey={this.state.ukey} >
+				<Accordion.Collapse eventKey={this.state.ukey}>
 
 					<Card.Body>
 
@@ -680,6 +698,19 @@ export class UnconnectedLayer extends Component {
 							{this.renderConfigPoint()}
 							{this.renderConfigCypher()}
 							{this.renderConfigSpatial()}
+
+							<Button variant="outline-info" type="submit" onClick={this.mapArea.bind(this)}>
+								Draw area on map
+							</Button>
+							<div show={true}>
+								<Button variant="outline-success" type="submit" onClick={this.mapArea.bind(this)}>
+									I'm done
+								</Button>
+								<Button variant="outline-danger" type="submit" onClick={this.mapArea.bind(this)}>
+									Cancel
+								</Button>
+								<Form.Control as="textarea" rows="3"/>
+							</div>
 
 							<h4> > Map rendering</h4>
 
@@ -772,4 +803,13 @@ export class UnconnectedLayer extends Component {
 	}
 }
 
-export default connect()(UnconnectedLayer);
+
+const mapStateToProps = (state, ownProps) => {
+	return {
+		map: state.map,
+		...ownProps
+	}
+};
+
+
+export default connect(mapStateToProps)(UnconnectedLayer);

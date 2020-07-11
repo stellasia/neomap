@@ -10,6 +10,8 @@ import 'leaflet.heat';
 import 'leaflet.markercluster';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
+import '@geoman-io/leaflet-geoman-free';
+import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
 
 
 export class UnconnectedMap extends Component {
@@ -117,6 +119,36 @@ export class UnconnectedMap extends Component {
 		});
 		this.map.flyToBounds(globalBounds);
 		this.updateLayerControl();
+
+		console.log("MAP", this.props.map);
+		if (this.props.map.showArea) {
+			this.addPm();
+		} else {
+			// TODO: probably not the best way to do that, I want to disable pm now
+			this.map.pm.addControls({
+				drawMarker: false,
+				drawPolyline: false,
+				drawCircle: false,
+				drawRectangle: false,
+				drawCircleMarker: false,
+				drawPolygon: false,
+				cutPolygon: false,
+				editMode: false,
+				dragMode: false,
+				removalMode: false
+			});
+		}
+	}
+
+	addPm() {
+		this.map.pm.addControls({
+			position: 'bottomleft',
+			drawMarker: false,
+			drawPolyline: false,
+			drawCircleMarker: false,
+			drawPolygon: false,
+			cutPolygon: false,
+		});
 	}
 
 	updateLayerControl() {
@@ -233,6 +265,7 @@ export class UnconnectedMap extends Component {
 const mapStateToProps = (state, ownProps) => {
 	return {
 		layers: state.layers,
+		map: state.map,
 		...ownProps
 	}
 };
