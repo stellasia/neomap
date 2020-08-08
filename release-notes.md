@@ -1,7 +1,12 @@
 # neomap release notes
 
 
-## 0.5.0
+## 0.5.1 (2020-08-08)
+
+- Fix overflow in side bar (layer configuration)
+- Publish package to NPM and update installation instructions 
+
+## 0.5.0 (2020-07-04)
 
 - Support for clusters in map rendering (#50)
 - Add support for Neo4j point built-in type (#58)

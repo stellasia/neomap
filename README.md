@@ -14,14 +14,22 @@ A Neo4J Desktop (React-based) application to visualize nodes with geographical a
 
 ### Add the app to Neo4jDesktop
 
+#### From NPM package URL (Recommended)
+
+1. Open neo4j desktop and go to "Graph Applications" view:
+
+    ![](img/desktop_graphapp_install.png)
+
+2. Paste the following link in the text input:
+
+       https://registry.npmjs.org/neomap
+
+
 #### From tarball
 
 1. Go to the repository [releases](https://github.com/stellasia/neomap/releases)
 2. Download the `neomap-<version>.tar.gz`
-3. Open neo4j desktop and go to "Graph Applications" view:
-
-   ![](img/desktop_graphapp_install.png)
-
+3. Open neo4j desktop and go to "Graph Applications" view (see image in previous section)
 4. Drag and drop the tarball you downloaded earlier below "Install Graph Application"
 5. Trust the application
 6. The application is now available and you can add it to your projects:
@@ -31,6 +39,7 @@ A Neo4J Desktop (React-based) application to visualize nodes with geographical a
 7. Click "Add"
 
    ![](img/desktop_graphapp_add_2.png)
+
 
 ## Usage
 
