@@ -19,6 +19,8 @@ body {
     width: 30%;
     min-height: 100%;
     padding: 0;
+    height: 100%;
+    overflow-y: scroll;
 }
 
 .navbar {
@@ -27,6 +29,10 @@ body {
     background: darkgrey;
     color: #fff;
     padding-left: 5%;
+}
+
+#map {
+    height: 100%;
 }
 
 #app-maparea {
