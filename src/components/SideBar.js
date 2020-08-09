@@ -4,7 +4,7 @@ import { Layer, NEW_LAYER, NEW_LAYER_KEY } from './Layer';
 
 
 export const SideBar = React.memo((props) => {
-	const { layers, removeLayer, addOrUpdateLayer } = props;
+	const { layers, removeLayer, addLayer, updateLayer } = props;
 
 	const renderLayers = () => {
 		return layers.map((layer) => {
@@ -14,7 +14,7 @@ export const SideBar = React.memo((props) => {
 					key={layer.ukey}
 					ukey={layer.ukey}
 					layer={layer}
-					addOrUpdateLayer={addOrUpdateLayer}
+					updateLayer={updateLayer}
 					removeLayer={removeLayer}
 				/>
 			);
@@ -28,7 +28,7 @@ export const SideBar = React.memo((props) => {
 				data-id="new-layer"
 				ukey={NEW_LAYER_KEY}
 				layer={NEW_LAYER}
-				addOrUpdateLayer={addOrUpdateLayer}
+				addLayer={addLayer}
 			/>
 		);
 	};

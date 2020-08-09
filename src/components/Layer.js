@@ -124,7 +124,7 @@ export class Layer extends Component {
 		}
 		let bounds = [[minLat, minLon], [maxLat, maxLon]];
 		this.setState({bounds: bounds}, function () {
-			this.props.addOrUpdateLayer({layer: this.state});
+			this.props.updateLayer({layer: this.state});
 		});
 	};
 
