@@ -9,7 +9,7 @@ import Card from 'react-bootstrap/Card';
 import {Button, Form} from 'react-bootstrap';
 import {CypherEditor} from "graph-app-kit/components/Editor"
 import {confirmAlert} from 'react-confirm-alert'; // Import
-import neo4jService from '../services/neo4jService'
+import { neo4jService } from '../services/neo4jService'
 
 
 import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
@@ -19,7 +19,6 @@ import "codemirror/addon/lint/lint.css";
 import "codemirror/addon/hint/show-hint.css";
 import "cypher-codemirror/dist/cypher-codemirror-syntax.css";
 import ColorPicker from "./ColorPicker";
-
 
 // layer type: either from node labels or cypher
 const LAYER_TYPE_LATLON = "latlon";
@@ -33,10 +32,8 @@ export const RENDERING_POLYLINE = "polyline";
 export const RENDERING_HEATMAP = "heatmap";
 export const RENDERING_CLUSTERS = "clusters";
 
-
 // default parameters for new layers
 export const NEW_LAYER = {
-	ukey: "newLayer",
 	name: "New layer",
 	layerType: LAYER_TYPE_LATLON,
 	latitudeProperty: {value: "latitude", label: "latitude"},
@@ -58,6 +55,7 @@ export const NEW_LAYER = {
 	spatialLayer: {value: "", label: ""},
 };
 
+export const NEW_LAYER_KEY ="NewLayer";
 
 export class Layer extends Component {
 
@@ -124,7 +122,9 @@ export class Layer extends Component {
 			});
 		}
 		let bounds = [[minLat, minLon], [maxLat, maxLon]];
-		this.setState({bounds: bounds});
+		this.setState({bounds: bounds}, function () {
+			this.props.addOrUpdateLayer({layer: this.state});
+		});
 	};
 
 
@@ -332,7 +332,8 @@ export class Layer extends Component {
 		) {
 			return;
 		}
-		this.props.removeLayer(this.props.layer.ukey);
+
+		this.props.removeLayer(this.state.ukey);
 	};
 
 
@@ -589,7 +590,7 @@ export class Layer extends Component {
 
 			<Card>
 
-				<Accordion.Toggle as={Card.Header} eventKey={this.state.ukey} >
+				<Accordion.Toggle as={Card.Header} eventKey={this.props.ukey} >
 					<h3>{this.state.name}
 						<small hidden>({this.state.ukey})</small>
 						<span
@@ -599,7 +600,7 @@ export class Layer extends Component {
 					</h3>
 				</Accordion.Toggle>
 
-				<Accordion.Collapse eventKey={this.state.ukey} >
+				<Accordion.Collapse eventKey={this.props.ukey} >
 
 					<Card.Body>
 

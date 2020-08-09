@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, cleanup } from '@testing-library/react'
-import { Layer, NEW_LAYER } from './Layer';
+import { Layer, NEW_LAYER, NEW_LAYER_KEY } from './Layer';
 
 describe('Test Layer component', () => {
 	let renderResult;

@@ -1,10 +1,9 @@
 import React, { Component } from "react";
 import download from "downloadjs";
-import neo4jService from './services/neo4jService';
 import { Map } from "./components/Map";
 import { Menu } from "./components/Menu";
 import { SideBar } from "./components/SideBar";
-import { NEW_LAYER } from './components/Layer';
+import { NEW_LAYER, NEW_LAYER_KEY } from './components/Layer';
 import "./App.css";
 
 export class App extends Component {
@@ -13,12 +12,11 @@ export class App extends Component {
 		super(props);
 
 		this.state = {
-			ready: false,
-			layers: [ NEW_LAYER.ukey ]
+			layers: [ NEW_LAYER_KEY ]
 		};
 
 		this.layerStore = new Map([
-			[ NEW_LAYER.ukey, NEW_LAYER ],
+			[ NEW_LAYER_KEY, NEW_LAYER ],
 		]);
 
 		
@@ -50,21 +48,6 @@ export class App extends Component {
 	};
 	//#endregion
 
-	getDriver() {
-		return neo4jService.getNeo4jDriver();
-	}
-
-	componentDidMount() {
-		this.getDriver().then( result => {
-			this.driver = result;
-		}).then( () => {
-			this.setState({
-				ready: true,
-			});
-		});
-	};
-
-
 	saveConfigToFile(e) {
 		let config = JSON.stringify(this.props.layers);
 		let fileName = "neomap_config.json";
@@ -94,8 +77,7 @@ export class App extends Component {
 		e.preventDefault();
 	};
 
-
-	renderUI() {
+	render() {
 		return (
 			<div id="wrapper" className="row">
 				<div id="sidebar" className="col-md-4">
@@ -103,8 +85,10 @@ export class App extends Component {
 					<SideBar
 						key="sidebar"
 						ref="sidebar"
-						driver = {this.driver}
 						layers={this.state.layers}
+						addOrUpdateLayer={this.addOrUpdateLayer}
+						removeLayer={this.removeLayer}
+
 					/>
 				</div>
 				<div id="app-maparea" className="col-md-8">
@@ -115,13 +99,5 @@ export class App extends Component {
 				</div>
 			</div>
 		);
-	};
-
-
-	render() {
-		// wait until driver is ready...
-		return this.state.ready ? this.renderUI() : (
-			<span>Loading...</span>
-		)
 	};
 }

@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import Accordion from 'react-bootstrap/Accordion';
-import { Layer, NEW_LAYER } from './Layer';
+import { Layer, NEW_LAYER, NEW_LAYER_KEY } from './Layer';
 
 
 export class SideBar extends Component {
@@ -43,7 +43,7 @@ export class SideBar extends Component {
 
 	renderNewLayer() {
 		return (
-			<Layer key={NEW_LAYER.ukey} data-id="new-layer" ukey={NEW_LAYER.ukey} layer={NEW_LAYER} sendData={this.sendData}
+			<Layer key={NEW_LAYER_KEY} data-id="new-layer" ukey={NEW_LAYER_KEY} layer={NEW_LAYER} deleteLayer={this.props.deleteLayer} sendData={this.sendData}
 						driver={this.props.driver} />
 		);
 	};
