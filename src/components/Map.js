@@ -2,17 +2,15 @@
  *
  *
  */
-import React, {Component} from 'react'
-import {connect} from 'react-redux';
-import {RENDERING_CLUSTERS, RENDERING_HEATMAP, RENDERING_MARKERS, RENDERING_POLYLINE} from "./layers/Layer";
+import React, { Component } from 'react'
 import L from 'leaflet';
 import 'leaflet.heat';
 import 'leaflet.markercluster';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
+import { RENDERING_CLUSTERS, RENDERING_HEATMAP, RENDERING_MARKERS, RENDERING_POLYLINE } from "./Layer";
 
-
-export class UnconnectedMap extends Component {
+export class Map extends Component {
 
 	componentDidMount() {
 		// init an empty map
@@ -222,20 +220,7 @@ export class UnconnectedMap extends Component {
 
 	render() {
 		return (
-			<div id="map">
-				text that will be replaced by the map
-			</div>
+			<div id="map"></div>
 		);
 	}
 }
-
-
-const mapStateToProps = (state, ownProps) => {
-	return {
-		layers: state.layers,
-		...ownProps
-	}
-};
-
-
-export default connect(mapStateToProps)(UnconnectedMap);

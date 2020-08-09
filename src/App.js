@@ -1,26 +1,54 @@
-import React, {Component} from "react";
-import "./App.css";
-import Map from "./components/Map";
-import Menu from "./components/Menu";
-import SideBar from "./components/SideBar";
-import neo4jService from './services/neo4jService'
+import React, { Component } from "react";
 import download from "downloadjs";
-import {connect} from "react-redux";
-import {setLayers} from "./actions";
+import neo4jService from './services/neo4jService';
+import { Map } from "./components/Map";
+import { Menu } from "./components/Menu";
+import { SideBar } from "./components/SideBar";
+import { NEW_LAYER } from './components/Layer';
+import "./App.css";
 
-
-class App extends Component {
+export class App extends Component {
 
 	constructor(props) {
 		super(props);
 
 		this.state = {
-			ready: false
+			ready: false,
+			layers: [ NEW_LAYER.ukey ]
 		};
 
+		this.layerStore = new Map([
+			[ NEW_LAYER.ukey, NEW_LAYER ],
+		]);
+
+		
 		this.saveConfigToFile = this.saveConfigToFile.bind(this);
 		this.loadConfigFromFile = this.loadConfigFromFile.bind(this);
 	};
+
+	//#region layer reducers
+	setLayers(layers) {
+		this.layerStore.clear();
+
+		layers.forEach(layer => {
+			this.layerStore.set(layer.ukey, layer);
+		})
+		
+		this.setState({ layers: this.layerStore.keys() });
+	}
+
+	addOrUpdateLayer(layer) {
+		this.layerStore.set(layer.ukey, layer);	
+
+		this.setState({ layers: this.layerStore.keys() });
+	};
+
+	removeLayer(layerKey) {
+		this.layerStore.delete(layerKey);
+
+		this.setState({ layers: this.layerStore.keys() });
+	};
+	//#endregion
 
 	getDriver() {
 		return neo4jService.getNeo4jDriver();
@@ -54,10 +82,12 @@ class App extends Component {
 			let fileReader = new FileReader();
 			fileReader.onloadend = (e) => {
 				const content = e.target.result;
-				const layers = JSON.parse(content);
-				this.props.dispatch(
-					setLayers({layers: layers})
-				);
+				try {
+					const layers = JSON.parse(content);
+					this.setLayers(layers);
+				} catch (err) {
+					console.log('Failed to load and parse data from file', err.message);
+				}
 			};
 			fileReader.readAsText(file);
 		};
@@ -74,11 +104,13 @@ class App extends Component {
 						key="sidebar"
 						ref="sidebar"
 						driver = {this.driver}
+						layers={this.state.layers}
 					/>
 				</div>
 				<div id="app-maparea" className="col-md-8">
 					<Map
 						key="map"
+						layers={this.state.layers}
 					/>
 				</div>
 			</div>
@@ -93,13 +125,3 @@ class App extends Component {
 		)
 	};
 }
-
-
-const mapStateToProps = (state, ownProps) => {
-	return {
-		layers: state.layers,
-		...ownProps
-	}
-};
-
-export default connect(mapStateToProps)(App);

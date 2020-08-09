@@ -3,15 +3,13 @@
  TODO: split into several files?
  */
 import React, {Component} from 'react';
-import {connect} from 'react-redux';
 import Select from 'react-select'
 import Accordion from 'react-bootstrap/Accordion';
 import Card from 'react-bootstrap/Card';
 import {Button, Form} from 'react-bootstrap';
 import {CypherEditor} from "graph-app-kit/components/Editor"
 import {confirmAlert} from 'react-confirm-alert'; // Import
-import neo4jService from '../../services/neo4jService'
-import {addOrUpdateLayer, removeLayer} from "../../actions";
+import neo4jService from '../services/neo4jService'
 
 
 import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
@@ -20,7 +18,7 @@ import "codemirror/lib/codemirror.css";
 import "codemirror/addon/lint/lint.css";
 import "codemirror/addon/hint/show-hint.css";
 import "cypher-codemirror/dist/cypher-codemirror-syntax.css";
-import ColorPicker from "../ColorPicker";
+import ColorPicker from "./ColorPicker";
 
 
 // layer type: either from node labels or cypher
@@ -37,7 +35,8 @@ export const RENDERING_CLUSTERS = "clusters";
 
 
 // default parameters for new layers
-const DEFAULT_LAYER = {
+export const NEW_LAYER = {
+	ukey: "newLayer",
 	name: "New layer",
 	layerType: LAYER_TYPE_LATLON,
 	latitudeProperty: {value: "latitude", label: "latitude"},
@@ -60,19 +59,12 @@ const DEFAULT_LAYER = {
 };
 
 
-export class UnconnectedLayer extends Component {
+export class Layer extends Component {
 
 	constructor(props) {
 		super(props);
 
-		if (props.layer !== undefined) {
-			this.state = props.layer;
-		} else {
-			this.state = DEFAULT_LAYER;
-			this.state["ukey"] = props.ukey;
-		}
-
-		this.driver = props.driver;
+		this.state = this.props.layer;
 
 		this.sendData = this.sendData.bind(this);
 		this.deleteLayer = this.deleteLayer.bind(this);
@@ -132,11 +124,7 @@ export class UnconnectedLayer extends Component {
 			});
 		}
 		let bounds = [[minLat, minLon], [maxLat, maxLon]];
-		this.setState({bounds: bounds}, function () {
-			this.props.dispatch(
-				addOrUpdateLayer({layer: this.state})
-			);
-		});
+		this.setState({bounds: bounds});
 	};
 
 
@@ -218,7 +206,7 @@ export class UnconnectedLayer extends Component {
 	updateData() {
 		/*Query database and update `this.state.data`
          */
-		neo4jService.getData(this.driver, this.getQuery(), {}).then( res => {
+		neo4jService.getData(this.props.driver, this.getQuery(), {}).then( res => {
 			if (res.status === "ERROR") {
 				let message = "Invalid cypher query.";
 				if (this.state.layerType !== LAYER_TYPE_CYPHER) {
@@ -344,9 +332,7 @@ export class UnconnectedLayer extends Component {
 		) {
 			return;
 		}
-		this.props.dispatch(
-			removeLayer({ukey: this.state.ukey})
-		);
+		this.props.removeLayer(this.props.layer.ukey);
 	};
 
 
@@ -364,7 +350,7 @@ export class UnconnectedLayer extends Component {
 
 
 	hasSpatialPlugin() {
-		neo4jService.hasSpatial(this.driver).then(result => {
+		neo4jService.hasSpatial(this.props.driver).then(result => {
 			this.setState({
 				hasSpatialPlugin: result
 			});
@@ -376,7 +362,7 @@ export class UnconnectedLayer extends Component {
 		/*This will be updated quite often,
            is that what we want?
          */
-		neo4jService.getNodeLabels(this.driver).then( result => {
+		neo4jService.getNodeLabels(this.props.driver).then( result => {
 			this.setState({
 				nodes: result
 			})
@@ -385,7 +371,7 @@ export class UnconnectedLayer extends Component {
 
 
 	getPropertyNames() {
-		neo4jService.getProperties(this.driver, this.getNodeFilter()).then( result => {
+		neo4jService.getProperties(this.props.driver, this.getNodeFilter()).then( result => {
 			result.push({value: "", label: ""}); // This is the default: no tooltip
 			this.setState({propertyNames: result});
 		});
@@ -393,7 +379,7 @@ export class UnconnectedLayer extends Component {
 
 
 	getSpatialLayers() {
-		neo4jService.getSpatialLayers(this.driver).then(result => {
+		neo4jService.getSpatialLayers(this.props.driver).then(result => {
 			this.setState({spatialLayers: result});
 		});
 	};
@@ -632,7 +618,7 @@ export class UnconnectedLayer extends Component {
 							</Form.Group>
 
 
-							<h4>  > Data</h4>
+							<h4>{' > Data'}</h4>
 
 							<Form.Group controlId="formLayerType">
 								<Form.Label>Layer type</Form.Label>
@@ -681,7 +667,7 @@ export class UnconnectedLayer extends Component {
 							{this.renderConfigCypher()}
 							{this.renderConfigSpatial()}
 
-							<h4> > Map rendering</h4>
+							<h4>{' > Map rendering'}</h4>
 
 							<Form.Group controlId="formRendering">
 								<Form.Label>Rendering</Form.Label>
@@ -771,5 +757,3 @@ export class UnconnectedLayer extends Component {
 		);
 	}
 }
-
-export default connect()(UnconnectedLayer);

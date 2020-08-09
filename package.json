@@ -28,7 +28,8 @@
 	"scripts": {
 		"start": "react-scripts start",
 		"build": "rm -rf dist && react-scripts build && mv build dist",
-		"test": "jest",
+		"test": "react-scripts test",
+		"test:debug": "react-scripts --inspect-brk test --runInBand --no-cache",
 		"eject": "react-scripts eject"
 	},
 	"files": [
@@ -41,6 +42,8 @@
 	"description": "A Neo4j Desktop application to visualize nodes with geographic attributes on a map.",
 	"main": "index.js",
 	"devDependencies": {
+		"@testing-library/jest-dom": "^5.11.2",
+		"@testing-library/react": "^10.4.8",
 		"jest": "^24.9.0"
 	},
 	"repository": "git://github.com/stellasia/neomap.git",

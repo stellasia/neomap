@@ -2,7 +2,7 @@ import {ADD_OR_UPDATE_LAYER, REMOVE_LAYER, SET_LAYERS} from '../actions'
 
 const layerDefaultState = [];
 
-const layerReducer = (state = layerDefaultState, action) => {
+export const layerReducer = (state = layerDefaultState, action) => {
     switch (action.type) {
         case SET_LAYERS:
             return action.layers;
@@ -28,5 +28,3 @@ const layerReducer = (state = layerDefaultState, action) => {
             return state;
     }
 };
-
-export default layerReducer;

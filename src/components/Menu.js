@@ -2,7 +2,7 @@ import React from "react";
 import { Nav, Navbar, NavDropdown } from "react-bootstrap";
 
 
-const Menu = ({ saveConfigToFile, loadConfigFromFile }) => {
+export const Menu = React.memo(({ saveConfigToFile, loadConfigFromFile }) => {
   return (
     <Navbar>
       <Navbar.Collapse id="basic-navbar-nav">
@@ -27,6 +27,4 @@ const Menu = ({ saveConfigToFile, loadConfigFromFile }) => {
       </Navbar.Collapse>
     </Navbar>
   );
-};
-
-export default Menu;
+});
