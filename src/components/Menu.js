@@ -2,7 +2,9 @@ import React from "react";
 import { Nav, Navbar, NavDropdown } from "react-bootstrap";
 
 
-export const Menu = React.memo(({ saveConfigToFile, loadConfigFromFile }) => {
+export const Menu = React.memo((props) => {
+  const { saveConfigToFile, loadConfigFromFile } = props;
+
   return (
     <Navbar>
       <Navbar.Collapse id="basic-navbar-nav">
