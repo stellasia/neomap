@@ -94,16 +94,17 @@ export class Layer extends Component {
 
 
 	updateBounds() {
-		/* Compute the map bounds based on `this.state.data`
+		/* Compute the map bounds based on current layer data
          */
-		let arr = this.state.data;
+		let data = this.state.data;
 		// TODO: delegate this job to leaflet
 		let minLat = Number.MAX_VALUE;
 		let maxLat = -Number.MAX_VALUE;
 		let minLon = Number.MAX_VALUE;
 		let maxLon = -Number.MAX_VALUE;
-		if (arr.length > 0) {
-			arr.map((item,) => {
+
+		if (data.length > 0) {
+			data.map((item,) => {
 				let lat = item.pos[0];
 				let lon = item.pos[1];
 				if (lat > maxLat) {
@@ -206,7 +207,7 @@ export class Layer extends Component {
 	updateData() {
 		/*Query database and update `this.state.data`
          */
-		neo4jService.getData(this.props.driver, this.getQuery(), {}).then( res => {
+		neo4jService.getData(this.getQuery(), {}).then( res => {
 			if (res.status === "ERROR") {
 				let message = "Invalid cypher query.";
 				if (this.state.layerType !== LAYER_TYPE_CYPHER) {
@@ -351,7 +352,7 @@ export class Layer extends Component {
 
 
 	hasSpatialPlugin() {
-		neo4jService.hasSpatial(this.props.driver).then(result => {
+		neo4jService.hasSpatial().then(result => {
 			this.setState({
 				hasSpatialPlugin: result
 			});
@@ -363,7 +364,7 @@ export class Layer extends Component {
 		/*This will be updated quite often,
            is that what we want?
          */
-		neo4jService.getNodeLabels(this.props.driver).then( result => {
+		neo4jService.getNodeLabels().then( result => {
 			this.setState({
 				nodes: result
 			})
@@ -372,7 +373,7 @@ export class Layer extends Component {
 
 
 	getPropertyNames() {
-		neo4jService.getProperties(this.props.driver, this.getNodeFilter()).then( result => {
+		neo4jService.getProperties(this.getNodeFilter()).then( result => {
 			result.push({value: "", label: ""}); // This is the default: no tooltip
 			this.setState({propertyNames: result});
 		});
@@ -380,7 +381,7 @@ export class Layer extends Component {
 
 
 	getSpatialLayers() {
-		neo4jService.getSpatialLayers(this.props.driver).then(result => {
+		neo4jService.getSpatialLayers().then(result => {
 			this.setState({spatialLayers: result});
 		});
 	};
