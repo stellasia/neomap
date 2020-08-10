@@ -124,7 +124,11 @@ export class Layer extends Component {
 		}
 		let bounds = [[minLat, minLon], [maxLat, maxLon]];
 		this.setState({bounds: bounds}, function () {
-			this.props.updateLayer({layer: this.state});
+			if (this.props.ukey === NEW_LAYER_KEY) {
+				this.props.addLayer({layer: this.state});
+			} else {
+				this.props.updateLayer({layer: this.state});
+			}
 		});
 	};
 
@@ -218,9 +222,11 @@ export class Layer extends Component {
 				message += "\n\n" + res.result;
 				alert(message);
 			} else {
-				this.setState({data: res.result}, function () {
-					this.updateBounds()
-				});
+				if (res.result) {
+					this.setState({data: res.result}, function () {
+						this.updateBounds()
+					});
+				}
 			}
 		});
 	};
@@ -389,7 +395,7 @@ export class Layer extends Component {
 
 	renderConfigSpatial() {
 		if (this.state.layerType !== LAYER_TYPE_SPATIAL)
-			return "";
+			return null;
 
 		return (
 			<div>
@@ -428,7 +434,7 @@ export class Layer extends Component {
 		/*If layerType==cypher, then we display the CypherEditor
          */
 		if (this.state.layerType !== LAYER_TYPE_CYPHER)
-			return "";
+			return null;
 		return (
 			<Form.Group controlId="formCypher">
 				<Form.Label>Query</Form.Label>
@@ -583,14 +589,20 @@ export class Layer extends Component {
 		)
 	};
 
+	getColor() {
+		const color = this.state.color || NEW_LAYER.color;
+		
+		return `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
+	}
+
 
 	render() {
-		let color = `rgba(${this.state.color.r}, ${this.state.color.g}, ${this.state.color.b}, ${this.state.color.a})`;
+
+		const color = this.getColor();
 
 		return (
 
 			<Card>
-
 				<Accordion.Toggle as={Card.Header} eventKey={this.props.ukey} >
 					<h3>{this.state.name}
 						<small hidden>({this.state.ukey})</small>

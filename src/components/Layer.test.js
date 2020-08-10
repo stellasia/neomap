@@ -1,102 +1,167 @@
 import React from 'react';
-import { render, cleanup } from '@testing-library/react'
+import { render, fireEvent, cleanup } from '@testing-library/react'
+import '@testing-library/jest-dom'
 import { Layer, NEW_LAYER, NEW_LAYER_KEY } from './Layer';
+import { neo4jService } from '../services/neo4jService'
+
+// Use these to assert invocations of App callbacks
+const mockAddLayer = jest.fn();
+const mockUpdateLayer = jest.fn();
+const mockRemoveLayer = jest.fn();
+
+// Use these to assert invocations of neo4jService interfaces
+const getDriverSpy = jest.spyOn(neo4jService, 'getNeo4jDriver');
+const getNodeLabelsSpy = jest.spyOn(neo4jService, 'getNodeLabels');
+const getPropertiesSpy = jest.spyOn(neo4jService, 'getProperties');
+const hasSpatialSpy = jest.spyOn(neo4jService, 'hasSpatial');
+const getSpatialLayersSpy = jest.spyOn(neo4jService, 'getSpatialLayers');
+const getDataSpy = jest.spyOn(neo4jService, 'getData');
 
 describe('Test Layer component', () => {
-	let renderResult;
-	let ukey = "akey";
+  let renderResult;
 
-	beforeEach(() => {
-		renderResult = render(<Layer ukey={ukey}/>);
+  beforeEach(() => {
+    renderResult = render(
+      <Layer
+        key={NEW_LAYER_KEY}
+        ukey={NEW_LAYER_KEY}
+        layer={NEW_LAYER}
+        addLayer={mockAddLayer}
+        updateLayer={mockUpdateLayer}
+        removeLayer={mockRemoveLayer}
+      />
+    );
+  });
+
+  it('Starts out in a collapsed accordion which expands on click', () => {
+    const layer = renderResult.getByText(NEW_LAYER.name);
+
+    expect(layer).toBeDefined();
+
+    // expect(renderResult.getByLabelText('Name')).not.toBeVisible(); // FIXME
+
+    fireEvent.click(layer);
+    expect(renderResult.getByLabelText('Name')).toBeVisible();
+  });
+
+	it('Can modify the layer name', () => {
+    const nameField = renderResult.getByLabelText('Name');
+    const newName = "New Layer Name";
+
+    fireEvent.change(nameField, {target: {value: newName}});
+
+		expect(renderResult.getByText(newName)).toBeDefined();
 	});
 
-	it('renders the layer', () => {
-		expect(renderResult.container).toBeDefined();
-	});
+	it('Can select/modify layer type property', () => {
+    const latLonRadio = renderResult.getByLabelText('Lat/Lon');
+    const builtInPointRadio = renderResult.getByLabelText('Point (neo4j built-in)');
+    const spatialPluginPointRadio = renderResult.getByLabelText('Point (neo4j-spatial plugin)');
+    const cypherQueryRadio = renderResult.getByLabelText('Advanced (cypher query)');
 
-	it('Layer change name', () => {
-		let identifier = '[name="name"]';
-		let input = renderResult.getByPlaceholderText('Layer name');
-		let text = "newValue";
-		input.simulate('change', {target: {value: text}});
-		expect(renderResult.state().name).toEqual(text);
-	});
+    expect(latLonRadio).toBeDefined();
+    expect(builtInPointRadio).toBeDefined();
+    expect(spatialPluginPointRadio).toBeDefined();
+    expect(cypherQueryRadio).toBeDefined();
 
-	it('Layer change lat property', () => {
-		let identifier = '[name="latitudeProperty"]';
-		let input = renderResult.find(identifier);
-		let text = "newValue";
-		input.simulate('change', {value: text, label: text});
-		expect(renderResult.state().latitudeProperty.value).toEqual(text);
-	});
+    // TODO: Assert rendering config default
 
-	it('Layer change lon property', () => {
-		let identifier = '[name="longitudeProperty"]';
-		let input = renderResult.find(identifier);
-		let text = "newValue";
-		input.simulate('change', {value: text, label: text});
-		expect(renderResult.state().longitudeProperty.value).toEqual(text);
-	});
+    expect(latLonRadio).toBeChecked();    
+    expect(builtInPointRadio).not.toBeChecked();
+    expect(spatialPluginPointRadio).not.toBeChecked();
+    expect(spatialPluginPointRadio).toBeDisabled();
+    expect(cypherQueryRadio).not.toBeChecked();
 
-	it('Layer change tooltip property', () => {
-		let identifier = '[name="tooltipProperty"]';
-		let input = renderResult.find(identifier);
-		let text = "newValue";
-		input.simulate('change', {value: text, label: text});
-		expect(renderResult.state().tooltipProperty.value).toEqual(text);
-	});
+    fireEvent.click(builtInPointRadio);
 
-	it('Layer change limit', () => {
-		let identifier = '[name="limit"]';
-		let input = renderResult.find(identifier);
-		let text = 10;
-		input.simulate('change', {target: {value: text}});
-		expect(renderResult.state().limit).toEqual(text);
-	});
+    expect(latLonRadio).not.toBeChecked();
+    expect(builtInPointRadio).toBeChecked();
 
-	it('Layer change layer type latlon', () => {
-		let identifier = '[name="layerTypeLatLon"]';
-		let checkbox = renderResult.find(identifier);
-		checkbox.simulate('change', {target: {value: "latlon"}});
-		expect(renderResult.state().layerType).toEqual("latlon");
-	});
+    // TODO: Assert rendering config point
 
-	it('Layer change layer type cypher', () => {
-		let identifier = '[name="layerTypeCypher"]';
-		let checkbox = renderResult.find(identifier);
-		checkbox.simulate('change', {target: {value: "cypher"}});
+    fireEvent.click(spatialPluginPointRadio);
 
-		// layer type is cypher
-		expect(renderResult.state().layerType).toEqual("cypher");
+    expect(latLonRadio).not.toBeChecked();
+    expect(builtInPointRadio).not.toBeChecked();
+    expect(spatialPluginPointRadio).toBeChecked();
 
-		// cypher editor is visible
-		expect(renderResult.exists('[name="cypher"]')).toEqual(true);
+    // TODO: Assert rendering config spatial
 
-		// lat/lon properties are hidden
-		expect(renderResult.exists('[name="latitudeProperty"]')).toEqual(false);
-		expect(renderResult.exists('[name="longitudeProperty"]')).toEqual(false);
-		expect(renderResult.exists('[name="nodeLabel"]')).toEqual(false);
+    // fireEvent.click(cypherQueryRadio); // FIXME
 
-		// this.state.cypher is not ""
-		expect(renderResult.state().cypher).not.toEqual("");
-	});
+    // expect(latLonRadio).not.toBeChecked();    
+    // expect(builtInPointRadio).not.toBeChecked();
+    // expect(spatialPluginPointRadio).not.toBeChecked();
+    // expect(cypherQueryRadio).toBeChecked();
 
+    // TODO: Assert rendering config cypher
+  });
 
-	it('Layer change rendering heatmap', () => {
-		let identifier = '[name="mapRenderingHeatmap"]';
-		let checkbox = renderResult.find(identifier);
-		checkbox.simulate('change', {target: {value: "heatmap"}});
+  it('Can select/modify map rendering options', () => {
+    const markersRadio = renderResult.getByLabelText('Markers');
+    const polylineRadio = renderResult.getByLabelText('Polyline');
+    const heatmapRadio = renderResult.getByLabelText('Heatmap');
+    const clustersRadio = renderResult.getByLabelText('Clusters');
 
-		// rendering state is heatmap
-		expect(renderResult.state().rendering).toEqual("heatmap");
+    expect(markersRadio).toBeDefined();
+    expect(polylineRadio).toBeDefined();
+    expect(heatmapRadio).toBeDefined();
+    expect(clustersRadio).toBeDefined();
 
-		// radius input is visible
-		expect(renderResult.exists('[name="radius"]')).toEqual(true);
+    // TODO: Extends assert rendering markers
 
-		// marker color and tooltip are hidden
-		expect(renderResult.find('[name="formgroupColor"]').props()['hidden']).toBe(true);
-		expect(renderResult.find('[name="formgroupTooltip"]').props()['hidden']).toBe(true);
-	});
+    expect(markersRadio).toBeChecked();    
+    expect(polylineRadio).not.toBeChecked();
+    expect(heatmapRadio).not.toBeChecked();
+    expect(clustersRadio).not.toBeChecked();
+
+    fireEvent.click(polylineRadio);
+
+    expect(markersRadio).not.toBeChecked();
+    expect(polylineRadio).toBeChecked();
+
+    // TODO: Extends assert rendering polyline
+
+    fireEvent.click(heatmapRadio);
+
+    expect(markersRadio).not.toBeChecked();
+    expect(polylineRadio).not.toBeChecked();
+    expect(heatmapRadio).toBeChecked();
+
+    // TODO: Extends assert rendering heatmap
+
+    fireEvent.click(clustersRadio);
+
+    expect(markersRadio).not.toBeChecked();
+    expect(polylineRadio).not.toBeChecked();
+    expect(heatmapRadio).not.toBeChecked();
+    expect(clustersRadio).toBeChecked();
+
+    // TODO: Extends assert rendering clusters
+  });
+  
+  it('Can select and update layer color', () => {
+    expect(true); // FIXME
+  });
+
+  it('Can configure heatmap radious', () => {
+    expect(true); // FIXME
+  });
+
+  it('Makes call to create/update layer', () => {
+    const updateMapButton = renderResult.getByText('Update map');
+
+    expect(updateMapButton).toBeDefined();
+
+    fireEvent.click(updateMapButton);
+
+    expect(true); // FIXME
+    // expect(mockAddLayer).toHaveBeenCalledTimes(1);
+  });
+
+  it('Makes call to delete layer', () => {
+    expect(true); // FIXME
+  });
 
 	afterEach(() => {
 		cleanup();
