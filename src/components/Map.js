@@ -3,7 +3,6 @@
  *
  */
 import React, {Component} from 'react'
-import {connect} from 'react-redux';
 import {RENDERING_CLUSTERS, RENDERING_HEATMAP, RENDERING_MARKERS, RENDERING_POLYLINE} from "./layers/Layer";
 import L from 'leaflet';
 import 'leaflet.heat';
@@ -12,7 +11,7 @@ import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 
 
-export class UnconnectedMap extends Component {
+export class Map extends Component {
 
 	componentDidMount() {
 		// init an empty map
@@ -228,14 +227,3 @@ export class UnconnectedMap extends Component {
 		);
 	}
 }
-
-
-const mapStateToProps = (state, ownProps) => {
-	return {
-		layers: state.layers,
-		...ownProps
-	}
-};
-
-
-export default connect(mapStateToProps)(UnconnectedMap);

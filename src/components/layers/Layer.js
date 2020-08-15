@@ -3,7 +3,6 @@
  TODO: split into several files?
  */
 import React, {Component} from 'react';
-import {connect} from 'react-redux';
 import Select from 'react-select'
 import Accordion from 'react-bootstrap/Accordion';
 import Card from 'react-bootstrap/Card';
@@ -11,7 +10,6 @@ import {Button, Form} from 'react-bootstrap';
 import {CypherEditor} from "graph-app-kit/components/Editor"
 import {confirmAlert} from 'react-confirm-alert'; // Import
 import neo4jService from '../../services/neo4jService'
-import {addOrUpdateLayer, removeLayer} from "../../actions";
 
 
 import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
@@ -60,7 +58,7 @@ const DEFAULT_LAYER = {
 };
 
 
-export class UnconnectedLayer extends Component {
+export class Layer extends Component {
 
 	constructor(props) {
 		super(props);
@@ -133,9 +131,7 @@ export class UnconnectedLayer extends Component {
 		}
 		let bounds = [[minLat, minLon], [maxLat, maxLon]];
 		this.setState({bounds: bounds}, function () {
-			this.props.dispatch(
-				addOrUpdateLayer({layer: this.state})
-			);
+			this.props.updateLayer(this.state);
 		});
 	};
 
@@ -344,9 +340,7 @@ export class UnconnectedLayer extends Component {
 		) {
 			return;
 		}
-		this.props.dispatch(
-			removeLayer({ukey: this.state.ukey})
-		);
+		this.props.removeLayer(this.state.ukey);
 	};
 
 
@@ -771,5 +765,3 @@ export class UnconnectedLayer extends Component {
 		);
 	}
 }
-
-export default connect()(UnconnectedLayer);

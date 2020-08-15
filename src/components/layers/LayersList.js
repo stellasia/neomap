@@ -1,46 +1,31 @@
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 import Accordion from 'react-bootstrap/Accordion';
-import Layer from './Layer';
-import {connect} from 'react-redux';
+import { Layer } from './Layer';
 
 
-export class UnconnectedLayersList extends Component {
+export class LayersList extends Component {
 
 	constructor(props) {
 		super(props);
 
-		this.state = {
-			driver: props.driver
-		};
-
 		this.renderLayers = this.renderLayers.bind(this);
 		this.renderNewLayer = this.renderNewLayer.bind(this);
-		this.deleteLayer = this.deleteLayer.bind(this);
 	};
-
-
-	deleteLayer(ukey) {
-		/*Remove a specific ukey from
-           `this.state.layers` map
-           and re-render map component
-        */
-		let layers = this.state.layers;
-		delete layers[ukey];
-		this.setState({
-			layers: layers
-		});
-		this.props.sendData({
-			layers: layers
-		});
-	};
-
 
 	renderLayers() {
 		// let layers = Object.entries(this.state.layers);
 		return this.props.layers.map((layer) => {
 			return (
-				<Layer data-id="layers" key={layer.ukey} ukey={layer.ukey} layer={layer} deleteLayer={this.deleteLayer}
-					   sendData={this.sendData} driver={this.state.driver}/>
+				<Layer
+					key={layer.ukey}
+					ukey={layer.ukey}
+					data-id="layers"
+					layer={layer}
+					driver={this.props.driver}
+					addLayer={this.props.addLayer}
+					updateLayer={this.props.updateLayer}
+					removeLayer={this.props.removeLayer}
+				/>
 			);
 		});
 	};
@@ -49,8 +34,15 @@ export class UnconnectedLayersList extends Component {
 	renderNewLayer() {
 		let uid = (new Date().getTime() + Math.random()).toString(36);
 		return (
-			<Layer key={uid} data-id="new-layer" ukey={uid} layer={undefined} sendData={this.sendData}
-				   driver={this.state.driver}/>
+			<Layer
+				key={uid}
+				ukey={uid}
+				data-id="new-layer"
+				driver={this.props.driver}
+				addLayer={this.props.addLayer}
+				updateLayer={this.props.updateLayer}
+				removeLayer={this.props.removeLayer}
+			/>
 		);
 	};
 
@@ -64,12 +56,3 @@ export class UnconnectedLayersList extends Component {
 		)
 	};
 }
-
-const mapStateToProps = (state, ownProps) => {
-	return {
-		layers: state.layers,
-		...ownProps
-	}
-};
-
-export default connect(mapStateToProps)(UnconnectedLayersList);
