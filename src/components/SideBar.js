@@ -1,20 +1,57 @@
 import React, { Component } from 'react';
-import { LayersList } from './layers/LayersList';
+import Accordion from 'react-bootstrap/Accordion';
+import { Layer, NEW_LAYER, NEW_LAYER_KEY } from './Layer';
 
 
 export class SideBar extends Component {
 
-	// TODO: move menu bar here or consider removing this component
+	constructor(props) {
+		super(props);
+
+		this.renderLayers = this.renderLayers.bind(this);
+		this.renderNewLayer = this.renderNewLayer.bind(this);
+	};
+
+	renderLayers() {
+		// let layers = Object.entries(this.state.layers);
+		return this.props.layers.map((layer) => {
+			return (
+				<Layer
+					key={layer.ukey}
+					ukey={layer.ukey}
+					data-id="layers"
+					layer={layer}
+					driver={this.props.driver}
+					addLayer={this.props.addLayer}
+					updateLayer={this.props.updateLayer}
+					removeLayer={this.props.removeLayer}
+				/>
+			);
+		});
+	};
+
+	renderNewLayer() {
+		return (
+			<Layer
+				key={NEW_LAYER_KEY}
+				ukey={NEW_LAYER_KEY}
+				data-id="new-layer"
+				layer={NEW_LAYER}
+				driver={this.props.driver}
+				addLayer={this.props.addLayer}
+				updateLayer={this.props.updateLayer}
+				removeLayer={this.props.removeLayer}
+			/>
+		);
+	};
+
 
 	render() {
 		return (
-			<LayersList
-				driver={this.props.driver}
-				layers={this.props.layers}
-				addLayer={this.addLayer}
-				updateLayer={this.updateLayer}
-				removeLayer={this.removeLayer}
-			/>
-		);
+			<Accordion>
+				{this.renderLayers()}
+				{this.renderNewLayer()}
+			</Accordion>
+		)
 	};
 }

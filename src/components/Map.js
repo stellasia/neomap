@@ -3,7 +3,7 @@
  *
  */
 import React, {Component} from 'react'
-import {RENDERING_CLUSTERS, RENDERING_HEATMAP, RENDERING_MARKERS, RENDERING_POLYLINE} from "./layers/Layer";
+import {RENDERING_CLUSTERS, RENDERING_HEATMAP, RENDERING_MARKERS, RENDERING_POLYLINE} from "./Layer";
 import L from 'leaflet';
 import 'leaflet.heat';
 import 'leaflet.markercluster';

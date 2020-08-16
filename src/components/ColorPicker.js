@@ -1,8 +1,8 @@
-import React from 'react'
-import reactCSS from 'reactcss'
-import {SketchPicker} from 'react-color'
+import React from 'react';
+import reactCSS from 'reactcss';
+import { SketchPicker } from 'react-color';
 
-class ColorPicker extends React.Component {
+export class ColorPicker extends React.Component {
 
 
     constructor(props) {
@@ -72,5 +72,3 @@ class ColorPicker extends React.Component {
         )
     }
 }
-
-export default ColorPicker;
