@@ -1,8 +1,8 @@
-import React, {Component} from 'react';
-import LayersList from './layers/LayersList';
+import React, { Component } from 'react';
+import { LayersList } from './layers/LayersList';
 
 
-class SideBar extends Component {
+export class SideBar extends Component {
 
 	// TODO: move menu bar here or consider removing this component
 
@@ -10,10 +10,11 @@ class SideBar extends Component {
 		return (
 			<LayersList
 				driver={this.props.driver}
+				layers={this.props.layers}
+				addLayer={this.addLayer}
+				updateLayer={this.updateLayer}
+				removeLayer={this.removeLayer}
 			/>
 		);
 	};
 }
-
-
-export default SideBar;

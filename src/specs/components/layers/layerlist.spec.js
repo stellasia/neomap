@@ -1,9 +1,9 @@
-import {UnconnectedLayersList as LayersList} from '../../../components/layers/LayersList';
+import {LayersList} from '../../../components/layers/LayersList';
 import React from 'react';
 import {shallow} from './../../enzyme';
 
 
-describe('Test LayerList component', () => {
+describe('Test LayersList component', () => {
   it('render the component', () => {
     const wrapper = shallow(<LayersList layers={[]}/>);
 
@@ -12,7 +12,7 @@ describe('Test LayerList component', () => {
 });
 
 
-describe("Test connected LayerList component", () => {
+describe("Test connected LayersList component", () => {
   describe('renderLayers', () => {
     const amountOfLayers = [1, 5, 10];
 

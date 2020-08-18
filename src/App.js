@@ -1,25 +1,27 @@
-import React, {Component} from "react";
-import "./App.css";
-import Map from "./components/Map";
-import Menu from "./components/Menu";
-import SideBar from "./components/SideBar";
+import React, { Component } from "react";
 import neo4jService from './services/neo4jService'
 import download from "downloadjs";
-import {connect} from "react-redux";
-import {setLayers} from "./actions";
+import { Map } from "./components/Map";
+import { Menu } from "./components/Menu";
+import { SideBar } from "./components/SideBar";
+import "./App.css";
 
 
-class App extends Component {
+export class App extends Component {
 
 	constructor(props) {
 		super(props);
 
 		this.state = {
-			ready: false
+			ready: false,
+			layers: []
 		};
 
 		this.saveConfigToFile = this.saveConfigToFile.bind(this);
 		this.loadConfigFromFile = this.loadConfigFromFile.bind(this);
+		this.addLayer = this.addLayer.bind(this);
+		this.updateLayer = this.updateLayer.bind(this);
+		this.removeLayer = this.removeLayer.bind(this);
 	};
 
 	getDriver() {
@@ -36,6 +38,26 @@ class App extends Component {
 		});
 	};
 
+	addLayer(layer) {
+		this.setState({ layers: [...this.state.layers, layer]});
+	}
+
+	updateLayer(layer) {
+		const updatedLayers = this.state.layers.map(currentLayer => {
+			if (currentLayer.key === layer.ukey) {
+				return layer; // OR possibly { ...currentLayer, ...layer }
+			}
+			return currentLayer;
+		});
+
+		this.setState({ layers: updatedLayers });
+	}
+
+	removeLayer(key) {
+		const filteredLayers = this.state.layers.filter(layer => layer.ukey !== key);
+
+		this.setState({ layers: filteredLayers});
+	}
 
 	saveConfigToFile(e) {
 		let config = JSON.stringify(this.props.layers);
@@ -54,10 +76,13 @@ class App extends Component {
 			let fileReader = new FileReader();
 			fileReader.onloadend = (e) => {
 				const content = e.target.result;
-				const layers = JSON.parse(content);
-				this.props.dispatch(
-					setLayers({layers: layers})
-				);
+				try {
+					const loadedLayers = JSON.parse(content);
+					this.setState({ layers: loadedLayers });
+				} catch (err) {
+					// TODO: Build error UI
+					console.log('Failed to load and parse data from file', err);
+				}
 			};
 			fileReader.readAsText(file);
 		};
@@ -74,11 +99,16 @@ class App extends Component {
 						key="sidebar"
 						ref="sidebar"
 						driver = {this.driver}
+						layers={this.state.layers}
+						addLayer={this.addLayer}
+						updateLayer={this.updateLayer}
+						removeLayer={this.removeLayer}
 					/>
 				</div>
 				<div id="app-maparea" className="col-md-8">
 					<Map
 						key="map"
+						layers={this.state.layers}
 					/>
 				</div>
 			</div>
@@ -93,13 +123,3 @@ class App extends Component {
 		)
 	};
 }
-
-
-const mapStateToProps = (state, ownProps) => {
-	return {
-		layers: state.layers,
-		...ownProps
-	}
-};
-
-export default connect(mapStateToProps)(App);

@@ -1,5 +1,5 @@
-import SideBar from './../../components/SideBar';
 import React from 'react';
+import { SideBar } from './../../components/SideBar';
 import { shallow } from './../enzyme';
 
 describe('<SideBar />', () => {
