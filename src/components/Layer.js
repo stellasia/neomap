@@ -35,9 +35,8 @@ export const RENDERING_CLUSTERS = "clusters";
 
 
 // default parameters for new layers
-export const NEW_LAYER_KEY = 'NewLayer';
-
 export const NEW_LAYER = {
+	ukey: 'NewLayer',
 	name: "New layer",
 	layerType: LAYER_TYPE_LATLON,
 	latitudeProperty: {value: "latitude", label: "latitude"},
@@ -754,7 +753,7 @@ export class Layer extends Component {
 							</Form.Group>
 
 
-							{this.state.ukey !== NEW_LAYER_KEY && (
+							{this.state.ukey !== NEW_LAYER.ukey && (
 								<Button variant="danger" type="submit"  onClick={this.deleteLayer} hidden={this.props.layer === undefined}>
 									Delete Layer
 								</Button>

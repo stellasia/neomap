@@ -1,7 +1,8 @@
 import React from 'react';
 import { render, fireEvent, cleanup } from '@testing-library/react'
 import '@testing-library/jest-dom'
-import { Layer, NEW_LAYER, NEW_LAYER_KEY } from './Layer';
+import { Layer, NEW_LAYER } from './Layer';
+import { act } from 'react-dom/test-utils';
 
 // Use these to assert invocations of App callbacks
 const mockAddLayer = jest.fn((_layer) => {});
@@ -19,26 +20,23 @@ jest.mock('../services/neo4jService', () => {
   }
 });
 
+const renderNewLayer = () => {
+  return render(
+    <Layer
+      key={NEW_LAYER.ukey}
+      layer={NEW_LAYER}
+      driver={{}}
+      addLayer={mockAddLayer}
+      updateLayer={mockUpdateLayer}
+      removeLayer={mockRemoveLayer}
+    />
+  );
+}
+
 describe('Test Layer component', () => {
-  let renderResult;
-
-  beforeEach(() => {
-    renderResult = render(
-      <Layer
-        key={NEW_LAYER_KEY}
-        ukey={NEW_LAYER_KEY}
-        layer={NEW_LAYER}
-        driver={{}}
-        addLayer={mockAddLayer}
-        updateLayer={mockUpdateLayer}
-        removeLayer={mockRemoveLayer}
-      />
-    );
-  });
-
   it('Starts out in a collapsed accordion which expands on click', () => {
+    const renderResult = renderNewLayer();
     const layer = renderResult.getByText(NEW_LAYER.name);
-
     expect(layer).toBeDefined();
 
     // expect(renderResult.getByLabelText('Name')).not.toBeVisible(); // FIXME
@@ -48,6 +46,7 @@ describe('Test Layer component', () => {
   });
 
 	it('Can modify the layer name', () => {
+    const renderResult = renderNewLayer();
     const nameField = renderResult.getByLabelText('Name');
     const newName = "New Layer Name";
 
@@ -57,6 +56,7 @@ describe('Test Layer component', () => {
 	});
 
 	it('Can select/modify layer type property', () => {
+    const renderResult = renderNewLayer();
     const latLonRadio = renderResult.getByLabelText('Lat/Lon');
     const builtInPointRadio = renderResult.getByLabelText('Point (neo4j built-in)');
     const spatialPluginPointRadio = renderResult.getByLabelText('Point (neo4j-spatial plugin)');
@@ -101,6 +101,7 @@ describe('Test Layer component', () => {
   });
 
   it('Can select/modify map rendering options', () => {
+    const renderResult = renderNewLayer();
     const markersRadio = renderResult.getByLabelText('Markers');
     const polylineRadio = renderResult.getByLabelText('Polyline');
     const heatmapRadio = renderResult.getByLabelText('Heatmap');
@@ -144,42 +145,76 @@ describe('Test Layer component', () => {
   });
 
   it('Can select and update layer color', () => {
+    const renderResult = renderNewLayer();
     expect(true); // FIXME
   });
 
   it('Can configure heatmap radious', () => {
+    const renderResult = renderNewLayer();
     expect(true); // FIXME
   });
 
-  it('Makes call to create new layer', () => {
+  it('Has a `Create New Layer` button that makes call to create a new layer', async () => {
+    const renderResult = renderNewLayer();
     const createLayerButton = renderResult.getByText('Create New Layer');
 
     expect(createLayerButton).toBeDefined();
 
-    fireEvent.click(createLayerButton);
+    await act(async () => {
+      fireEvent.click(createLayerButton);
+    });
 
-    expect(true); // FIXME
     expect(mockAddLayer).toHaveBeenCalledTimes(1);
   });
 
-  it('Makes call to update layer', () => {
+  it('Has an `Update Layer` button that makes call to update current layer', async () => {
+    const renderResult = renderNewLayer();
     const updateLayerButton = renderResult.getByText('Update Layer');
 
     expect(updateLayerButton).toBeDefined();
 
-    fireEvent.click(updateLayerButton);
+    await act(async () => {
+      fireEvent.click(updateLayerButton);
+    });
 
-    expect(true); // FIXME
     expect(mockUpdateLayer).toHaveBeenCalledTimes(1);
   });
 
-  it('New layer has no delete button', () => {
-    const deleteLayerButton = renderResult.getByText('Delete Layer');
+  it('New layer has no `Delete Layer` button', () => {
+    const renderResult = renderNewLayer();
+    expect(renderResult.queryByText('Delete Layer')).toBe(null);
+  });
 
-    expect(deleteLayerButton).not.toBeDefined();
+
+  it('Created layer has a `Delete Layer` button that makes call to delete current layer', async () => {
+    const testLayer1 = {
+      ...NEW_LAYER,
+      ukey: "tl1",
+      name: 'Test Layer 1'
+    };
+
+    const deleteLayerButton = render(
+      <Layer
+        key={testLayer1.ukey}
+        layer={testLayer1}
+        driver={{}}
+        addLayer={mockAddLayer}
+        updateLayer={mockUpdateLayer}
+        removeLayer={mockRemoveLayer}
+      />
+    ).queryByText('Delete Layer')
+
+    expect(deleteLayerButton).toBeDefined();
+
+    await act(async () => {
+      fireEvent.click(deleteLayerButton);
+    });
+
+    expect(mockRemoveLayer).toHaveBeenCalledTimes(1);
   });
 
 	afterEach(() => {
-		cleanup();
-	});
+    jest.clearAllMocks();
+    cleanup();
+  });
 });
