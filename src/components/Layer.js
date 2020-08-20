@@ -69,9 +69,6 @@ export class Layer extends Component {
 
 		this.driver = props.driver;
 
-		this.createLayer = this.createLayer.bind(this);
-		this.updateLayer = this.updateLayer.bind(this);
-		this.deleteLayer = this.deleteLayer.bind(this);
 		this.showQuery = this.showQuery.bind(this);
 		this.handleNameChange = this.handleNameChange.bind(this);
 		this.handleLayerTypeChange = this.handleLayerTypeChange.bind(this);
@@ -99,10 +96,10 @@ export class Layer extends Component {
 	}
 
 
-	updateBounds() {
+	updateBounds = () => {
 		/* Compute the map bounds based on `this.state.data`
          */
-		let arr = this.state.data;
+		let arr = this.state.data || [];
 		// TODO: delegate this job to leaflet
 		let minLat = Number.MAX_VALUE;
 		let maxLat = -Number.MAX_VALUE;
@@ -139,7 +136,7 @@ export class Layer extends Component {
 	};
 
 
-	getCypherQuery() {
+	getCypherQuery = () => {
 		// TODO: check that the query is valid
 		return this.state.cypher;
 	};
@@ -228,7 +225,7 @@ export class Layer extends Component {
 			}
 			message += "\n\n" + result;
 			alert(message);
-		} else {
+		} else if (result) {
 			this.setState({data: result}, function () {
 				this.updateBounds()
 			});
@@ -327,7 +324,7 @@ export class Layer extends Component {
 	 * Update an existing Layer.
 	 * Send data to parent which will propagate to the Map component
 	 */
-	async updateLayer() {
+	updateLayer = async () => {
 		await this.updateData();
 		this.props.updateLayer(this.state);
 	};
@@ -336,14 +333,14 @@ export class Layer extends Component {
 	 * Create a new Layer.
 	 * Send data to parent which will propagate to the Map component
 	 */
-	async createLayer() {
+	createLayer = async () => {
 		await this.updateData();
 		// TODO: Create new ukey for layer
 		this.props.addLayer(this.state);
 	}
 
 
-	deleteLayer() {
+	deleteLayer = () => {
 		if (
 			window.confirm(
 				`Delete layer ${this.state.name}? This action can not be undone.`
