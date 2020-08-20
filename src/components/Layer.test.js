@@ -75,14 +75,18 @@ describe('Test Layer component', () => {
     expect(spatialPluginPointRadio).toBeDisabled();
     expect(cypherQueryRadio).not.toBeChecked();
 
-    fireEvent.click(builtInPointRadio);
+    act(() => {
+      fireEvent.click(builtInPointRadio);
+    });
 
     expect(latLonRadio).not.toBeChecked();
     expect(builtInPointRadio).toBeChecked();
 
     // TODO: Assert rendering config point
 
-    fireEvent.click(spatialPluginPointRadio);
+    act(() => {
+      fireEvent.click(spatialPluginPointRadio);
+    });
 
     expect(latLonRadio).not.toBeChecked();
     expect(builtInPointRadio).not.toBeChecked();
@@ -90,7 +94,9 @@ describe('Test Layer component', () => {
 
     // TODO: Assert rendering config spatial
 
-    // fireEvent.click(cypherQueryRadio); // FIXME
+    act(() => {
+      // fireEvent.click(cypherQueryRadio); // FIXME
+    });
 
     // expect(latLonRadio).not.toBeChecked();
     // expect(builtInPointRadio).not.toBeChecked();
@@ -119,14 +125,18 @@ describe('Test Layer component', () => {
     expect(heatmapRadio).not.toBeChecked();
     expect(clustersRadio).not.toBeChecked();
 
-    fireEvent.click(polylineRadio);
+    act(() => {
+      fireEvent.click(polylineRadio);
+    });
 
     expect(markersRadio).not.toBeChecked();
     expect(polylineRadio).toBeChecked();
 
     // TODO: Extends assert rendering polyline
 
-    fireEvent.click(heatmapRadio);
+    act(() => {
+      fireEvent.click(heatmapRadio);
+    });
 
     expect(markersRadio).not.toBeChecked();
     expect(polylineRadio).not.toBeChecked();
@@ -134,7 +144,9 @@ describe('Test Layer component', () => {
 
     // TODO: Extends assert rendering heatmap
 
-    fireEvent.click(clustersRadio);
+    act(() => {
+      fireEvent.click(clustersRadio);
+    });
 
     expect(markersRadio).not.toBeChecked();
     expect(polylineRadio).not.toBeChecked();
