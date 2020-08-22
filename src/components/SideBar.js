@@ -1,10 +1,9 @@
 import React from 'react';
 import Accordion from 'react-bootstrap/Accordion';
-import { Layer, NEW_LAYER } from './Layer';
+import { Layer } from './Layer';
+import { NEW_LAYER } from './constants';
 
-export const SideBar = React.memo((props) => {
-
-	const {driver, layers, addLayer, updateLayer, removeLayer} = props;
+export const SideBar = React.memo(({driver, layers, addLayer, updateLayer, removeLayer}) => {
 
 	const renderLayers = () => {
 		return layers.map((layer) => {
