@@ -20,44 +20,17 @@ import "codemirror/addon/lint/lint.css";
 import "codemirror/addon/hint/show-hint.css";
 import "cypher-codemirror/dist/cypher-codemirror-syntax.css";
 
-
-// layer type: either from node labels or cypher
-const LAYER_TYPE_LATLON = "latlon";
-const LAYER_TYPE_POINT = "point";
-const LAYER_TYPE_CYPHER = "cypher";
-const LAYER_TYPE_SPATIAL = "spatial";
-
-// TODO: move this into a separate configuration/constants file
-export const RENDERING_MARKERS = "markers";
-export const RENDERING_POLYLINE = "polyline";
-export const RENDERING_HEATMAP = "heatmap";
-export const RENDERING_CLUSTERS = "clusters";
-
-
-// default parameters for new layers
-export const NEW_LAYER = {
-	ukey: 'NewLayer',
-	name: "New layer",
-	layerType: LAYER_TYPE_LATLON,
-	latitudeProperty: {value: "latitude", label: "latitude"},
-	longitudeProperty: {value: "longitude", label: "longitude"},
-	pointProperty: {value: "point", label: "point"},
-	tooltipProperty: {value: "", label: ""},
-	nodeLabel: [],
-	propertyNames: [],
-	spatialLayers: [],
-	data: [],
-	bounds: [],
-	color: {r: 0, g: 0, b: 255, a: 1},
-	limit: null,
-	rendering: RENDERING_MARKERS,
-	radius: 30,
-	cypher: "",
-	// TODO: this should not be in Layer state?
-	hasSpatialPlugin: false,
-	spatialLayer: {value: "", label: ""},
-};
-
+import {
+	NEW_LAYER,
+	LAYER_TYPE_LATLON,
+	LAYER_TYPE_POINT,
+	LAYER_TYPE_CYPHER,
+	LAYER_TYPE_SPATIAL,
+	RENDERING_MARKERS,
+	RENDERING_POLYLINE,
+	RENDERING_HEATMAP,
+	RENDERING_CLUSTERS
+} from './constants';
 
 export class Layer extends Component {
 
