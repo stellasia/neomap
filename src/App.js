@@ -6,14 +6,12 @@ import { Menu } from "./components/Menu";
 import { SideBar } from "./components/SideBar";
 import "./App.css";
 
+
 export const App = React.memo(() => {
 
-	const [driver, setDriver] = React.useState(undefined);
 	const [layers, setLayers] = React.useState([]);
-
-	const getDriver = () => {
-		return neo4jService.getNeo4jDriver();
-	}
+	const [ready, setReady] = React.useState(false);
+	const driverRef = React.useRef(undefined);
 
 	// This blocks render indefinitely if the driver is never resolved.
 	// A better pattern would be to render anyway without driver,
@@ -22,8 +20,9 @@ export const App = React.memo(() => {
 
 	// TODO: Remove boot blocker
 	React.useEffect(() => {
-		getDriver().then(result => {
-			setDriver(result);
+		neo4jService.getNeo4jDriver().then(result => {
+			driverRef.current = result;
+			setReady(true);
 		});
 	});
 
@@ -78,12 +77,12 @@ export const App = React.memo(() => {
 	};
 
 	return <React.Suspense fallback={<span>Loading...</span>}>
-		{driver && (
+		{ready && (
 			<div id="wrapper" className="row">
 				<div id="sidebar" className="col-md-4">
 					<Menu saveConfigToFile={saveConfigToFile} loadConfigFromFile={loadConfigFromFile} />
 					<SideBar
-						driver = {driver}
+						driver = {driverRef.current}
 						layers={layers}
 						addLayer={addLayer}
 						updateLayer={updateLayer}
