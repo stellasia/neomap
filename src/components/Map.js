@@ -21,7 +21,7 @@ export const Map = React.memo(({layers}) => {
 		const mapElement = mapElementRef.current;
 
 		if (mapElement) {
-			mapRef.current = L.map('map', {
+			mapRef.current = L.map(mapElement, {
 				preferCanvas: true,
 				center: [0, 0],
 				zoom: 2,
@@ -30,10 +30,10 @@ export const Map = React.memo(({layers}) => {
 						attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
 					}),
 				]
-			})
+			});
 		}
 
-	}, [mapElementRef])
+	}, [mapElementRef]);
 
 	React.useEffect(() => {
 		const map = mapRef.current;
@@ -115,7 +115,7 @@ export const Map = React.memo(({layers}) => {
 							polylineLayer.addLatLng(entry.pos);
 						});
 
-						currentmapOverlays[name] = polylineLayer;
+						newMapOverlays[name] = polylineLayer;
 
 						break;
 
@@ -186,8 +186,6 @@ export const Map = React.memo(({layers}) => {
 			layerControlRef.current = layerControl;
 			mapOverlaysRef.current = newMapOverlays;
 		}
-
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [layers]);
 
 	return (
