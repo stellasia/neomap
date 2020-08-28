@@ -39,17 +39,12 @@ export const Map = React.memo(({layers}) => {
 		const map = mapRef.current;
 
 		if (map) {
-
-			layerControlRef.current.remove(map);
-
 			let globalBounds = new L.LatLngBounds();
-
 			
 			// On a new render pass, build new map overlays object,
-			// and replace the current map overlays object. This auto-removes
-			// any deleted layers from map
+			// and replace the current map overlays object created on the last render pass
 			const newMapOverlays = {}
-			const currentmapOverlays  = mapOverlaysRef.current;
+			const currentMapOverlays  = mapOverlaysRef.current;
 
 			// Iterate through layers
 			layers.forEach((layer) => {
@@ -69,7 +64,7 @@ export const Map = React.memo(({layers}) => {
 
 				switch(rendering) {
 					case RENDERING_MARKERS:
-						let markerLayer = currentmapOverlays[name];
+						let markerLayer = currentMapOverlays[name];
 
 						if (!markerLayer) {
 							markerLayer = L.layerGroup().addTo(map);
@@ -102,7 +97,7 @@ export const Map = React.memo(({layers}) => {
 						break;
 
 					case RENDERING_POLYLINE:						
-						let polylineLayer = currentmapOverlays[name];
+						let polylineLayer = currentMapOverlays[name];
 
 						if (!polylineLayer) {
 							polylineLayer = L.polyline([], {color: rgbColor}).addTo(map);
@@ -120,7 +115,7 @@ export const Map = React.memo(({layers}) => {
 						break;
 
 					case RENDERING_HEATMAP:
-						let heatmapLayer = currentmapOverlays[name];
+						let heatmapLayer = currentMapOverlays[name];
 
 						if (!heatmapLayer) {
 							heatmapLayer = L.heatLayer([], {
@@ -141,7 +136,7 @@ export const Map = React.memo(({layers}) => {
 						break;
 
 					case RENDERING_CLUSTERS:
-						let clusterLayer = currentmapOverlays[name];
+						let clusterLayer = currentMapOverlays[name];
 
 						if (!clusterLayer) {
 							clusterLayer = L.markerClusterGroup().addTo(map);
@@ -174,17 +169,27 @@ export const Map = React.memo(({layers}) => {
 				}
 			});
 
+			// Remove deleted layers from the map
+			currentMapOverlays.forEach((overlay, name) => {
+				if (!newMapOverlays[name]) {
+					overlay.remove(map);
+				}
+			});
+
+			// Update the layer controls on map
+			layerControlRef.current.remove(map);
+			const layerControl = L.control.layers([], newMapOverlays).addTo(map);
+
+			// Persist overlays and layer controls for the next render pass
+			layerControlRef.current = layerControl;
+			mapOverlaysRef.current = newMapOverlays;
+
 			// Check if globalBounds is defined
 			if (!globalBounds.isValid()) {
 				globalBounds = new L.LatLngBounds([[90, -180], [-90, 180]]);
 			}
-	
-			map.flyToBounds(globalBounds);
-	
-			const layerControl = L.control.layers([], newMapOverlays).addTo(map);
 
-			layerControlRef.current = layerControl;
-			mapOverlaysRef.current = newMapOverlays;
+			map.flyToBounds(globalBounds);
 		}
 	}, [layers]);
 
