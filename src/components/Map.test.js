@@ -1,13 +1,21 @@
 import React from 'react';
-import { render, rerender, cleanup } from '@testing-library/react';
+import { render, cleanup } from '@testing-library/react';
 import { Map } from './Map';
 import { NEW_LAYER, RENDERING_POLYLINE, RENDERING_HEATMAP, RENDERING_CLUSTERS } from './Layer';
+
+jest.mock('leaflet');
+
+// TODO: Complete test cases!!!
 
 describe('Map tests', () => {
   it('plots marker layers', () => {
     render(<Map layers={[testMarkerLayer]}/>);
 
     expect(true); // FIXME
+    // expect(getByText('Big Diomede')).toBeDefined();
+    // expect(getByText('Ezzahara')).toBeDefined();
+    // expect(getByText('Diogo Lopes')).toBeDefined();
+    // expect(getByText('Oban')).toBeDefined();
   });
 
   it('plots polyline layers', () => {
@@ -29,7 +37,7 @@ describe('Map tests', () => {
   });
 
   it('plots multiple layers of different types and autoremoves deleted layers on update', () => {
-    render(<Map layers={[
+    const renderResult = render(<Map layers={[
       testMarkerLayer,
       testPolylineLayer,
       testHeatmapLayer,
@@ -38,7 +46,7 @@ describe('Map tests', () => {
 
     expect(true); // FIX
 
-    rerender(<Map layers={[
+    renderResult.rerender(<Map layers={[
       testMarkerLayer,
       testPolylineLayer,
       testClusterLayer
@@ -49,10 +57,10 @@ describe('Map tests', () => {
 
   it('plots multiple layers within individual bounds', () => {
     render(<Map layers={[
-      testBoundedMarkerLayer,
-      testBoundedPolylineLayer,
-      testBoundedHeatmapLayer,
-      testBoundedClusterLayer
+      testMarkerLayer,
+      testPolylineLayer,
+      testHeatmapLayer,
+      testClusterLayer
     ]}/>);
 
     expect(true); // FIXME
@@ -63,68 +71,40 @@ describe('Map tests', () => {
   });
 });
 
-
-// Test data
+//#region Test Data 
 
 const testMarkerLayer = {
   ...NEW_LAYER,
-  ukey: "mlyr",
+  ukey: 'mlyr',
   name: 'marker layer',
   data: [
-    { pos: [], tooltip: "a" },
-    { pos: [], tooltip: "b" }
-  ]
+    { pos: [65.7748473, -168.9437527], tooltip: "Big Diomede" },
+    { pos: [35.8429415, -5.5551773], tooltip: "Ezzahara" },
+    { pos: [-5.0928441, -36.4576796], tooltip: "Diogo Lopes" },
+    { pos: [-46.8988914, 168.1239884], tooltip: "Oban" }
+  ],
+  bounds: [[40.712216, -74.22655], [40.773941, -74.12544]]
 };
 
 const testPolylineLayer = {
-  ...NEW_LAYER,
-  ukey: "plyr",
+  ...testMarkerLayer,
+  ukey: 'plyr',
   name: 'polyline layer',
-  data: [
-    { pos: [], tooltip: "a" },
-    { pos: [], tooltip: "b" }
-  ],
   rendering: RENDERING_POLYLINE
 };
 
 const testHeatmapLayer = {
-  ...NEW_LAYER,
-  ukey: "hlyr",
+  ...testMarkerLayer,
+  ukey: 'hlyr',
   name: 'heatmap layer',
-  data: [
-    { pos: [], tooltip: "a" },
-    { pos: [], tooltip: "b" }
-  ],
   rendering: RENDERING_HEATMAP
 };
 
 const testClusterLayer = {
-  ...NEW_LAYER,
-  ukey: "clyr",
+  ...testMarkerLayer,
+  ukey: 'clyr',
   name: 'cluster layer',
-  data: [
-    { pos: [], tooltip: "a" },
-    { pos: [], tooltip: "b" }
-  ],
   rendering: RENDERING_CLUSTERS
 };
 
-const testBoundedMarkerLayer = {
-  ...testMarkerLayer,
-  bounds: [[40.712216, -74.22655], [40.773941, -74.12544]]
-};
-
-const testBoundedPolylineLayer = {
-  ...testPolylineLayer,
-  bounds: [[40.712216, -74.22655], [40.773941, -74.12544]]
-};
-
-const testBoundedHeatmapLayer = {
-  ...testHeatmapLayer,
-  bounds: [[40.712216, -74.22655], [40.773941, -74.12544]]
-};
-
-const testBoundedClusterLayer = {
-  ...testClusterLayer,
-  bounds: [[40.712216, -74.22655], [40.773941, -74.12544]]
-};
+//#endregion

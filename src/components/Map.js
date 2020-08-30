@@ -1,5 +1,5 @@
 import React from 'react'
-import {RENDERING_CLUSTERS, RENDERING_HEATMAP, RENDERING_MARKERS, RENDERING_POLYLINE} from "./Layer";
+import { RENDERING_CLUSTERS, RENDERING_HEATMAP, RENDERING_MARKERS, RENDERING_POLYLINE } from "./Layer";
 import L from 'leaflet';
 import 'leaflet.heat';
 import 'leaflet.markercluster';
@@ -37,6 +37,7 @@ export const Map = React.memo(({layers}) => {
 
 	React.useEffect(() => {
 		const map = mapRef.current;
+		const layerControl = layerControlRef.current;
 
 		if (map) {
 			let globalBounds = new L.LatLngBounds();
@@ -46,13 +47,8 @@ export const Map = React.memo(({layers}) => {
 			const newMapOverlays = {}
 			const currentMapOverlays  = mapOverlaysRef.current;
 
-			// Iterate through layers
 			layers.forEach((layer) => {
-				const {ukey, name, bounds, rendering, data, radius, color } = layer;
-
-				if (ukey === undefined) {
-					return;
-				}
+				const {name, bounds, rendering, data, radius, color } = layer;
 
 				const latLngBounds = new L.LatLngBounds(bounds);
 
@@ -104,11 +100,7 @@ export const Map = React.memo(({layers}) => {
 						}
 
 						// TODO: check if the layer has changed before rerendering it
-						polylineLayer.setLatLngs([]);
-
-						data.forEach((entry) => {
-							polylineLayer.addLatLng(entry.pos);
-						});
+						polylineLayer.setLatLngs(data.map(entry => entry.pos));
 
 						newMapOverlays[name] = polylineLayer;
 
@@ -169,22 +161,18 @@ export const Map = React.memo(({layers}) => {
 				}
 			});
 
-			// Remove deleted layers from the map
-			currentMapOverlays.forEach((overlay, name) => {
+			// Remove deleted layers from the map and the layer control
+			Object.entries(currentMapOverlays).forEach((name, overlay) => {
 				if (!newMapOverlays[name]) {
 					overlay.remove(map);
+					overlay.remove(layerControl);
 				}
 			});
 
-			// Update the layer controls on map
-			layerControlRef.current.remove(map);
-			const layerControl = L.control.layers([], newMapOverlays).addTo(map);
-
-			// Persist overlays and layer controls for the next render pass
-			layerControlRef.current = layerControl;
+			// Persist overlays for the next render pass
 			mapOverlaysRef.current = newMapOverlays;
 
-			// Check if globalBounds is defined
+			// Zoom to bounds
 			if (!globalBounds.isValid()) {
 				globalBounds = new L.LatLngBounds([[90, -180], [-90, 180]]);
 			}
