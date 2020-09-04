@@ -4,7 +4,7 @@ import { ColorPicker } from './ColorPicker';
 
 describe('ColorPicker tests', () => {
     it('renders the color picker', () => {
-      const picker = render(<ColorPicker />).container;
+      const picker = render(<ColorPicker handleColorChange={jest.fn(() => {})} />).container;
 
       expect(picker).toBeDefined();
     });
