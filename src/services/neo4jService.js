@@ -7,25 +7,12 @@ import neo4j from "neo4j-driver";
  */
 const neo4jDesktopApi = window.neo4jDesktopApi;
 
-/**
- * Returns a neo4j driver instance from the boltUrl, username, and passwords.
- *
- * Currently accepts bolt and bolt+routing
- * @param {String} boltUrl
- * @param {String} username
- * @param {String} password
- */
-const createDriver = (boltUrl, username, password) =>
-  neo4j.driver(boltUrl, neo4j.auth.basic(username, password));
-
 class Neo4JService {
   constructor() {
     this.driver = this.getNeo4jDriver();
   }
 
   getNeo4jDriver = async () => {
-    let driver = undefined;
-
     if (neo4jDesktopApi) {
       await neo4jDesktopApi.getContext().then((context) => {
         for (let project of context.projects) {
@@ -34,18 +21,23 @@ class Neo4JService {
               console.log(`Active graph is; ${graph.name} (${graph.description})`);
 
               let boltProtocol = graph.connection.configuration.protocols.bolt;
-              driver = createDriver(
+
+              const driver = neo4j.driver(
                 boltProtocol.url,
                 boltProtocol.username,
                 boltProtocol.password
               );
+
+              // Already found and athenticated an active graph.
+              // No need to try and authenticate other graphs.
+              return driver;
             }
           }
         }
       });
     }
 
-    return driver;
+    return undefined;
   };
 
   getNodeLabels = async () => {
