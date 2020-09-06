@@ -1,4 +1,4 @@
-import neo4j from "neo4j-driver";
+import neo4j, { session } from "neo4j-driver";
 
 /**
  * Hooks into the neo4jDesktopApi
@@ -23,7 +23,7 @@ class Neo4JService {
     this.driver = this.getNeo4jDriver();
   }
 
-  getNeo4jDriver = async function() {
+  getNeo4jDriver = async () => {
     let driver = undefined;
 
     if (neo4jDesktopApi) {
@@ -33,10 +33,10 @@ class Neo4JService {
             if (graph.status === "ACTIVE") {
               console.log(
                 "Active graph is; " +
-                  graph.name +
-                  " (" +
-                  graph.description +
-                  ")"
+                graph.name +
+                " (" +
+                graph.description +
+                ")"
               );
               let boltProtocol = graph.connection.configuration.protocols.bolt;
               driver = createDriver(
@@ -55,172 +55,160 @@ class Neo4JService {
 
   getNodeLabels = async () => {
     const driver = await this.driver;
-    let res = [];
 
     if (!driver) {
-      return res;
+      return { status: 500, error: new Error('Failed to get driver') }
     }
 
-    const session = driver.session();
-    await session
-      .run(`CALL db.labels() YIELD label RETURN label ORDER BY label`)
-      .then(function (result) {
-        result.records.forEach(function (record) {
-          let el = {
-            value: record.get("label"),
-            label: record.get("label"),
-          };
-          res.push(el);
-        });
-        session.close();
-      })
-      .catch(function (error) {
-        console.log(error);
+    const query = "CALL db.labels() YIELD label RETURN label ORDER BY label";
+    let res;
+
+    try {
+      const session = driver.session();
+      const result = (await session.run(query)).map(record => {
+        return {
+          value: record.get("label"),
+          label: record.get("label"),
+        };
       });
 
-    return res;
+      res = { status: 200, result };
+    } catch (error) {
+      res = { status: 500, error }
+    } finally {
+      session.close();
+      return res;
+    }
   };
 
   getProperties = async (nodeFilter) => {
     const driver = await this.driver;
-    let res = [];
 
     if (!driver) {
+      return { status: 500, error: new Error('Failed to get driver') }
+    }
+
+    const query = nodeFilter ?
+      `MATCH (n) WHERE true ${nodeFilter} WITH n LIMIT 100 UNWIND keys(n) AS key RETURN DISTINCT key AS propertyKey ORDER BY key` :
+      "CALL db.propertyKeys() YIELD propertyKey RETURN propertyKey ORDER BY propertyKey";
+    let res;
+
+    try {
+      const result = (await session.run(query)).map(record => {
+        return {
+          value: record.get("propertyKey"),
+          label: record.get("propertyKey"),
+        };
+      });
+
+      res = { status: 200, result };
+    } catch (error) {
+      res = { status: 500, error }
+    } finally {
+      session.close();
       return res;
     }
-
-    let query = "";
-    if (nodeFilter !== "") {
-      query += "MATCH (n) WHERE true ";
-      query += nodeFilter;
-      query +=
-      "WITH n LIMIT 100 UNWIND keys(n) AS key RETURN DISTINCT key AS propertyKey ORDER BY key";
-    } else {
-      query +=
-      "CALL db.propertyKeys() YIELD propertyKey RETURN propertyKey ORDER BY propertyKey";
-    }
-
-    const session = driver.session();
-    await session
-      .run(query)
-      .then(function (result) {
-        result.records.forEach(function (record) {
-          let el = {
-            value: record.get("propertyKey"),
-            label: record.get("propertyKey"),
-          };
-          res.push(el);
-        });
-        session.close();
-      })
-      .catch(function (error) {
-        console.log(error);
-      });
-    return res;
   };
 
   hasSpatial = async () => {
     const driver = await this.driver;
-    let res = false;
 
     if (!driver) {
-      return res;
+      return { status: 500, error: new Error('Failed to get driver') }
     }
 
-    const session = driver.session();
-    await session
-      .run("CALL spatial.procedures() YIELD name RETURN name LIMIT 1")
-      .then(() => {
-        res = true;
-        session.close();
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-    return res;
+    const query = "CALL spatial.procedures() YIELD name RETURN name LIMIT 1";
+    let res;
+
+    try {
+      const session = driver.session();
+      const result = await session.run(query);
+
+      res = { status: 200, result: result.length > 0 };
+    } catch (error) {
+      res = { status: 500, error }
+    } finally {
+      session.close();
+      return res;
+    }
   };
 
   getSpatialLayers = async () => {
     const driver = await this.driver;
-    let res = [];
 
     if (!driver) {
-      return res;
+      return { status: 500, error: new Error('Failed to get driver') }
     }
 
-    const session = driver.session();
-    session
-      .run(
-        "MATCH (n:ReferenceNode)-[:LAYER]->(l)" +
-          "WHERE l.layer_class = 'org.neo4j.gis.spatial.SimplePointLayer'" +
-          "AND l.geomencoder = 'org.neo4j.gis.spatial.encoders.SimplePointEncoder'" +
-          "RETURN l.layer as layer"
-      )
-      .then((result) => {
-        result.records.forEach((record) => {
-          let el = {
-            value: record.get("layer"),
-            label: record.get("layer"),
-          };
-          res.push(el);
-          session.close();
-        });
-      })
-      .catch(function (error) {
-        console.log(error);
+    const query = "MATCH (n:ReferenceNode)-[:LAYER]->(l)" +
+      "WHERE l.layer_class = 'org.neo4j.gis.spatial.SimplePointLayer'" +
+      "AND l.geomencoder = 'org.neo4j.gis.spatial.encoders.SimplePointEncoder'" +
+      "RETURN l.layer as layer";
+    let res;
+
+    try {
+      const session = driver.session();
+      const result = (await session.run(query)).map(record => {
+        return {
+          value: record.get("layer"),
+          label: record.get("layer"),
+        }
       });
-    return res;
+
+      res = { status: 200, result };
+    } catch (error) {
+      res = { status: 500, error }
+    } finally {
+      session.close();
+      return res;
+    }
   };
 
   getData = async (query, params) => {
-    const driver = await this.driver;
     let res = [];
+    const driver = await this.driver;
 
     if (!driver) {
-      return res;
+      return { status: 500, error: new Error('Failed to get driver') }
     }
 
-    const session = driver.session();
-    return await session
-        .run(query, params)
-        .then((response) => {
-          let res = [];
-          if (response.records === undefined || response.records.length === 0) {
-            alert("No result found, please check your query");
-            return {
-              status: "ERROR",
-              result: query,
-            };
-          }
-          response.records.forEach((record) => {
-            let el = {
-              pos: [record.get("latitude"), record.get("longitude")],
-            };
-            if (record.has("tooltip") && record.get("tooltip") !== null) {
-              // make sure tooltip is a string, otherwise leaflet is not happy AT ALL!
-              el["tooltip"] = record.get("tooltip").toString();
-            }
-            res.push(el);
-          });
-          session.close();
+
+    try {
+      const session = driver.session();
+      const response = (await session.run(query, params));
+
+      if (response.length > 0) {
+        const result = response.map(record => {
+          const position = [record.get("latitude"), record.get("longitude")];
+          const tooltip = record.has("tooltip") && record.get("tooltip");
+
           return {
-            status: "OK",
-            result: res,
-          };
-        })
-        .catch((error) => {
-          return {status: "ERROR", result: error};
+            pos: position,
+            tooltip: tooltip && tooltip.toString()
+          }
         });
+
+        res = { status: 200, result };
+      } else {
+        res = { status: 500, error: new Error('No result found, please check your query') };
+      }
+
+    } catch (error) {
+      res = { status: 500, error }
+    } finally {
+      session.close();
+      return res;
+    }
   };
 };
 
 // Singleton Neo4JService
 export const neo4jService = (() => {
- let serviceInstance;
+  let serviceInstance;
 
- if (!serviceInstance) {
-   serviceInstance = new Neo4JService();
- }
+  if (!serviceInstance) {
+    serviceInstance = new Neo4JService();
+  }
 
- return serviceInstance;
+  return serviceInstance;
 })();
