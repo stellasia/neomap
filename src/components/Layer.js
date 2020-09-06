@@ -9,8 +9,8 @@ import Card from 'react-bootstrap/Card';
 import {Button, Form} from 'react-bootstrap';
 import {CypherEditor} from "graph-app-kit/components/Editor"
 import {confirmAlert} from 'react-confirm-alert'; // Import
-import neo4jService from '../services/neo4jService'
-import {ColorPicker} from "./ColorPicker";
+import { neo4jService } from '../services/neo4jService'
+import { ColorPicker } from "./ColorPicker";
 
 
 import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
@@ -38,8 +38,6 @@ export class Layer extends Component {
 		super(props);
 
 		this.state = props.layer;
-
-		this.driver = props.driver;
 
 		this.showQuery = this.showQuery.bind(this);
 		this.handleNameChange = this.handleNameChange.bind(this);
@@ -186,7 +184,7 @@ export class Layer extends Component {
 	async updateData() {
 		/*Query database and update `this.state.data`
          */
-		const [status, result] = await neo4jService.getData(this.driver, this.getQuery(), {});
+		const [status, result] = await neo4jService.getData( this.getQuery(), {});
 
 		if (status === "ERROR") {
 			let message = "Invalid cypher query.";
@@ -339,7 +337,7 @@ export class Layer extends Component {
 
 
 	async hasSpatialPlugin() {
-		const result = await neo4jService.hasSpatial(this.driver);
+		const result = await neo4jService.hasSpatial();
 
 		this.setState({
 			hasSpatialPlugin: result
@@ -351,7 +349,7 @@ export class Layer extends Component {
 		/*This will be updated quite often,
            is that what we want?
          */
-		const result = await neo4jService.getNodeLabels(this.driver);
+		const result = await neo4jService.getNodeLabels();
 
 		this.setState({
 			nodes: result
@@ -360,7 +358,7 @@ export class Layer extends Component {
 
 
 	async getPropertyNames() {
-		const result = await neo4jService.getProperties(this.driver, this.getNodeFilter());
+		const result = await neo4jService.getProperties( this.getNodeFilter());
 
 		// TODO: find a better way of appending no tooltip
 		result.push({value: "", label: ""}); // This is the default: no tooltip
@@ -370,7 +368,7 @@ export class Layer extends Component {
 
 
 	async getSpatialLayers() {
-		const result = neo4jService.getSpatialLayers(this.driver);
+		const result = neo4jService.getSpatialLayers();
 
 		this.setState({spatialLayers: result});
 	};

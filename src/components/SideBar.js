@@ -3,7 +3,7 @@ import Accordion from 'react-bootstrap/Accordion';
 import { Layer } from './Layer';
 import { NEW_LAYER } from './constants';
 
-export const SideBar = React.memo(({driver, layers, addLayer, updateLayer, removeLayer}) => {
+export const SideBar = React.memo(({ layers, addLayer, updateLayer, removeLayer }) => {
 
 	const renderLayers = () => {
 		return layers.map((layer) => {
@@ -12,7 +12,6 @@ export const SideBar = React.memo(({driver, layers, addLayer, updateLayer, remov
 					key={layer.ukey}
 					data-id="layers"
 					layer={layer}
-					driver={driver}
 					addLayer={addLayer}
 					updateLayer={updateLayer}
 					removeLayer={removeLayer}
@@ -28,7 +27,6 @@ export const SideBar = React.memo(({driver, layers, addLayer, updateLayer, remov
 				key={NEW_LAYER.ukey}
 				data-id="new-layer"
 				layer={NEW_LAYER}
-				driver={driver}
 				addLayer={addLayer}
 				updateLayer={updateLayer}
 				removeLayer={removeLayer}

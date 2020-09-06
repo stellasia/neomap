@@ -18,9 +18,14 @@ const neo4jDesktopApi = window.neo4jDesktopApi;
 const createDriver = (boltUrl, username, password) =>
   neo4j.driver(boltUrl, neo4j.auth.basic(username, password));
 
-export default {
-  getNeo4jDriver: async function () {
+class Neo4JService {
+  constructor() {
+    this.driver = this.getNeo4jDriver();
+  }
+
+  getNeo4jDriver = async function() {
     let driver = undefined;
+
     if (neo4jDesktopApi) {
       await neo4jDesktopApi.getContext().then((context) => {
         for (let project of context.projects) {
@@ -44,13 +49,18 @@ export default {
         }
       });
     }
+
     return driver;
-  },
+  };
 
-  getNodeLabels: async function (driver) {
-    if (driver === undefined) return [];
-
+  getNodeLabels = async () => {
+    const driver = await this.driver;
     let res = [];
+
+    if (!driver) {
+      return res;
+    }
+
     const session = driver.session();
     await session
       .run(`CALL db.labels() YIELD label RETURN label ORDER BY label`)
@@ -69,23 +79,28 @@ export default {
       });
 
     return res;
-  },
+  };
 
-  getProperties: async function (driver, nodeFilter) {
-    if (driver === undefined) return [];
-
+  getProperties = async (nodeFilter) => {
+    const driver = await this.driver;
     let res = [];
-    const session = driver.session();
+
+    if (!driver) {
+      return res;
+    }
+
     let query = "";
     if (nodeFilter !== "") {
       query += "MATCH (n) WHERE true ";
       query += nodeFilter;
       query +=
-        "WITH n LIMIT 100 UNWIND keys(n) AS key RETURN DISTINCT key AS propertyKey ORDER BY key";
+      "WITH n LIMIT 100 UNWIND keys(n) AS key RETURN DISTINCT key AS propertyKey ORDER BY key";
     } else {
       query +=
-        "CALL db.propertyKeys() YIELD propertyKey RETURN propertyKey ORDER BY propertyKey";
+      "CALL db.propertyKeys() YIELD propertyKey RETURN propertyKey ORDER BY propertyKey";
     }
+
+    const session = driver.session();
     await session
       .run(query)
       .then(function (result) {
@@ -102,12 +117,16 @@ export default {
         console.log(error);
       });
     return res;
-  },
+  };
 
-  hasSpatial: async function (driver) {
-    if (driver === undefined) return false;
-
+  hasSpatial = async () => {
+    const driver = await this.driver;
     let res = false;
+
+    if (!driver) {
+      return res;
+    }
+
     const session = driver.session();
     await session
       .run("CALL spatial.procedures() YIELD name RETURN name LIMIT 1")
@@ -119,12 +138,16 @@ export default {
         console.log(error);
       });
     return res;
-  },
+  };
 
-  getSpatialLayers: async function (driver) {
-    if (driver === undefined) return [];
-
+  getSpatialLayers = async () => {
+    const driver = await this.driver;
     let res = [];
+
+    if (!driver) {
+      return res;
+    }
+
     const session = driver.session();
     session
       .run(
@@ -147,9 +170,16 @@ export default {
         console.log(error);
       });
     return res;
-  },
+  };
 
-  getData: async function (driver, query, params) {
+  getData = async (query, params) => {
+    const driver = await this.driver;
+    let res = [];
+
+    if (!driver) {
+      return res;
+    }
+
     const session = driver.session();
     return await session
         .run(query, params)
@@ -181,5 +211,16 @@ export default {
         .catch((error) => {
           return {status: "ERROR", result: error};
         });
-  },
+  };
 };
+
+// Singleton Neo4JService
+export const neo4jService = (() => {
+ let serviceInstance;
+
+ if (!serviceInstance) {
+   serviceInstance = new Neo4JService();
+ }
+
+ return serviceInstance;
+})();
