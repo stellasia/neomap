@@ -182,11 +182,16 @@ export class Layer extends Component {
 
 
 	async updateData() {
-		/*Query database and update `this.state.data`
-         */
-		const [status, result] = await neo4jService.getData( this.getQuery(), {});
+		const { status, error, result } = await neo4jService.getData( this.getQuery(), {});
 
-		if (status === "ERROR") {
+		if (status === 200 && result) {
+			this.setState({ data: result }, function () {
+				this.updateBounds()
+			});
+		} else if (result) {
+			// TODO: Add Error UX. This should probably block creating/updating layer
+			console.log(error);
+
 			let message = "Invalid cypher query.";
 			if (this.state.layerType !== LAYER_TYPE_CYPHER) {
 				message += "\nContact the development team";
@@ -194,11 +199,9 @@ export class Layer extends Component {
 				message += "\nFix your query and try again";
 			}
 			message += "\n\n" + result;
+
+			// Deprecate alert in favor of a less jarring error UX
 			alert(message);
-		} else if (result) {
-			this.setState({data: result}, function () {
-				this.updateBounds()
-			});
 		}
 	};
 
@@ -337,11 +340,15 @@ export class Layer extends Component {
 
 
 	async hasSpatialPlugin() {
-		const result = await neo4jService.hasSpatial();
+		const { status, error, result } = await neo4jService.hasSpatial();
 
-		this.setState({
-			hasSpatialPlugin: result
-		});
+		if (status === 200 && result) {
+			this.setState({	hasSpatialPlugin: result });
+		} else {
+			// TODO: Add Error UX. This should probably block creating/updating layer
+			console.log(error);
+		}
+
 	};
 
 
@@ -349,28 +356,39 @@ export class Layer extends Component {
 		/*This will be updated quite often,
            is that what we want?
          */
-		const result = await neo4jService.getNodeLabels();
-
-		this.setState({
-			nodes: result
-		})
+		const { status, error, result } = await neo4jService.getNodeLabels();
+		
+		if (status === 200 && result) {
+			this.setState({	nodes: result });
+		} else {
+			// TODO: Add Error UX. This should probably block creating/updating layer
+			console.log(error);
+		}
 	};
 
 
 	async getPropertyNames() {
-		const result = await neo4jService.getProperties( this.getNodeFilter());
+		const { status, error, result } = await neo4jService.getProperties( this.getNodeFilter());
 
-		// TODO: find a better way of appending no tooltip
-		result.push({value: "", label: ""}); // This is the default: no tooltip
-
-		this.setState({propertyNames: result});
+		if (status === 200 && result) {
+			const defaultNoTooltip = {value: "", label: ""};
+			this.setState({ propertyNames: [...result, defaultNoTooltip] });
+		} else {
+			// TODO: Add Error UX. This should probably block creating/updating layer
+			console.log(error);
+		}
 	};
 
 
 	async getSpatialLayers() {
-		const result = neo4jService.getSpatialLayers();
+		const { status, error, result } = neo4jService.getSpatialLayers();
 
-		this.setState({spatialLayers: result});
+		if (status === 200 && result) {
+			this.setState({ spatialLayers: result });
+		} else {
+			// TODO: Add Error UX. This should probably block creating/updating layer
+			console.log(error);
+		}
 	};
 
 
