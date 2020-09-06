@@ -13,11 +13,11 @@ jest.mock('../services/neo4jService', () => {
   return {
     neo4jService: {
       getNeo4jDriver: jest.fn(() => Promise.resolve({})),
-      getNodeLabels: jest.fn((_driver) => Promise.resolve([])),
-      getProperties: jest.fn((_driver, _nodeFilter) => Promise.resolve([])),
-      hasSpatial: jest.fn((_driver) => Promise.resolve(false)),
-      getSpatialLayers: jest.fn((_driver) => Promise.resolve([])),
-      getData: jest.fn((_driver, _query, _params) => Promise.resolve([]))
+      getNodeLabels: jest.fn(() => Promise.resolve({ status: 200, result: [] })),
+      getProperties: jest.fn(( _nodeFilter) => Promise.resolve({ status: 200, result: [] })),
+      hasSpatial: jest.fn(() => Promise.resolve({ status: 200, result: false })),
+      getSpatialLayers: jest.fn(() => Promise.resolve({ status: 200, result: [] })),
+      getData: jest.fn((_query, _params) => Promise.resolve({ status: 200, result: [] }))
     }
   }
 });

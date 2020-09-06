@@ -1,4 +1,4 @@
-import neo4j, { session } from "neo4j-driver";
+import neo4j from "neo4j-driver";
 
 /**
  * Hooks into the neo4jDesktopApi
@@ -31,13 +31,8 @@ class Neo4JService {
         for (let project of context.projects) {
           for (let graph of project.graphs) {
             if (graph.status === "ACTIVE") {
-              console.log(
-                "Active graph is; " +
-                graph.name +
-                " (" +
-                graph.description +
-                ")"
-              );
+              console.log(`Active graph is; ${graph.name} (${graph.description})`);
+
               let boltProtocol = graph.connection.configuration.protocols.bolt;
               driver = createDriver(
                 boltProtocol.url,
@@ -63,16 +58,23 @@ class Neo4JService {
     const query = "CALL db.labels() YIELD label RETURN label ORDER BY label";
     let res;
 
-    try {
-      const session = driver.session();
-      const result = (await session.run(query)).map(record => {
-        return {
-          value: record.get("label"),
-          label: record.get("label"),
-        };
-      });
+    const session = driver.session();
 
-      res = { status: 200, result };
+    try {
+      const records = (await session.run(query)).records;
+
+      if (records && records.length > 0) {
+        const result = records.map(record => {
+          return {
+            value: record.get("label"),
+            label: record.get("label"),
+          };
+        });
+
+        res = { status: 200, result };
+      } else {
+        throw new Error("No records found");
+      }
     } catch (error) {
       res = { status: 500, error }
     } finally {
@@ -93,15 +95,23 @@ class Neo4JService {
       "CALL db.propertyKeys() YIELD propertyKey RETURN propertyKey ORDER BY propertyKey";
     let res;
 
-    try {
-      const result = (await session.run(query)).map(record => {
-        return {
-          value: record.get("propertyKey"),
-          label: record.get("propertyKey"),
-        };
-      });
+    const session = driver.session();
 
-      res = { status: 200, result };
+    try {
+      const records = (await session.run(query)).records;
+
+      if (records && records.length > 0) {
+        const result = records.map(record => {
+          return {
+            value: record.get("propertyKey"),
+            label: record.get("propertyKey"),
+          };
+        });
+
+        res = { status: 200, result };
+      } else {
+        throw new Error("No records found");
+      }
     } catch (error) {
       res = { status: 500, error }
     } finally {
@@ -120,11 +130,13 @@ class Neo4JService {
     const query = "CALL spatial.procedures() YIELD name RETURN name LIMIT 1";
     let res;
 
-    try {
-      const session = driver.session();
-      const result = await session.run(query);
+    const session = driver.session();
 
-      res = { status: 200, result: result.length > 0 };
+    try {
+      const records = (await session.run(query)).records;
+      const result = records !== undefined && records.length > 0;
+
+      res = { status: 200, result };
     } catch (error) {
       res = { status: 500, error }
     } finally {
@@ -146,16 +158,23 @@ class Neo4JService {
       "RETURN l.layer as layer";
     let res;
 
-    try {
-      const session = driver.session();
-      const result = (await session.run(query)).map(record => {
-        return {
-          value: record.get("layer"),
-          label: record.get("layer"),
-        }
-      });
+    const session = driver.session();
 
-      res = { status: 200, result };
+    try {
+      const records = (await session.run(query)).records;
+
+      if (records && records.length > 0) {
+        const result = records.map(record => {
+          return {
+            value: record.get("layer"),
+            label: record.get("layer"),
+          }
+        });
+
+        res = { status: 200, result };
+      } else {
+        throw new Error("No records found");
+      }
     } catch (error) {
       res = { status: 500, error }
     } finally {
@@ -172,13 +191,13 @@ class Neo4JService {
       return { status: 500, error: new Error('Failed to get driver') }
     }
 
+    const session = driver.session();
 
     try {
-      const session = driver.session();
-      const response = (await session.run(query, params));
+      const records = (await session.run(query, params)).records;
 
-      if (response.length > 0) {
-        const result = response.map(record => {
+      if (records && records.length > 0) {
+        const result = records.map(record => {
           const position = [record.get("latitude"), record.get("longitude")];
           const tooltip = record.has("tooltip") && record.get("tooltip");
 
@@ -190,9 +209,8 @@ class Neo4JService {
 
         res = { status: 200, result };
       } else {
-        res = { status: 500, error: new Error('No result found, please check your query') };
+        throw new Error('No result found, please check your query');
       }
-
     } catch (error) {
       res = { status: 500, error }
     } finally {

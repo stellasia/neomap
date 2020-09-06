@@ -184,7 +184,7 @@ export class Layer extends Component {
 	async updateData() {
 		const { status, error, result } = await neo4jService.getData( this.getQuery(), {});
 
-		if (status === 200 && result) {
+		if (status === 200 && result !== undefined) {
 			this.setState({ data: result }, function () {
 				this.updateBounds()
 			});
@@ -342,7 +342,7 @@ export class Layer extends Component {
 	async hasSpatialPlugin() {
 		const { status, error, result } = await neo4jService.hasSpatial();
 
-		if (status === 200 && result) {
+		if (status === 200 && result !== undefined) {
 			this.setState({	hasSpatialPlugin: result });
 		} else {
 			// TODO: Add Error UX. This should probably block creating/updating layer
@@ -358,7 +358,7 @@ export class Layer extends Component {
          */
 		const { status, error, result } = await neo4jService.getNodeLabels();
 		
-		if (status === 200 && result) {
+		if (status === 200 && result !== undefined) {
 			this.setState({	nodes: result });
 		} else {
 			// TODO: Add Error UX. This should probably block creating/updating layer
@@ -370,7 +370,7 @@ export class Layer extends Component {
 	async getPropertyNames() {
 		const { status, error, result } = await neo4jService.getProperties( this.getNodeFilter());
 
-		if (status === 200 && result) {
+		if (status === 200 && result !== undefined) {
 			const defaultNoTooltip = {value: "", label: ""};
 			this.setState({ propertyNames: [...result, defaultNoTooltip] });
 		} else {
@@ -381,9 +381,9 @@ export class Layer extends Component {
 
 
 	async getSpatialLayers() {
-		const { status, error, result } = neo4jService.getSpatialLayers();
+		const { status, error, result } = await neo4jService.getSpatialLayers();
 
-		if (status === 200 && result) {
+		if (status === 200 && result !== undefined) {
 			this.setState({ spatialLayers: result });
 		} else {
 			// TODO: Add Error UX. This should probably block creating/updating layer
