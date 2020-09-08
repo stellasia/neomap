@@ -12,7 +12,6 @@ const mockRemoveLayer = jest.fn((_key) => {});
 jest.mock('../services/neo4jService', () => {
   return {
     neo4jService: {
-      getNeo4jDriver: jest.fn(() => Promise.resolve({})),
       getNodeLabels: jest.fn(() => Promise.resolve({ status: 200, result: [] })),
       getProperties: jest.fn(( _nodeFilter) => Promise.resolve({ status: 200, result: [] })),
       hasSpatial: jest.fn(() => Promise.resolve({ status: 200, result: false })),

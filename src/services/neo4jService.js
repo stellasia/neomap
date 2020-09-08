@@ -9,10 +9,10 @@ const neo4jDesktopApi = window.neo4jDesktopApi;
 
 class Neo4JService {
   constructor() {
-    this.driver = this.getNeo4jDriver();
+    this.driver = this._getNeo4jDriver();
   }
 
-  getNeo4jDriver = async () => {
+  _getNeo4jDriver = async () => {
     if (neo4jDesktopApi) {
       await neo4jDesktopApi.getContext().then((context) => {
         for (let project of context.projects) {
@@ -40,174 +40,121 @@ class Neo4JService {
     return undefined;
   };
 
-  getNodeLabels = async () => {
+  _runQuery = async (query) => {
     const driver = await this.driver;
 
     if (!driver) {
       return { status: 500, error: new Error('Failed to get driver') }
     }
 
-    const query = "CALL db.labels() YIELD label RETURN label ORDER BY label";
-    let res;
-
     const session = driver.session();
 
+    const records = (await session.run(query)).records;
+
+    session.close();
+
+    if (records && records.length > 0) {
+      return records;
+    } else {
+      throw new Error("No records found");
+    }
+  }
+
+
+  getNodeLabels = async () => {
+    const query = "CALL db.labels() YIELD label RETURN label ORDER BY label";
+
     try {
-      const records = (await session.run(query)).records;
+      const records = this._runQuery(query)
 
-      if (records && records.length > 0) {
-        const result = records.map(record => {
-          return {
-            value: record.get("label"),
-            label: record.get("label"),
-          };
-        });
+      const result = records.map(record => {
+        return {
+          value: record.get("label"),
+          label: record.get("label"),
+        };
+      });
 
-        res = { status: 200, result };
-      } else {
-        throw new Error("No records found");
-      }
+      return { status: 200, result };
     } catch (error) {
-      res = { status: 500, error }
-    } finally {
-      session.close();
-      return res;
+      return { status: 500, error }
     }
   };
 
   getProperties = async (nodeFilter) => {
-    const driver = await this.driver;
-
-    if (!driver) {
-      return { status: 500, error: new Error('Failed to get driver') }
-    }
-
     const query = nodeFilter ?
       `MATCH (n) WHERE true ${nodeFilter} WITH n LIMIT 100 UNWIND keys(n) AS key RETURN DISTINCT key AS propertyKey ORDER BY key` :
       "CALL db.propertyKeys() YIELD propertyKey RETURN propertyKey ORDER BY propertyKey";
-    let res;
-
-    const session = driver.session();
 
     try {
-      const records = (await session.run(query)).records;
+      const records = this._runQuery(query);
 
-      if (records && records.length > 0) {
-        const result = records.map(record => {
-          return {
-            value: record.get("propertyKey"),
-            label: record.get("propertyKey"),
-          };
-        });
+      const result = records.map(record => {
+        return {
+          value: record.get("propertyKey"),
+          label: record.get("propertyKey"),
+        };
+      });
 
-        res = { status: 200, result };
-      } else {
-        throw new Error("No records found");
-      }
+      return { status: 200, result };
     } catch (error) {
-      res = { status: 500, error }
-    } finally {
-      session.close();
-      return res;
+      return { status: 500, error }
     }
   };
 
   hasSpatial = async () => {
-    const driver = await this.driver;
-
-    if (!driver) {
-      return { status: 500, error: new Error('Failed to get driver') }
-    }
-
     const query = "CALL spatial.procedures() YIELD name RETURN name LIMIT 1";
-    let res;
-
-    const session = driver.session();
 
     try {
-      const records = (await session.run(query)).records;
-      const result = records !== undefined && records.length > 0;
+      (await session.run(query)).records;
 
-      res = { status: 200, result };
+      return { status: 200, result: true };
     } catch (error) {
-      res = { status: 500, error }
-    } finally {
-      session.close();
-      return res;
+      return { status: 500, error }
     }
   };
 
   getSpatialLayers = async () => {
-    const driver = await this.driver;
-
-    if (!driver) {
-      return { status: 500, error: new Error('Failed to get driver') }
-    }
-
     const query = "MATCH (n:ReferenceNode)-[:LAYER]->(l)" +
       "WHERE l.layer_class = 'org.neo4j.gis.spatial.SimplePointLayer'" +
       "AND l.geomencoder = 'org.neo4j.gis.spatial.encoders.SimplePointEncoder'" +
       "RETURN l.layer as layer";
-    let res;
-
-    const session = driver.session();
 
     try {
       const records = (await session.run(query)).records;
 
-      if (records && records.length > 0) {
-        const result = records.map(record => {
-          return {
-            value: record.get("layer"),
-            label: record.get("layer"),
-          }
-        });
+      const result = records.map(record => {
+        return {
+          value: record.get("layer"),
+          label: record.get("layer"),
+        }
+      });
 
-        res = { status: 200, result };
-      } else {
-        throw new Error("No records found");
-      }
+      return { status: 200, result };
     } catch (error) {
-      res = { status: 500, error }
-    } finally {
-      session.close();
-      return res;
+      return { status: 500, error }
     }
   };
 
   getData = async (query, params) => {
-    let res = [];
-    const driver = await this.driver;
-
-    if (!driver) {
-      return { status: 500, error: new Error('Failed to get driver') }
-    }
-
     const session = driver.session();
 
     try {
       const records = (await session.run(query, params)).records;
 
-      if (records && records.length > 0) {
-        const result = records.map(record => {
-          const position = [record.get("latitude"), record.get("longitude")];
-          const tooltip = record.has("tooltip") && record.get("tooltip");
+      const result = records.map(record => {
+        const position = [record.get("latitude"), record.get("longitude")];
+        const tooltip = record.has("tooltip") && record.get("tooltip");
 
-          return {
-            pos: position,
-            tooltip: tooltip && tooltip.toString()
-          }
-        });
+        return {
+          pos: position,
+          tooltip: tooltip && tooltip.toString()
+        }
+      });
 
-        res = { status: 200, result };
-      } else {
-        throw new Error('No result found, please check your query');
-      }
+      return { status: 200, result };
     } catch (error) {
-      res = { status: 500, error }
-    } finally {
-      session.close();
-      return res;
+      const customError = new Error(`${error.message}, please check your query`)
+      return { status: 500, error: customError }
     }
   };
 };
