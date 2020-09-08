@@ -1,55 +1,38 @@
-import React, { Component } from 'react';
+import React from 'react';
 import Accordion from 'react-bootstrap/Accordion';
-import { Layer, NEW_LAYER } from './Layer';
+import { Layer } from './Layer';
+import { NEW_LAYER } from './constants';
 
+export const SideBar = React.memo(({driver, layers, addLayer, updateLayer, removeLayer}) => {
 
-export class SideBar extends Component {
-
-	constructor(props) {
-		super(props);
-
-		this.renderLayers = this.renderLayers.bind(this);
-		this.renderNewLayer = this.renderNewLayer.bind(this);
-	};
-
-	renderLayers() {
-		// let layers = Object.entries(this.state.layers);
-		return this.props.layers.map((layer) => {
+	const renderLayers = () => {
+		return layers.map((layer) => {
 			return (
 				<Layer
 					key={layer.ukey}
 					data-id="layers"
 					layer={layer}
-					driver={this.props.driver}
-					addLayer={this.props.addLayer}
-					updateLayer={this.props.updateLayer}
-					removeLayer={this.props.removeLayer}
+					driver={driver}
+					addLayer={addLayer}
+					updateLayer={updateLayer}
+					removeLayer={removeLayer}
 				/>
 			);
 		});
 	};
 
-	renderNewLayer() {
-		return (
+	return (
+		<Accordion>
+			{renderLayers()}
 			<Layer
 				key={NEW_LAYER.ukey}
 				data-id="new-layer"
 				layer={NEW_LAYER}
-				driver={this.props.driver}
-				addLayer={this.props.addLayer}
-				updateLayer={this.props.updateLayer}
-				removeLayer={this.props.removeLayer}
+				driver={driver}
+				addLayer={addLayer}
+				updateLayer={updateLayer}
+				removeLayer={removeLayer}
 			/>
-		);
-	};
-
-
-	render() {
-		return (
-			<Accordion>
-				{this.renderLayers()}
-				{this.renderNewLayer()}
-			</Accordion>
-		)
-	};
-}
+		</Accordion>
+	)
+});

@@ -71,7 +71,7 @@ describe('Map tests', () => {
   });
 });
 
-//#region Test Data 
+//#region Test Data
 
 const testMarkerLayer = {
   ...NEW_LAYER,

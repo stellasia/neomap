@@ -1,12 +1,12 @@
 import React from 'react'
-import { RENDERING_CLUSTERS, RENDERING_HEATMAP, RENDERING_MARKERS, RENDERING_POLYLINE } from "./Layer";
+import { RENDERING_CLUSTERS, RENDERING_HEATMAP, RENDERING_MARKERS, RENDERING_POLYLINE } from "./constants";
 import L from 'leaflet';
 import 'leaflet.heat';
 import 'leaflet.markercluster';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 
-/* 
+/*
  * Main map component based on leaflet map.
  */
 export const Map = React.memo(({layers}) => {
@@ -41,7 +41,7 @@ export const Map = React.memo(({layers}) => {
 
 		if (map) {
 			let globalBounds = new L.LatLngBounds();
-			
+
 			// On a new render pass, build new map overlays object,
 			// and replace the current map overlays object created on the last render pass
 			const newMapOverlays = {}
@@ -92,7 +92,7 @@ export const Map = React.memo(({layers}) => {
 
 						break;
 
-					case RENDERING_POLYLINE:						
+					case RENDERING_POLYLINE:
 						let polylineLayer = currentMapOverlays[name];
 
 						if (!polylineLayer) {

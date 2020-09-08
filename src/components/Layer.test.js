@@ -1,8 +1,8 @@
 import React from 'react';
-import { render, fireEvent, cleanup } from '@testing-library/react'
 import '@testing-library/jest-dom'
-import { Layer, NEW_LAYER } from './Layer';
-import { act } from 'react-dom/test-utils';
+import { render, fireEvent, cleanup, act } from '@testing-library/react'
+import { Layer } from './Layer';
+import { NEW_LAYER } from './constants';
 
 // Use these to assert invocations of App callbacks
 const mockAddLayer = jest.fn((_layer) => {});
