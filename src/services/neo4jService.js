@@ -40,16 +40,16 @@ class Neo4JService {
     return undefined;
   };
 
-  _runQuery = async (query) => {
+  _runQuery = async (query, params = undefined) => {
     const driver = await this.driver;
 
     if (!driver) {
-      return { status: 500, error: new Error('Failed to get driver') }
+      throw new Error('Failed to get driver');
     }
 
     const session = driver.session();
 
-    const records = (await session.run(query)).records;
+    const records = (await session.run(query, params)).records;
 
     session.close();
 
@@ -65,7 +65,7 @@ class Neo4JService {
     const query = "CALL db.labels() YIELD label RETURN label ORDER BY label";
 
     try {
-      const records = this._runQuery(query)
+      const records = await this._runQuery(query)
 
       const result = records.map(record => {
         return {
@@ -86,7 +86,7 @@ class Neo4JService {
       "CALL db.propertyKeys() YIELD propertyKey RETURN propertyKey ORDER BY propertyKey";
 
     try {
-      const records = this._runQuery(query);
+      const records = await this._runQuery(query);
 
       const result = records.map(record => {
         return {
@@ -105,7 +105,7 @@ class Neo4JService {
     const query = "CALL spatial.procedures() YIELD name RETURN name LIMIT 1";
 
     try {
-      (await session.run(query)).records;
+      await this._runQuery(query);
 
       return { status: 200, result: true };
     } catch (error) {
@@ -120,7 +120,7 @@ class Neo4JService {
       "RETURN l.layer as layer";
 
     try {
-      const records = (await session.run(query)).records;
+      const records = await this._runQuery(query);
 
       const result = records.map(record => {
         return {
@@ -136,10 +136,8 @@ class Neo4JService {
   };
 
   getData = async (query, params) => {
-    const session = driver.session();
-
     try {
-      const records = (await session.run(query, params)).records;
+      const records = await this._runQuery(query, params);
 
       const result = records.map(record => {
         const position = [record.get("latitude"), record.get("longitude")];
