@@ -1,139 +1,116 @@
-import { neo4j } from 'neo4j-driver';
+/**
+ * Importing neo4jDesktopApi from __mocks__ adds a mock desktop api to the global window object
+ * subsequent neo4jservice imports will use a mock api and driver *
+ */
+import '../../__mocks__/neo4jDesktopApi';
+
 import { neo4jService } from './neo4jService';
-
-const neo4jDesktopApiMock = {
-  getContext: jest.fn(() => {
-    const mockGraph = {
-      name: 'mock graph',
-      description: 'mock graph for testing',
-      connection: {
-        configuration: {
-          protocols: {
-            bolt: {
-              url: '',
-              username: '',
-              password: ''
-            }
-          }
-        }
-      }
-    }
-
-    const mockProject = {
-      graphs: [ mockGraph ]
-    }
-
-    const mockContext = {
-      projects: [ mockProject ]
-    }
-
-    return Promise.resolve(mockContext);
-  })
-}
+import { neo4jService as neo4jServiceCopy } from './neo4jService';
 
 jest.mock('neo4j-driver', () => {
+  const mockRecord = new Map([
+    ['name', 't-name'],
+    ['label', 't-label'],
+    ['layer', 't-layer'],
+    ['tooltip', 't-tooltip'],
+    ['propertyKey', 't-propertyKey'],
+    ['longitude', '4321'],
+    ['latitude', '1234']
+  ]);
+
   const mockSession = {
-    run: jest.fn(_query => []),
+    run: jest.fn((_query, _params, _config) => {
+      return new Promise((resolve, _reject) => {
+        return resolve([mockRecord]);
+      });
+    }),
     close: jest.fn()
   }
 
   const mockDriver = {
-    session: jest.fn(() => mockSession)
+    session: jest.fn((_args) => mockSession)
   }
 
   return {
-    neo4j: {
-      driver: jest.fn((_url, _username, _password) => mockDriver)
-    }
+    driver: jest.fn((_url, _authToken, _config) => mockDriver)
   }
 });
 
+
 describe('neo4jService tests', () => {
-
-  it('can have an undefined driver', async () => {
-    // Act
-    const driver = await neo4jService._getNeo4jDriver();
-
-    // Assert
-    expect(driver).toBeUndefined()
-  });
-
-  it('returns error code 500 when driver is undefined', async () => {
-    // Arrange
-    const errorResult = { status: 500, error: new Error("Failed to get driver") };
-    const getDataCustomErrorResult = {
-      status:500,
-      error: new Error("Failed to get driver, please check your query")
-    };
-
-    // Act
-    const driver = await neo4jService._getNeo4jDriver();
-
-    // Assert
-    expect(driver).toBeUndefined()
-    expect(await neo4jService.getNodeLabels()).toEqual(errorResult);
-    expect(await neo4jService.getProperties()).toEqual(errorResult);
-    expect(await neo4jService.hasSpatial()).toEqual(errorResult);
-    expect(await neo4jService.getSpatialLayers()).toEqual(errorResult);
-    expect(await neo4jService.getData()).toEqual(getDataCustomErrorResult);
-  });
-
-  it('instantiates neo4jDesktop api', async () => {
-    // Arrange
-    // window.neo4jDesktopApi = neo4jDesktopApiMock;
-    // const mockDriver = await neo4j.driver();
-
-    // Act
-    // const driver = await neo4jService._getNeo4jDriver();
-
-    // Assert
-    // console.info(driver)
-    // expect(driver).toEqual(mockDriver);
-    expect(true); // FIXME
+  it('is a singelton', () => {
+    expect(neo4jService).toEqual(neo4jServiceCopy);
   });
 
   it('gets node labels', async () => {
     // Arrange
+    const testNodeLabels = [
+      {
+        value: 't-label',
+        label: 't-label'
+      }
+    ]
 
     // Act
+    const nodeLabels = await neo4jService.getNodeLabels();
 
     // Assert
-    expect(true); // FIXME
+    expect(nodeLabels).toEqual({ status: 200, result: testNodeLabels });
   });
 
   it('gets properties', async () => {
     // Arrange
+    const testProperties = [
+      {
+        value: 't-propertyKey',
+        label: 't-propertyKey'
+      }
+    ]
 
     // Act
+    const properties = await neo4jService.getProperties();
 
     // Assert
-    expect(true); // FIXME
+    expect(properties).toEqual({ status: 200, result: testProperties });
   });
 
   it('checks for spatial', async () => {
-    // Arrange
-
     // Act
+    const hasSpatial = await neo4jService.hasSpatial()
 
     // Assert
-    expect(true); // FIXME
+    expect(hasSpatial).toEqual({ status: 200, result: true });
   });
 
   it('gets spatial layers', async () => {
     // Arrange
+    const testSpatialLayers = [
+      {
+        value: 't-layer',
+        label: 't-layer'
+      }
+    ]
 
     // Act
+    const spatialLayers = await neo4jService.getSpatialLayers();
 
     // Assert
-    expect(true); // FIXME
+    expect(spatialLayers).toEqual({ status: 200, result: testSpatialLayers });
   });
 
   it('gets corect data', async () => {
     // Arrange
+    const testData = [
+      {
+        pos: ['1234', '4321'],
+        tooltip: 't-tooltip'
+      }
+    ]
 
     // Act
+    const data = await neo4jService.getData();
 
     // Assert
-    expect(true); // FIXME
+    expect(data).toEqual({ status: 200, result: testData });
   });
 });

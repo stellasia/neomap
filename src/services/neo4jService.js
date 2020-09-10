@@ -1,47 +1,42 @@
-import neo4j from "neo4j-driver";
-
-/**
- * Hooks into the neo4jDesktopApi
- *
- * Note: this integration is going to be deprecated in desktop api 2.0
- */
-const neo4jDesktopApi = window.neo4jDesktopApi;
+import { driver as createDriver } from "neo4j-driver";
 
 class Neo4JService {
-  constructor() {
-    this.driver = this._getNeo4jDriver();
-  }
-
   _getNeo4jDriver = async () => {
-    if (neo4jDesktopApi) {
-      await neo4jDesktopApi.getContext().then((context) => {
+    if (!this.driver) {
+      try {
+        /**
+         * Hooks into the neo4jDesktopApi.
+         * Note: this integration is going to be deprecated in desktop api 2.0
+         */
+        const context = await window.neo4jDesktopApi.getContext();
+
         for (let project of context.projects) {
           for (let graph of project.graphs) {
             if (graph.status === "ACTIVE") {
-              console.log(`Active graph is; ${graph.name} (${graph.description})`);
+              console.log(`Active graph is: ${graph.name} - (${graph.description})`);
 
               let boltProtocol = graph.connection.configuration.protocols.bolt;
 
-              const driver = neo4j.driver(
+              // Already found and athenticated an active graph.
+              // No need to try and authenticate other graphs.
+              this.driver = createDriver(
                 boltProtocol.url,
                 boltProtocol.username,
                 boltProtocol.password
               );
-
-              // Already found and athenticated an active graph.
-              // No need to try and authenticate other graphs.
-              return driver;
             }
           }
         }
-      });
+      } catch (error) {
+        console.log(error);
+      }
     }
 
-    return undefined;
+    return this.driver;
   };
 
   _runQuery = async (query, params = undefined) => {
-    const driver = await this.driver;
+    const driver = this.driver || await this._getNeo4jDriver();
 
     if (!driver) {
       throw new Error('Failed to get driver');
@@ -49,7 +44,13 @@ class Neo4JService {
 
     const session = driver.session();
 
-    const records = (await session.run(query, params)).records;
+    const records = await session.run(query, params).then(
+      records => records,
+      error => {
+        console.log(error);
+        return [];
+      }
+    );
 
     session.close();
 
@@ -145,7 +146,7 @@ class Neo4JService {
 
         return {
           pos: position,
-          tooltip: tooltip && tooltip.toString()
+          tooltip: tooltip ? tooltip.toString() : ''
         }
       });
 
@@ -157,7 +158,9 @@ class Neo4JService {
   };
 };
 
-// Singleton Neo4JService
+/**
+ * Singleton Neo4JService
+ */
 export const neo4jService = (() => {
   let serviceInstance;
 
