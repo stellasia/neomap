@@ -40,14 +40,18 @@ export const Layer = React.memo(({ layer, addLayer, updateLayer, removeLayer }) 
   }
 
   React.useEffect(() => {
-
     getNodes();
     getPropertyNames();
     hasSpatialPlugin();
-    getSpatialLayers();
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  React.useEffect(() => {
+    if (state.hasSpatialPlugin) {
+      getSpatialLayers();
+    }
+  }, [state.hasSpatialPlugin])
 
   const hasSpatialPlugin = async () => {
     const { status, error, result } = await neo4jService.hasSpatial();
