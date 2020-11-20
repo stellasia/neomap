@@ -32,7 +32,10 @@ jest.mock('neo4j-driver', () => {
   }
 
   return {
-    driver: jest.fn((_url, _authToken, _config) => mockDriver)
+    auth:  {
+      basic: (_username, _password, _realm=undefined) => 'AuthToken'
+    },
+    driver: jest.fn((_url, _authToken, _config) => mockDriver),
   }
 });
 
