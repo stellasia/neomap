@@ -21,7 +21,7 @@ jest.mock('neo4j-driver', () => {
   const mockSession = {
     run: jest.fn((_query, _params, _config) => {
       return new Promise((resolve, _reject) => {
-        return resolve([mockRecord]);
+        return resolve({ records: [mockRecord] });
       });
     }),
     close: jest.fn()

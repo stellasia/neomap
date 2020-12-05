@@ -44,22 +44,10 @@ class Neo4JService {
     }
 
     const session = driver.session();
-
-    const records = await session.run(query, params).then(
-      (records) => records,
-      (error) => {
-        console.log(error);
-        return [];
-      }
-    );
-
+    const records = (await session.run(query, params)).records;
     session.close();
 
-    if (records && records.length > 0) {
-      return records;
-    } else {
-      throw new Error("No records found");
-    }
+    return records || [];
   };
 
   getNodeLabels = async () => {
