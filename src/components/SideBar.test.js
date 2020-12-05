@@ -25,7 +25,6 @@ describe('SideBar tests', () => {
   it('always renders one create new layer', () => {
     const {container:sidebar, getByText} = render(
       <SideBar
-        driver={{}}
         layers={[]}
         addLayer={() => {}}
         updateLayer={() => {}}
@@ -40,7 +39,6 @@ describe('SideBar tests', () => {
   it('renders multiple layers and the create new layer', () => {
     const {container:sidebar, getByText} = render(
       <SideBar
-        driver={{}}
         layers={[ testLayer1, testLayer2 ]}
         addLayer={() => {}}
         updateLayer={() => {}}

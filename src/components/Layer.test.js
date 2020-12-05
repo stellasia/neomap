@@ -11,12 +11,13 @@ const mockRemoveLayer = jest.fn((_key) => {});
 
 jest.mock('../services/neo4jService', () => {
   return {
-    getNeo4jDriver: jest.fn(() => Promise.resolve({})),
-    getNodeLabels: jest.fn((_driver) => Promise.resolve([])),
-    getProperties: jest.fn((_driver, _nodeFilter) => Promise.resolve([])),
-    hasSpatial: jest.fn((_driver) => Promise.resolve(false)),
-    getSpatialLayers: jest.fn((_driver) => Promise.resolve([])),
-    getData: jest.fn((_driver, _query, _params) => Promise.resolve([]))
+    neo4jService: {
+      getNodeLabels: jest.fn(() => Promise.resolve({ status: 200, result: [] })),
+      getProperties: jest.fn(( _nodeFilter) => Promise.resolve({ status: 200, result: [] })),
+      hasSpatial: jest.fn(() => Promise.resolve({ status: 200, result: false })),
+      getSpatialLayers: jest.fn(() => Promise.resolve({ status: 200, result: [] })),
+      getData: jest.fn((_query, _params) => Promise.resolve({ status: 200, result: [] }))
+    }
   }
 });
 
@@ -25,7 +26,6 @@ const renderNewLayer = () => {
     <Layer
       key={NEW_LAYER.ukey}
       layer={NEW_LAYER}
-      driver={{}}
       addLayer={mockAddLayer}
       updateLayer={mockUpdateLayer}
       removeLayer={mockRemoveLayer}
@@ -209,7 +209,6 @@ describe('Test Layer component', () => {
       <Layer
         key={testLayer1.ukey}
         layer={testLayer1}
-        driver={{}}
         addLayer={mockAddLayer}
         updateLayer={mockUpdateLayer}
         removeLayer={mockRemoveLayer}

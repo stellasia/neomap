@@ -33,7 +33,8 @@ export const Map = React.memo(({layers}) => {
 			});
 		}
 
-	}, [mapElementRef]);
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
 
 	React.useEffect(() => {
 		const map = mapRef.current;

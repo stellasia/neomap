@@ -1,5 +1,4 @@
 import React from "react";
-import neo4jService from './services/neo4jService'
 import download from "downloadjs";
 import { Map } from "./components/Map";
 import { Menu } from "./components/Menu";
@@ -10,21 +9,6 @@ import "./App.css";
 export const App = React.memo(() => {
 
 	const [layers, setLayers] = React.useState([]);
-	const [ready, setReady] = React.useState(false);
-	const driverRef = React.useRef(undefined);
-
-	// This blocks render indefinitely if the driver is never resolved.
-	// A better pattern would be to render anyway without driver,
-	// only calling getDriver() when a module wants to use the driver.
-	// Error handle incase driver is not resolved at that point.
-
-	// TODO: Remove boot blocker
-	React.useEffect(() => {
-		neo4jService.getNeo4jDriver().then(result => {
-			driverRef.current = result;
-			setReady(true);
-		});
-	});
 
 	const addLayer = (layer) => {
 		setLayers([...layers, layer]);
@@ -76,26 +60,23 @@ export const App = React.memo(() => {
 		e.preventDefault();
 	};
 
-	return <React.Suspense fallback={<span>Loading...</span>}>
-		{ready && (
-			<div id="wrapper" className="row">
-				<div id="sidebar" className="col-md-4">
-					<Menu saveConfigToFile={saveConfigToFile} loadConfigFromFile={loadConfigFromFile} />
-					<SideBar
-						driver = {driverRef.current}
-						layers={layers}
-						addLayer={addLayer}
-						updateLayer={updateLayer}
-						removeLayer={removeLayer}
-					/>
-				</div>
-				<div id="app-maparea" className="col-md-8">
-					<Map
-						key="map"
-						layers={layers}
-					/>
-				</div>
+	return (
+		<div id="wrapper" className="row">
+			<div id="sidebar" className="col-md-4">
+				<Menu saveConfigToFile={saveConfigToFile} loadConfigFromFile={loadConfigFromFile} />
+				<SideBar
+					layers={layers}
+					addLayer={addLayer}
+					updateLayer={updateLayer}
+					removeLayer={removeLayer}
+				/>
 			</div>
-		)}
-	</React.Suspense>
+			<div id="app-maparea" className="col-md-8">
+				<Map
+					key="map"
+					layers={layers}
+				/>
+			</div>
+		</div>
+	);
 });

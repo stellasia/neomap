@@ -9,8 +9,8 @@ import Card from 'react-bootstrap/Card';
 import {Button, Form} from 'react-bootstrap';
 import {CypherEditor} from "graph-app-kit/components/Editor"
 import {confirmAlert} from 'react-confirm-alert'; // Import
-import neo4jService from '../services/neo4jService'
-import {ColorPicker} from "./ColorPicker";
+import { neo4jService } from '../services/neo4jService'
+import { ColorPicker } from "./ColorPicker";
 
 
 import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
@@ -38,8 +38,6 @@ export class Layer extends Component {
 		super(props);
 
 		this.state = props.layer;
-
-		this.driver = props.driver;
 
 		this.showQuery = this.showQuery.bind(this);
 		this.handleNameChange = this.handleNameChange.bind(this);
@@ -184,11 +182,16 @@ export class Layer extends Component {
 
 
 	async updateData() {
-		/*Query database and update `this.state.data`
-         */
-		const [status, result] = await neo4jService.getData(this.driver, this.getQuery(), {});
+		const { status, error, result } = await neo4jService.getData( this.getQuery(), {});
 
-		if (status === "ERROR") {
+		if (status === 200 && result !== undefined) {
+			this.setState({ data: result }, function () {
+				this.updateBounds()
+			});
+		} else if (result) {
+			// TODO: Add Error UX. This should probably block creating/updating layer
+			console.log(error);
+
 			let message = "Invalid cypher query.";
 			if (this.state.layerType !== LAYER_TYPE_CYPHER) {
 				message += "\nContact the development team";
@@ -196,11 +199,9 @@ export class Layer extends Component {
 				message += "\nFix your query and try again";
 			}
 			message += "\n\n" + result;
+
+			// Deprecate alert in favor of a less jarring error UX
 			alert(message);
-		} else if (result) {
-			this.setState({data: result}, function () {
-				this.updateBounds()
-			});
 		}
 	};
 
@@ -339,11 +340,15 @@ export class Layer extends Component {
 
 
 	async hasSpatialPlugin() {
-		const result = await neo4jService.hasSpatial(this.driver);
+		const { status, error, result } = await neo4jService.hasSpatial();
 
-		this.setState({
-			hasSpatialPlugin: result
-		});
+		if (status === 200 && result !== undefined) {
+			this.setState({	hasSpatialPlugin: result });
+		} else {
+			// TODO: Add Error UX. This should probably block creating/updating layer
+			console.log(error);
+		}
+
 	};
 
 
@@ -351,28 +356,39 @@ export class Layer extends Component {
 		/*This will be updated quite often,
            is that what we want?
          */
-		const result = await neo4jService.getNodeLabels(this.driver);
-
-		this.setState({
-			nodes: result
-		})
+		const { status, error, result } = await neo4jService.getNodeLabels();
+		
+		if (status === 200 && result !== undefined) {
+			this.setState({	nodes: result });
+		} else {
+			// TODO: Add Error UX. This should probably block creating/updating layer
+			console.log(error);
+		}
 	};
 
 
 	async getPropertyNames() {
-		const result = await neo4jService.getProperties(this.driver, this.getNodeFilter());
+		const { status, error, result } = await neo4jService.getProperties( this.getNodeFilter());
 
-		// TODO: find a better way of appending no tooltip
-		result.push({value: "", label: ""}); // This is the default: no tooltip
-
-		this.setState({propertyNames: result});
+		if (status === 200 && result !== undefined) {
+			const defaultNoTooltip = {value: "", label: ""};
+			this.setState({ propertyNames: [...result, defaultNoTooltip] });
+		} else {
+			// TODO: Add Error UX. This should probably block creating/updating layer
+			console.log(error);
+		}
 	};
 
 
 	async getSpatialLayers() {
-		const result = neo4jService.getSpatialLayers(this.driver);
+		const { status, error, result } = await neo4jService.getSpatialLayers();
 
-		this.setState({spatialLayers: result});
+		if (status === 200 && result !== undefined) {
+			this.setState({ spatialLayers: result });
+		} else {
+			// TODO: Add Error UX. This should probably block creating/updating layer
+			console.log(error);
+		}
 	};
 
 
