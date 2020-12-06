@@ -99,36 +99,37 @@ export const Layer = React.memo(({ layer, addLayer, updateLayer, removeLayer }) 
     }
   };
 
-  const updateBounds = () => {
-		/* Compute the map bounds based on `state.data`
-         */
-    let arr = state.data || [];
-    // TODO: delegate this job to leaflet
+  /**
+   * Compute the map bounds based on proposaed state data
+   * TODO: delegate this job to leaflet
+   */
+  const getBounds = (data) => {
     let minLat = Number.MAX_VALUE;
     let maxLat = -Number.MAX_VALUE;
     let minLon = Number.MAX_VALUE;
     let maxLon = -Number.MAX_VALUE;
-    if (arr.length > 0) {
-      arr.map((item,) => {
+
+    if (data.length > 0) {
+      data.map((item,) => {
         let lat = item.pos[0];
         let lon = item.pos[1];
         if (lat > maxLat) {
-          maxLat = lat;
+        maxLat = lat;
         }
         if (lat < minLat) {
-          minLat = lat;
+        minLat = lat;
         }
         if (lon > maxLon) {
-          maxLon = lon;
+        maxLon = lon;
         }
         if (lon < minLon) {
-          minLon = lon;
+        minLon = lon;
         }
         return undefined;
       });
     }
-    let bounds = [[minLat, minLon], [maxLat, maxLon]];
-    updateState({ bounds });
+
+    return [[minLat, minLon], [maxLat, maxLon]];
   };
 
   const getNodeFilter = () => {
@@ -197,31 +198,6 @@ export const Layer = React.memo(({ layer, addLayer, updateLayer, removeLayer }) 
       query += `\nLIMIT ${state.limit}`;
 
     return query;
-  };
-
-
-  const updateData = async () => {
-    const { status, error, result } = await neo4jService.getData(getQuery(), {});
-
-    if (status === 200 && result !== undefined) {
-      updateState({ data: result }, function () {
-        updateBounds()
-      });
-    } else {
-      // TODO: Add Error UX. This should probably block creating/updating layer
-      console.log(error, result);
-
-      // let message = "Invalid cypher query.";
-      // if (state.layerType !== LAYER_TYPE_CYPHER) {
-      //   message += "\nContact the development team";
-      // } else {
-      //   message += "\nFix your query and try again";
-      // }
-      // message += "\n\n" + result;
-
-      // TODO: Deprecate alert in favor of a less jarring error UX
-      alert(`Status: ${status}, ${error.message}`);
-    }
   };
 
   const handleNameChange = (e) => {
@@ -304,8 +280,18 @@ export const Layer = React.memo(({ layer, addLayer, updateLayer, removeLayer }) 
 	 * Send data to parent which will propagate to the Map component
 	 */
   const handleUpdateLayer = async () => {
-    await updateData();
-    updateLayer(state);
+    const { status, error, result } = await neo4jService.getData(getQuery(), {});
+
+    if (status === 200 && result !== undefined) {
+      updateState({ data: result, bounds: getBounds(result) }, () => {
+        updateLayer(state);
+      });
+
+    } else {
+      // TODO: Add Error UX. This should probably block creating/updating layer
+      console.log(error, result);
+      alert(`Status: ${status}, ${error.message}. Update layer failed`);
+    }
   };
 
 	/**
@@ -313,9 +299,19 @@ export const Layer = React.memo(({ layer, addLayer, updateLayer, removeLayer }) 
 	 * Send data to parent which will propagate to the Map component
 	 */
   const handleCreateLayer = async () => {
-    await updateData();
-    // TODO: Create new ukey for layer
-    addLayer(state);
+    const { status, error, result } = await neo4jService.getData(getQuery(), {});
+
+    if (status === 200 && result !== undefined) {
+      updateState({ data: result, bounds: getBounds(result) }, () => {
+        // TODO: Create new ukey for layer
+        addLayer(state);
+      });
+
+    } else {
+      // TODO: Add Error UX. This should probably block creating/updating layer
+      console.log(error, result);
+      alert(`Status: ${status}, ${error.message}. Create new layer failed`);
+    }
   }
 
   const handleDeleteLayer = () => {
