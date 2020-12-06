@@ -207,20 +207,20 @@ export const Layer = React.memo(({ layer, addLayer, updateLayer, removeLayer }) 
       updateState({ data: result }, function () {
         updateBounds()
       });
-    } else if (result) {
+    } else {
       // TODO: Add Error UX. This should probably block creating/updating layer
-      console.log(error);
+      console.log(error, result);
 
-      let message = "Invalid cypher query.";
-      if (state.layerType !== LAYER_TYPE_CYPHER) {
-        message += "\nContact the development team";
-      } else {
-        message += "\nFix your query and try again";
-      }
-      message += "\n\n" + result;
+      // let message = "Invalid cypher query.";
+      // if (state.layerType !== LAYER_TYPE_CYPHER) {
+      //   message += "\nContact the development team";
+      // } else {
+      //   message += "\nFix your query and try again";
+      // }
+      // message += "\n\n" + result;
 
       // TODO: Deprecate alert in favor of a less jarring error UX
-      alert(message);
+      alert(`Status: ${status}, ${error.message}`);
     }
   };
 
@@ -437,20 +437,20 @@ export const Layer = React.memo(({ layer, addLayer, updateLayer, removeLayer }) 
             />
 
             {state.ukey !== NEW_LAYER.ukey && (
-              <Button variant="danger" type="submit" onClick={handleDeleteLayer} hidden={layer === undefined}>
+              <Button variant="danger" onClick={handleDeleteLayer} hidden={layer === undefined}>
                 Delete Layer
               </Button>
             )}
 
-            <Button variant="info" type="submit" onClick={handleShowQuery} hidden={state.layerType === LAYER_TYPE_CYPHER}>
+            <Button variant="info" onClick={handleShowQuery} hidden={state.layerType === LAYER_TYPE_CYPHER}>
               Show query
 						</Button>
 
-            <Button variant="success" type="submit" onClick={handleUpdateLayer} >
+            <Button variant="success" onClick={handleUpdateLayer} >
               Update Layer
 						</Button>
 
-            <Button variant="success" type="submit" onClick={handleCreateLayer} >
+            <Button variant="success" onClick={handleCreateLayer} >
               Create New Layer
 						</Button>
 

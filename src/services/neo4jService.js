@@ -141,10 +141,7 @@ class Neo4JService {
 
       return { status: 200, result };
     } catch (error) {
-      const customError = new Error(
-        `${error.message}, please check your query`
-      );
-      return { status: 500, error: customError };
+      return { status: 500, error };
     }
   };
 }
