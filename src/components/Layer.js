@@ -35,15 +35,19 @@ export const Layer = React.memo(({ layer, addLayer, updateLayer, removeLayer }) 
 
   const [state, setState] = React.useState(layer);
 
-  const updateState = (update, callback = undefined) => {
-    setState({ ...state, ...update }, callback);
+  const updateState = (update) => {
+    const updatedState = { ...state, ...update };
+    setState(updatedState);
+
+    return updatedState;
   }
 
   React.useEffect(() => {
-    getNodes();
-    getPropertyNames();
-    hasSpatialPlugin();
+    const nodes = getNodes();
+    const propertyNames = getPropertyNames(state.nodeLabels);
+    const hasSpatialPlugin = checkSpatialPlugin();
 
+    updateState({ nodes, propertyNames, hasSpatialPlugin })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -51,13 +55,27 @@ export const Layer = React.memo(({ layer, addLayer, updateLayer, removeLayer }) 
     if (state.hasSpatialPlugin) {
       getSpatialLayers();
     }
-  }, [state.hasSpatialPlugin])
 
-  const hasSpatialPlugin = async () => {
-    const { status, error, result } = await neo4jService.hasSpatial();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.hasSpatialPlugin ])
 
-    if (status === 200 && result !== undefined) {
-      updateState({ hasSpatialPlugin: result });
+  const checkSpatialPlugin = async () => {
+    const { status, error, result:hasSpatialPlugin } = await neo4jService.hasSpatial();
+
+    if (status === 200 && hasSpatialPlugin !== undefined) {
+      return hasSpatialPlugin;
+    } else {
+      // TODO: Add Error UX. This should probably block creating/updating layer
+      console.log(error);
+      return false;
+    }
+  };
+
+  const getSpatialLayers = async () => {
+    const { status, error, result:spatialLayers } = await neo4jService.getSpatialLayers();
+
+    if (status === 200 && spatialLayers !== undefined) {
+      updateState({ spatialLayers });
     } else {
       // TODO: Add Error UX. This should probably block creating/updating layer
       console.log(error);
@@ -66,36 +84,28 @@ export const Layer = React.memo(({ layer, addLayer, updateLayer, removeLayer }) 
 
   const getNodes = async () => {
     // This will be updated quite often, is that what we want?
-    const { status, error, result } = await neo4jService.getNodeLabels();
+    const { status, error, result:nodes } = await neo4jService.getNodeLabels();
 
-    if (status === 200 && result !== undefined) {
-      updateState({ nodes: result });
+    if (status === 200 && nodes !== undefined) {
+      return nodes
     } else {
       // TODO: Add Error UX. This should probably block creating/updating layer
       console.log(error);
+      return;
     }
   };
 
-  const getSpatialLayers = async () => {
-    const { status, error, result } = await neo4jService.getSpatialLayers();
+  const getPropertyNames = async (nodeLabels) => {
+    const { status, error, result:propertyNames } = await neo4jService.getProperties(getNodeFilter(nodeLabels));
 
-    if (status === 200 && result !== undefined) {
-      updateState({ spatialLayers: result });
-    } else {
-      // TODO: Add Error UX. This should probably block creating/updating layer
-      console.log(error);
-    }
-  };
-
-  const getPropertyNames = async () => {
-    const { status, error, result } = await neo4jService.getProperties(getNodeFilter());
-
-    if (status === 200 && result !== undefined) {
+    if (status === 200 && propertyNames !== undefined) {
       const defaultNoTooltip = { value: "", label: "" };
-      updateState({ propertyNames: [...result, defaultNoTooltip] });
+
+      return [...propertyNames, defaultNoTooltip];
     } else {
       // TODO: Add Error UX. This should probably block creating/updating layer
       console.log(error);
+      return [];
     }
   };
 
@@ -132,12 +142,13 @@ export const Layer = React.memo(({ layer, addLayer, updateLayer, removeLayer }) 
     return [[minLat, minLon], [maxLat, maxLon]];
   };
 
-  const getNodeFilter = () => {
+  const getNodeFilter = (nodeLabels) => {
     let filter = '';
     // filter wanted node labels
-    if (state.nodeLabel !== null && state.nodeLabel.length > 0) {
+    // TODO: Revisit the sub query generator below
+    if (nodeLabels !== null && nodeLabels.length > 0) {
       let sub_q = "(false";
-      state.nodeLabel.forEach((value,) => {
+      nodeLabels.forEach((value,) => {
         let lab = value.label;
         sub_q += ` OR n:${lab}`;
       });
@@ -176,7 +187,7 @@ export const Layer = React.memo(({ layer, addLayer, updateLayer, removeLayer }) 
     // TODO: improve this method...
     let query = 'MATCH (n) WHERE true';
     // filter wanted node labels
-    query += getNodeFilter();
+    query += getNodeFilter(state.nodeLabels);
     // filter out nodes with null latitude or longitude
     if (state.layerType === LAYER_TYPE_LATLON) {
       query += `\nAND exists(n.${state.latitudeProperty.value}) AND exists(n.${state.longitudeProperty.value})`;
@@ -245,10 +256,9 @@ export const Layer = React.memo(({ layer, addLayer, updateLayer, removeLayer }) 
     updateState({ tooltipProperty: e });
   };
 
-  const handleNodeLabelChange = (e) => {
-    updateState({ nodeLabel: e }, function () {
-      getPropertyNames();
-    });
+  const handleNodeLabelChange = (nodeLabel) => {
+    const propertyNames = getPropertyNames([nodeLabel]); // TODO: Clarify disticntion between `nodeLabel` and `nodeLabels` in state!
+    updateState({ nodeLabel, propertyNames });
   };
 
   const handleColorChange = (color) => {
@@ -280,16 +290,14 @@ export const Layer = React.memo(({ layer, addLayer, updateLayer, removeLayer }) 
 	 * Send data to parent which will propagate to the Map component
 	 */
   const handleUpdateLayer = async () => {
-    const { status, error, result } = await neo4jService.getData(getQuery(), {});
+    const { status, error, result:data } = await neo4jService.getData(getQuery(), {});
 
-    if (status === 200 && result !== undefined) {
-      updateState({ data: result, bounds: getBounds(result) }, () => {
-        updateLayer(state);
-      });
+    if (status === 200 && data !== undefined) {
+      updateLayer(updateState({ data, bounds: getBounds(data) }));
 
     } else {
       // TODO: Add Error UX. This should probably block creating/updating layer
-      console.log(error, result);
+      console.log(status, error);
       alert(`Status: ${status}, ${error.message}. Update layer failed`);
     }
   };
@@ -299,13 +307,11 @@ export const Layer = React.memo(({ layer, addLayer, updateLayer, removeLayer }) 
 	 * Send data to parent which will propagate to the Map component
 	 */
   const handleCreateLayer = async () => {
-    const { status, error, result } = await neo4jService.getData(getQuery(), {});
+    const { status, error, result:data } = await neo4jService.getData(getQuery(), {});
 
-    if (status === 200 && result !== undefined) {
-      updateState({ data: result, bounds: getBounds(result) }, () => {
-        // TODO: Create new ukey for layer
-        addLayer(state);
-      });
+    if (status === 200 && data !== undefined) {
+      // TODO: Create new ukey for layer
+      addLayer(updateState({ data, bounds: getBounds(data) }));
 
     } else {
       // TODO: Add Error UX. This should probably block creating/updating layer
