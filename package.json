@@ -8,9 +8,11 @@
 		"licenseRequired": false
 	},
 	"dependencies": {
+		"apollo-boost": "^0.4.9",
 		"bootstrap": "^4.5.2",
 		"downloadjs": "^1.4.7",
 		"graph-app-kit": "^1.0.4",
+		"graphql": "^15.4.0",
 		"leaflet": "^1.5.1",
 		"leaflet.heat": "^0.2.0",
 		"leaflet.markercluster": "^1.4.1",

@@ -4,11 +4,21 @@ import { Map } from "./components/Map";
 import { Menu } from "./components/Menu";
 import { SideBar } from "./components/SideBar";
 import "./App.css";
+import {neo4jService} from "./services/neo4jService";
 
 
 export const App = React.memo(() => {
 
 	const [layers, setLayers] = React.useState([]);
+	const [ready, setReady] = React.useState(false);
+
+	// we have to make sure the Neo4j driver is created BEFORE rendering
+	neo4jService._getNeo4jDriver().then(result => {
+		console.log(result);
+		if (result !== undefined) {
+			setReady(true);
+		}
+	});
 
 	const addLayer = (layer) => {
 		setLayers([...layers, layer]);
@@ -60,23 +70,28 @@ export const App = React.memo(() => {
 		e.preventDefault();
 	};
 
-	return (
-		<div id="wrapper" className="row">
-			<div id="sidebar" className="col-md-4">
-				<Menu saveConfigToFile={saveConfigToFile} loadConfigFromFile={loadConfigFromFile} />
-				<SideBar
-					layers={layers}
-					addLayer={addLayer}
-					updateLayer={updateLayer}
-					removeLayer={removeLayer}
-				/>
+	if (ready) {
+		return (
+			<div id="wrapper" className="row">
+				<div id="sidebar" className="col-md-4">
+					<Menu saveConfigToFile={saveConfigToFile} loadConfigFromFile={loadConfigFromFile}/>
+					<SideBar
+						layers={layers}
+						addLayer={addLayer}
+						updateLayer={updateLayer}
+						removeLayer={removeLayer}
+					/>
+				</div>
+				<div id="app-maparea" className="col-md-8">
+					<Map
+						key="map"
+						layers={layers}
+					/>
+				</div>
 			</div>
-			<div id="app-maparea" className="col-md-8">
-				<Map
-					key="map"
-					layers={layers}
-				/>
-			</div>
-		</div>
-	);
+		)
+	}
+	else {
+		return (<span>Loading...</span>)
+	}
 });

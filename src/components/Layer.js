@@ -748,15 +748,15 @@ export class Layer extends Component {
 								</Button>
 							)}
 
-							<Button variant="info" type="submit"  onClick={this.showQuery} hidden={this.state.layerType === LAYER_TYPE_CYPHER}>
+							<Button variant="info" onClick={this.showQuery} hidden={this.state.layerType === LAYER_TYPE_CYPHER}>
 								Show query
 							</Button>
 
-							<Button variant="success" type="submit"  onClick={this.updateLayer} >
+							<Button variant="success" onClick={this.updateLayer} >
 								Update Layer
 							</Button>
 
-							<Button variant="success" type="submit"  onClick={this.createLayer} >
+							<Button variant="success" onClick={this.createLayer} >
 								Create New Layer
 							</Button>
 
