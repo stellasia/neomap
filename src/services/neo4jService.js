@@ -91,13 +91,7 @@ class Neo4JService {
   };
 
   _hasSpatialPlugin = async () => {
-    /**
-     * This query seems unsafe and relies on proper error handling to avod a crash in case spatial.proecdures() are not available.
-     * Consider replacing with the following generic filter query:
-     *
-     * const query = "CALL dbms.procedures() YIELD name WHERE name STARTS WITH 'spatial' RETURN name"
-     */
-    const query = "CALL spatial.procedures() YIELD name RETURN name LIMIT 1";
+    const query = "CALL dbms.procedures() YIELD name WHERE name STARTS WITH 'spatial' RETURN name"
 
     try {
       const records = await this._runQuery(query);
@@ -127,7 +121,7 @@ class Neo4JService {
       const result = records.map((record) => {
         return {
           value: record.get("layer"),
-          label: record.get("label"),
+          label: record.get("layer"),
         };
       });
 

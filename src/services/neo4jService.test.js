@@ -82,7 +82,7 @@ describe('neo4jService tests', () => {
     const testSpatialLayers = [
       {
         value: 't-layer',
-        label: 't-label'
+        label: 't-layer'
       }
     ]
 
