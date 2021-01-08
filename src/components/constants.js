@@ -22,7 +22,6 @@ export const NEW_LAYER = {
 	tooltipProperty: {value: "", label: ""},
 	nodeLabel: [],
 	propertyNames: [],
-	spatialLayers: [],
 	data: [],
 	bounds: [],
 	color: {r: 0, g: 0, b: 255, a: 1},
@@ -30,7 +29,7 @@ export const NEW_LAYER = {
 	rendering: RENDERING_MARKERS,
 	radius: 30,
 	cypher: "",
-	// TODO: this should not be in Layer state?
-	hasSpatialPlugin: false,
+	/** Merge or clarify usage of the two parameters below */
+	spatialLayers: [],
 	spatialLayer: {value: "", label: ""},
 };

@@ -90,19 +90,25 @@ class Neo4JService {
     }
   };
 
-  hasSpatial = async () => {
-    const query = "CALL spatial.procedures() YIELD name RETURN name LIMIT 1";
+  _hasSpatialPlugin = async () => {
+    const query = "CALL dbms.procedures() YIELD name WHERE name STARTS WITH 'spatial' RETURN name"
 
     try {
-      await this._runQuery(query);
+      const records = await this._runQuery(query);
 
-      return { status: 200, result: true };
+      return { status: 200, result: records.length > 0 };
     } catch (error) {
-      return { status: 500, error };
+      return { status: 500, error, result: false };
     }
   };
 
   getSpatialLayers = async () => {
+    const { status, error, result: hasSpatialPlugin } = await this._hasSpatialPlugin();
+
+    if (!hasSpatialPlugin) {
+      return { status, error };
+    }
+
     const query =
       "MATCH (n:ReferenceNode)-[:LAYER]->(l)" +
       "WHERE l.layer_class = 'org.neo4j.gis.spatial.SimplePointLayer'" +
@@ -141,10 +147,7 @@ class Neo4JService {
 
       return { status: 200, result };
     } catch (error) {
-      const customError = new Error(
-        `${error.message}, please check your query`
-      );
-      return { status: 500, error: customError };
+      return { status: 500, error };
     }
   };
 }

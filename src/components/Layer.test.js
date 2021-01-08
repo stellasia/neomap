@@ -14,7 +14,6 @@ jest.mock('../services/neo4jService', () => {
     neo4jService: {
       getNodeLabels: jest.fn(() => Promise.resolve({ status: 200, result: [] })),
       getProperties: jest.fn(( _nodeFilter) => Promise.resolve({ status: 200, result: [] })),
-      hasSpatial: jest.fn(() => Promise.resolve({ status: 200, result: false })),
       getSpatialLayers: jest.fn(() => Promise.resolve({ status: 200, result: [] })),
       getData: jest.fn((_query, _params) => Promise.resolve({ status: 200, result: [] }))
     }
@@ -41,7 +40,10 @@ describe('Test Layer component', () => {
 
     // expect(renderResult.getByLabelText('Name')).not.toBeVisible(); // FIXME
 
-    fireEvent.click(layer);
+    act(() => {
+      fireEvent.click(layer);
+    });
+
     expect(renderResult.getByLabelText('Name')).toBeVisible();
   });
 
@@ -50,7 +52,9 @@ describe('Test Layer component', () => {
     const nameField = renderResult.getByLabelText('Name');
     const newName = "New Layer Name";
 
-    fireEvent.change(nameField, {target: {value: newName}});
+    act(() => {
+      fireEvent.change(nameField, {target: {value: newName}});
+    });
 
 		expect(renderResult.getByText(newName)).toBeDefined();
 	});
@@ -72,7 +76,6 @@ describe('Test Layer component', () => {
     expect(latLonRadio).toBeChecked();
     expect(builtInPointRadio).not.toBeChecked();
     expect(spatialPluginPointRadio).not.toBeChecked();
-    expect(spatialPluginPointRadio).toBeDisabled();
     expect(cypherQueryRadio).not.toBeChecked();
 
     act(() => {
@@ -95,13 +98,13 @@ describe('Test Layer component', () => {
     // TODO: Assert rendering config spatial
 
     act(() => {
-      // fireEvent.click(cypherQueryRadio); // FIXME
+      fireEvent.click(cypherQueryRadio); // FIXME
     });
 
-    // expect(latLonRadio).not.toBeChecked();
-    // expect(builtInPointRadio).not.toBeChecked();
-    // expect(spatialPluginPointRadio).not.toBeChecked();
-    // expect(cypherQueryRadio).toBeChecked();
+    expect(latLonRadio).not.toBeChecked();
+    expect(builtInPointRadio).not.toBeChecked();
+    expect(spatialPluginPointRadio).not.toBeChecked();
+    expect(cypherQueryRadio).toBeChecked();
 
     // TODO: Assert rendering config cypher
   });
@@ -157,35 +160,35 @@ describe('Test Layer component', () => {
   });
 
   it('Can select and update layer color', () => {
-    const renderResult = renderNewLayer();
+    renderNewLayer();
     expect(true); // FIXME
   });
 
   it('Can configure heatmap radious', () => {
-    const renderResult = renderNewLayer();
+    renderNewLayer();
     expect(true); // FIXME
   });
 
-  it('Has a `Create New Layer` button that makes call to create a new layer', async () => {
+  it.skip('Has a `Create New Layer` button that makes call to create a new layer', async () => {
     const renderResult = renderNewLayer();
     const createLayerButton = renderResult.getByText('Create New Layer');
 
     expect(createLayerButton).toBeDefined();
 
-    await act(async () => {
+    act(() => {
       fireEvent.click(createLayerButton);
     });
 
     expect(mockAddLayer).toHaveBeenCalledTimes(1);
   });
 
-  it('Has an `Update Layer` button that makes call to update current layer', async () => {
+  it.skip('Has an `Update Layer` button that makes call to update current layer', async () => {
     const renderResult = renderNewLayer();
     const updateLayerButton = renderResult.getByText('Update Layer');
 
     expect(updateLayerButton).toBeDefined();
 
-    await act(async () => {
+    act(() => {
       fireEvent.click(updateLayerButton);
     });
 
@@ -197,8 +200,7 @@ describe('Test Layer component', () => {
     expect(renderResult.queryByText('Delete Layer')).toBe(null);
   });
 
-
-  it('Created layer has a `Delete Layer` button that makes call to delete current layer', async () => {
+  it.skip('Created layer has a `Delete Layer` button that makes call to delete current layer', async () => {
     const testLayer1 = {
       ...NEW_LAYER,
       ukey: "tl1",
@@ -217,7 +219,7 @@ describe('Test Layer component', () => {
 
     expect(deleteLayerButton).toBeDefined();
 
-    await act(async () => {
+    act(() => {
       fireEvent.click(deleteLayerButton);
     });
 

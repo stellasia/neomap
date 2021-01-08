@@ -1,19 +1,20 @@
-/**Layer definition.
-
- TODO: split into several files?
- */
-import React, {Component} from 'react';
-import Select from 'react-select'
-import Accordion from 'react-bootstrap/Accordion';
+import React from 'react';
 import Card from 'react-bootstrap/Card';
-import {Button, Form} from 'react-bootstrap';
-import {CypherEditor} from "graph-app-kit/components/Editor"
-import {confirmAlert} from 'react-confirm-alert'; // Import
+import Accordion from 'react-bootstrap/Accordion';
+import { Button, Form } from 'react-bootstrap';
+import { confirmAlert } from 'react-confirm-alert';
 import { neo4jService } from '../services/neo4jService'
-import { ColorPicker } from "./ColorPicker";
+import {
+  LayerTypeForm,
+  MapRenderingForm,
+  LatLonLayerForm,
+  PointLayerForm,
+  SpatialLayerForm,
+  CypherLayerForm
+} from './Layer.forms';
 
-
-import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
+// Import css
+import 'react-confirm-alert/src/react-confirm-alert.css';
 // css needed for CypherEditor
 import "codemirror/lib/codemirror.css";
 import "codemirror/addon/lint/lint.css";
@@ -21,752 +22,427 @@ import "codemirror/addon/hint/show-hint.css";
 import "cypher-codemirror/dist/cypher-codemirror-syntax.css";
 
 import {
-	NEW_LAYER,
-	LAYER_TYPE_LATLON,
-	LAYER_TYPE_POINT,
-	LAYER_TYPE_CYPHER,
-	LAYER_TYPE_SPATIAL,
-	RENDERING_MARKERS,
-	RENDERING_POLYLINE,
-	RENDERING_HEATMAP,
-	RENDERING_CLUSTERS
+  NEW_LAYER,
+  LAYER_TYPE_LATLON,
+  LAYER_TYPE_POINT,
+  LAYER_TYPE_CYPHER,
+  LAYER_TYPE_SPATIAL,
+  RENDERING_HEATMAP,
 } from './constants';
 
-export class Layer extends Component {
 
-	constructor(props) {
-		super(props);
+export const Layer = React.memo(({ layer, addLayer, updateLayer, removeLayer }) => {
 
-		this.state = props.layer;
+  const [state, setState] = React.useState(layer);
 
-		this.showQuery = this.showQuery.bind(this);
-		this.handleNameChange = this.handleNameChange.bind(this);
-		this.handleLayerTypeChange = this.handleLayerTypeChange.bind(this);
-		this.handleNodeLabelChange = this.handleNodeLabelChange.bind(this);
-		this.handleLatPropertyChange = this.handleLatPropertyChange.bind(this);
-		this.handleLonPropertyChange = this.handleLonPropertyChange.bind(this);
-		this.handlePointPropertyChange = this.handlePointPropertyChange.bind(this);
-		this.handleTooltipPropertyChange = this.handleTooltipPropertyChange.bind(this);
-		this.handleLimitChange = this.handleLimitChange.bind(this);
-		this.handleColorChange = this.handleColorChange.bind(this);
-		this.handleRenderingChange = this.handleRenderingChange.bind(this);
-		this.handleRadiusChange = this.handleRadiusChange.bind(this);
-		this.handleCypherChange = this.handleCypherChange.bind(this);
-		this.handleSpatialLayerChanged = this.handleSpatialLayerChanged.bind(this);
+  const updateState = (update) => {
+    const updatedState = { ...state, ...update };
+    setState(updatedState);
 
-	};
+    return updatedState;
+  }
+
+  React.useEffect(() => {
+    const nodes = getNodes();
+    const propertyNames = getPropertyNames(state.nodeLabels);
+    const spatialLayers = getSpatialLayers();
+
+    updateState({ nodes, propertyNames, spatialLayers })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const getSpatialLayers = async () => {
+    const { status, error, result:spatialLayers } = await neo4jService.getSpatialLayers();
+
+    if (status === 200 && spatialLayers !== undefined) {
+      return spatialLayers
+    } else {
+      // TODO: Add Error UX. This should probably block creating/updating layer
+      console.log(status, error);
+      return [];
+    }
+  };
+
+  const getNodes = async () => {
+    // This will be updated quite often, is that what we want?
+    const { status, error, result:nodes } = await neo4jService.getNodeLabels();
+
+    if (status === 200 && nodes !== undefined) {
+      return nodes
+    } else {
+      // TODO: Add Error UX. This should probably block creating/updating layer
+      console.log(status, error);
+      return;
+    }
+  };
+
+  const getPropertyNames = async (nodeLabels) => {
+    const { status, error, result:propertyNames } = await neo4jService.getProperties(getNodeFilter(nodeLabels));
+
+    if (status === 200 && propertyNames !== undefined) {
+      const defaultNoTooltip = { value: "", label: "" };
+
+      return [...propertyNames, defaultNoTooltip];
+    } else {
+      // TODO: Add Error UX. This should probably block creating/updating layer
+      console.log(status, error);
+      return [];
+    }
+  };
+
+  /**
+   * Compute the map bounds based on proposaed state data
+   * TODO: delegate this job to leaflet
+   */
+  const getBounds = (data) => {
+    let minLat = Number.MAX_VALUE;
+    let maxLat = -Number.MAX_VALUE;
+    let minLon = Number.MAX_VALUE;
+    let maxLon = -Number.MAX_VALUE;
+
+    if (data.length > 0) {
+      data.map((item,) => {
+        let lat = item.pos[0];
+        let lon = item.pos[1];
+        if (lat > maxLat) {
+        maxLat = lat;
+        }
+        if (lat < minLat) {
+        minLat = lat;
+        }
+        if (lon > maxLon) {
+        maxLon = lon;
+        }
+        if (lon < minLon) {
+        minLon = lon;
+        }
+        return undefined;
+      });
+    }
+
+    return [[minLat, minLon], [maxLat, maxLon]];
+  };
+
+  const getNodeFilter = (nodeLabels) => {
+    let filter = '';
+    // filter wanted node labels
+    // TODO: Revisit the sub query generator below
+    if (nodeLabels && nodeLabels.length > 0) {
+      let sub_q = "(false";
+      nodeLabels.forEach((value,) => {
+        let lab = value.label;
+        sub_q += ` OR n:${lab}`;
+      });
+      sub_q += ")";
+      filter += "\nAND " + sub_q;
+    }
+    return filter;
+  };
 
 
-	componentDidMount() {
-		// list of available nodes
-		this.getNodes();
-		this.getPropertyNames();
-		this.hasSpatialPlugin();
-		this.getSpatialLayers();
-	}
+  const getSpatialQuery = () => {
+    let query = `CALL spatial.layer('${state.spatialLayer.value}') YIELD node `;
+    query += "WITH node ";
+    query += "MATCH (node)-[:RTREE_ROOT]-()-[:RTREE_CHILD*1..10]->()-[:RTREE_REFERENCE]-(n) ";
+    query += "WHERE n.point.srid = 4326 ";
+    query += "RETURN n.point.x as longitude, n.point.y as latitude ";
+    if (state.tooltipProperty.value !== '')
+      query += `, n.${state.tooltipProperty.value} as tooltip `;
+    if (state.limit)
+      query += `\nLIMIT ${state.limit}`;
+    return query;
+  };
 
 
-	updateBounds = () => {
-		/* Compute the map bounds based on `this.state.data`
-         */
-		let arr = this.state.data || [];
-		// TODO: delegate this job to leaflet
-		let minLat = Number.MAX_VALUE;
-		let maxLat = -Number.MAX_VALUE;
-		let minLon = Number.MAX_VALUE;
-		let maxLon = -Number.MAX_VALUE;
-		if (arr.length > 0) {
-			arr.map((item,) => {
-				let lat = item.pos[0];
-				let lon = item.pos[1];
-				if (lat > maxLat) {
-					maxLat = lat;
-				}
-				if (lat < minLat) {
-					minLat = lat;
-				}
-				if (lon > maxLon) {
-					maxLon = lon;
-				}
-				if (lon < minLon) {
-					minLon = lon;
-				}
-				return undefined;
-			});
-		}
-		let bounds = [[minLat, minLon], [maxLat, maxLon]];
-		this.setState({ bounds });
-
-		// TODO: Should ths really have a side effect of creating / updating the layer?
-		// The call to create / update layer should be explicit, from user intent
-
-		// this.setState({bounds: bounds}, function () {
-		// 	this.props.updateLayer(this.state);
-		// });
-	};
-
-
-	getCypherQuery = () => {
-		// TODO: check that the query is valid
-		return this.state.cypher;
-	};
-
-
-	getNodeFilter() {
-		let filter = '';
-		// filter wanted node labels
-		if (this.state.nodeLabel !== null && this.state.nodeLabel.length > 0) {
-			let sub_q = "(false";
-			this.state.nodeLabel.forEach((value,) => {
-				let lab = value.label;
-				sub_q += ` OR n:${lab}`;
-			});
-			sub_q += ")";
-			filter += "\nAND " + sub_q;
-		}
-		return filter;
-	};
-
-
-	getSpatialQuery() {
-		let query = `CALL spatial.layer('${this.state.spatialLayer.value}') YIELD node `;
-		query += "WITH node ";
-		query += "MATCH (node)-[:RTREE_ROOT]-()-[:RTREE_CHILD*1..10]->()-[:RTREE_REFERENCE]-(n) ";
-		query += "WHERE n.point.srid = 4326 ";
-		query += "RETURN n.point.x as longitude, n.point.y as latitude ";
-		if (this.state.tooltipProperty.value !== '')
-			query += `, n.${this.state.tooltipProperty.value} as tooltip `;
-		if (this.state.limit)
-			query += `\nLIMIT ${this.state.limit}`;
-		return query;
-	};
-
-
-	getQuery() {
+  const getQuery = () => {
 		/*If layerType==cypher, query is inside the CypherEditor,
            otherwise, we need to build the query manually.
          */
-		if (this.state.layerType === LAYER_TYPE_CYPHER)
-			return this.getCypherQuery();
+    if (state.layerType === LAYER_TYPE_CYPHER)
+      return getCypherQuery();
 
-		if (this.state.layerType === LAYER_TYPE_SPATIAL)
-			return this.getSpatialQuery();
+    if (state.layerType === LAYER_TYPE_SPATIAL)
+      return getSpatialQuery();
 
-		// lat lon query
-		// TODO: improve this method...
-		let query = 'MATCH (n) WHERE true';
-		// filter wanted node labels
-		query += this.getNodeFilter();
-		// filter out nodes with null latitude or longitude
-		if (this.state.layerType === LAYER_TYPE_LATLON) {
-			query += `\nAND exists(n.${this.state.latitudeProperty.value}) AND exists(n.${this.state.longitudeProperty.value})`;
-			// return latitude, longitude
-			query += `\nRETURN n.${this.state.latitudeProperty.value} as latitude, n.${this.state.longitudeProperty.value} as longitude`;
-		} else if (this.state.layerType === LAYER_TYPE_POINT) {
-			query += `\nAND exists(n.${this.state.pointProperty.value})`;
-			// return latitude, longitude
-			query += `\nRETURN n.${this.state.pointProperty.value}.y as latitude, n.${this.state.pointProperty.value}.x as longitude`;
-		}
+    // lat lon query
+    // TODO: improve this method...
+    let query = 'MATCH (n) WHERE true';
+    // filter wanted node labels
+    query += getNodeFilter(state.nodeLabels);
+    // filter out nodes with null latitude or longitude
+    if (state.layerType === LAYER_TYPE_LATLON) {
+      query += `\nAND exists(n.${state.latitudeProperty.value}) AND exists(n.${state.longitudeProperty.value})`;
+      // return latitude, longitude
+      query += `\nRETURN n.${state.latitudeProperty.value} as latitude, n.${state.longitudeProperty.value} as longitude`;
+    } else if (state.layerType === LAYER_TYPE_POINT) {
+      query += `\nAND exists(n.${state.pointProperty.value})`;
+      // return latitude, longitude
+      query += `\nRETURN n.${state.pointProperty.value}.y as latitude, n.${state.pointProperty.value}.x as longitude`;
+    }
 
-		// if tooltip is not null, also return tooltip
-		if (this.state.tooltipProperty.value !== '')
-			query += `, n.${this.state.tooltipProperty.value} as tooltip`;
+    // if tooltip is not null, also return tooltip
+    if (state.tooltipProperty.value !== '')
+      query += `, n.${state.tooltipProperty.value} as tooltip`;
 
-		// TODO: is that really needed???
-		// limit the number of points to avoid browser crash...
-		if (this.state.limit)
-			query += `\nLIMIT ${this.state.limit}`;
+    // TODO: is that really needed???
+    // limit the number of points to avoid browser crash...
+    if (state.limit)
+      query += `\nLIMIT ${state.limit}`;
 
-		return query;
-	};
+    return query;
+  };
 
+  const handleNameChange = (e) => {
+    updateState({ name: e.target.value });
+  };
 
-	async updateData() {
-		const { status, error, result } = await neo4jService.getData( this.getQuery(), {});
+  const handleLimitChange = (e) => {
+    updateState({ limit: e.target.value });
+  };
 
-		if (status === 200 && result !== undefined) {
-			this.setState({ data: result }, function () {
-				this.updateBounds()
-			});
-		} else if (result) {
-			// TODO: Add Error UX. This should probably block creating/updating layer
-			console.log(error);
+  const handleLayerTypeChange = (e) => {
+    let old_type = state.layerType;
+    let new_type = e.target.value;
+    if (old_type === new_type) {
+      return;
+    }
+    if (new_type === LAYER_TYPE_CYPHER) {
+      updateState({ cypher: getQuery() });
+    } else if (old_type === LAYER_TYPE_CYPHER) {
+      if (
+        window.confirm(
+          'You will lose your cypher query, is that what you want?'
+        ) === false
+      ) {
+        return;
+      }
+      updateState({ cypher: "" });
+    }
+    updateState({ layerType: e.target.value });
+  };
 
-			let message = "Invalid cypher query.";
-			if (this.state.layerType !== LAYER_TYPE_CYPHER) {
-				message += "\nContact the development team";
-			} else {
-				message += "\nFix your query and try again";
-			}
-			message += "\n\n" + result;
+  const handleLatPropertyChange = (e) => {
+    updateState({ latitudeProperty: e });
+  };
 
-			// Deprecate alert in favor of a less jarring error UX
-			alert(message);
-		}
-	};
+  const handleLonPropertyChange = (e) => {
+    updateState({ longitudeProperty: e });
+  };
 
+  const handlePointPropertyChange = (e) => {
+    updateState({ pointProperty: e });
+  };
 
-	handleNameChange(e) {
-		this.setState({name: e.target.value});
-	};
+  const handleTooltipPropertyChange = (e) => {
+    updateState({ tooltipProperty: e });
+  };
 
+  const handleNodeLabelChange = (nodeLabel) => {
+    const propertyNames = getPropertyNames([nodeLabel]); // TODO: Clarify disticntion between `nodeLabel` and `nodeLabels` in state!
+    updateState({ nodeLabel, propertyNames });
+  };
 
-	handleLimitChange(e) {
-		this.setState({limit: e.target.value});
-	};
+  const handleColorChange = (color) => {
+    updateState({
+      color: color,
+    });
+  };
 
+  const handleSpatialLayerChanged = (e) => {
+    updateState({
+      spatialLayer: e,
+    });
+  };
 
-	handleLayerTypeChange(e) {
-		let old_type = this.state.layerType;
-		let new_type = e.target.value;
-		if (old_type === new_type) {
-			return;
-		}
-		if (new_type === LAYER_TYPE_CYPHER) {
-			this.setState({cypher: this.getQuery()});
-		} else if (old_type === LAYER_TYPE_CYPHER) {
-			if (
-				window.confirm(
-					'You will lose your cypher query, is that what you want?'
-				) === false
-			) {
-				return;
-			}
-			this.setState({cypher: ""});
-		}
-		this.setState({layerType: e.target.value});
-	};
+  const handleRenderingChange = (e) => {
+    updateState({ rendering: e.target.value });
+  };
 
+  const handleRadiusChange = (e) => {
+    updateState({ radius: parseFloat(e.target.value) });
+  };
 
-	handleLatPropertyChange(e) {
-		this.setState({latitudeProperty: e});
-	};
-
-
-	handleLonPropertyChange(e) {
-		this.setState({longitudeProperty: e});
-	};
-
-
-	handlePointPropertyChange(e) {
-		this.setState({pointProperty: e});
-	};
-
-
-	handleTooltipPropertyChange(e) {
-		this.setState({tooltipProperty: e});
-	};
-
-
-	handleNodeLabelChange(e) {
-		this.setState({nodeLabel: e}, function() {
-			this.getPropertyNames();
-		});
-	};
-
-
-	handleColorChange(color) {
-		this.setState({
-			color: color,
-		});
-	};
-
-
-	handleSpatialLayerChanged(e) {
-		this.setState({
-			spatialLayer: e,
-		});
-	};
-
-
-	handleRenderingChange(e) {
-		this.setState({rendering: e.target.value});
-	};
-
-
-	handleRadiusChange(e) {
-		this.setState({radius: parseFloat(e.target.value)});
-	};
-
-
-	handleCypherChange(e) {
-		this.setState({cypher: e});
-	};
+  const handleCypherChange = (e) => {
+    updateState({ cypher: e });
+  };
 
 	/**
 	 * Update an existing Layer.
 	 * Send data to parent which will propagate to the Map component
 	 */
-	updateLayer = async () => {
-		await this.updateData();
-		this.props.updateLayer(this.state);
-	};
+  const handleUpdateLayer = async () => {
+    const { status, error, result:data } = await neo4jService.getData(getQuery(), {});
+
+    if (status === 200 && data !== undefined) {
+      updateLayer(updateState({ data, bounds: getBounds(data) }));
+
+    } else {
+      // TODO: Add Error UX. This should probably block creating/updating layer
+      console.log(status, error);
+      alert(`Status: ${status}, ${error.message}. Update layer failed`);
+    }
+  };
 
 	/**
 	 * Create a new Layer.
 	 * Send data to parent which will propagate to the Map component
 	 */
-	createLayer = async () => {
-		await this.updateData();
-		// TODO: Create new ukey for layer
-		this.props.addLayer(this.state);
-	}
+  const handleCreateLayer = async () => {
+    const { status, error, result:data } = await neo4jService.getData(getQuery(), {});
+
+    if (status === 200 && data !== undefined) {
+      // TODO: Create new ukey for layer
+      addLayer(updateState({ data, bounds: getBounds(data) }));
+
+    } else {
+      // TODO: Add Error UX. This should probably block creating/updating layer
+      console.log(status, error);
+      alert(`Status: ${status}, ${error.message}. Create new layer failed`);
+    }
+  }
+
+  const handleDeleteLayer = () => {
+    if (
+      // TODO: Use controlled overlay UI
+      window.confirm(
+        `Delete layer ${state.name}? This action can not be undone.`
+      ) === false
+    ) {
+      return;
+    }
+
+    removeLayer(state.ukey);
+  };
+
+  const getCypherQuery = () => {
+    // TODO: check that the query is valid
+    return state.cypher;
+  };
+
+  const handleShowQuery = (event) => {
+    confirmAlert({
+      message: getQuery(),
+      buttons: [
+        {
+          label: 'OK',
+        }
+      ]
+    });
+    event.preventDefault();
+  };
+
+  const color = `rgba(${state.color.r}, ${state.color.g}, ${state.color.b}, ${state.color.a})`;
+
+  return (
+
+    <Card>
+
+      <Accordion.Toggle as={Card.Header} eventKey={state.ukey} >
+        <h3>{state.name}
+          <small hidden>({state.ukey})</small>
+          <span
+            hidden={state.rendering === RENDERING_HEATMAP}
+            style={{ background: color, float: 'right', height: '20px', width: '50px' }}>
+          </span>
+        </h3>
+      </Accordion.Toggle>
+
+      <Accordion.Collapse eventKey={state.ukey} >
+
+        <Card.Body>
+
+          <Form action="" >
+
+            <Form.Group controlId="formLayerName">
+              <Form.Label>Name</Form.Label>
+              <Form.Control
+                type="text"
+                className="form-control"
+                placeholder="Layer name"
+                defaultValue={state.name}
+                onChange={handleNameChange}
+                name="name"
+              />
+            </Form.Group>
 
 
-	deleteLayer = () => {
-		if (
-			window.confirm(
-				`Delete layer ${this.state.name}? This action can not be undone.`
-			) === false
-		) {
-			return;
-		}
+            <LayerTypeForm
+              state={state}
+              handleLayerTypeChange={handleLayerTypeChange}
+            />
 
-		this.props.removeLayer(this.state.ukey);
-	};
+            {
+              state.layerType === LAYER_TYPE_LATLON && (
+                <LatLonLayerForm
+                  state={state}
+                  handleNodeLabelChange={handleNodeLabelChange}
+                  handleLatPropertyChange={handleLatPropertyChange}
+                  handleLonPropertyChange={handleLonPropertyChange}
+                  handleTooltipPropertyChange={handleTooltipPropertyChange}
+                  handleLimitChange={handleLimitChange}
+                />
+              )
+            }
+            {
+              state.layerType === LAYER_TYPE_POINT && (
+                <PointLayerForm
+                  state={state}
+                  handleNodeLabelChange={handleNodeLabelChange}
+                  handleTooltipPropertyChange={handleTooltipPropertyChange}
+                  handlePointPropertyChange={handlePointPropertyChange}
+                  handleLimitChange={handleLimitChange}
+                />
+              )
+            }
+            {
+              state.layerType === LAYER_TYPE_SPATIAL && (
+                <SpatialLayerForm
+                  state={state}
+                  handleTooltipPropertyChange={handleTooltipPropertyChange}
+                  handleSpatialLayerChanged={handleSpatialLayerChanged}
+                />
+              )
+            }
+            {
+              state.layerType === LAYER_TYPE_CYPHER && (
+                <CypherLayerForm
+                  state={state}
+                  handleCypherChange={handleCypherChange}
+                />
+              )
+            }
 
+            <MapRenderingForm
+              state={state}
+              handleRenderingChange={handleRenderingChange}
+              handleColorChange={handleColorChange}
+              handleRadiusChange={handleRadiusChange}
+            />
 
-	showQuery(event) {
-		confirmAlert({
-			message: this.getQuery(),
-			buttons: [
-				{
-					label: 'OK',
-				}
-			]
-		});
-		event.preventDefault();
-	};
+            {state.ukey !== NEW_LAYER.ukey && (
+              <Button variant="danger" onClick={handleDeleteLayer} hidden={layer === undefined}>
+                Delete Layer
+              </Button>
+            )}
 
+            <Button variant="info" onClick={handleShowQuery} hidden={state.layerType === LAYER_TYPE_CYPHER}>
+              Show query
+						</Button>
 
-	async hasSpatialPlugin() {
-		const { status, error, result } = await neo4jService.hasSpatial();
+            <Button variant="success" onClick={handleUpdateLayer} >
+              Update Layer
+						</Button>
 
-		if (status === 200 && result !== undefined) {
-			this.setState({	hasSpatialPlugin: result });
-		} else {
-			// TODO: Add Error UX. This should probably block creating/updating layer
-			console.log(error);
-		}
+            <Button variant="success" onClick={handleCreateLayer} >
+              Create New Layer
+						</Button>
 
-	};
+          </Form>
+        </Card.Body>
 
+      </Accordion.Collapse>
 
-	async getNodes() {
-		/*This will be updated quite often,
-           is that what we want?
-         */
-		const { status, error, result } = await neo4jService.getNodeLabels();
-		
-		if (status === 200 && result !== undefined) {
-			this.setState({	nodes: result });
-		} else {
-			// TODO: Add Error UX. This should probably block creating/updating layer
-			console.log(error);
-		}
-	};
+    </Card>
 
-
-	async getPropertyNames() {
-		const { status, error, result } = await neo4jService.getProperties( this.getNodeFilter());
-
-		if (status === 200 && result !== undefined) {
-			const defaultNoTooltip = {value: "", label: ""};
-			this.setState({ propertyNames: [...result, defaultNoTooltip] });
-		} else {
-			// TODO: Add Error UX. This should probably block creating/updating layer
-			console.log(error);
-		}
-	};
-
-
-	async getSpatialLayers() {
-		const { status, error, result } = await neo4jService.getSpatialLayers();
-
-		if (status === 200 && result !== undefined) {
-			this.setState({ spatialLayers: result });
-		} else {
-			// TODO: Add Error UX. This should probably block creating/updating layer
-			console.log(error);
-		}
-	};
-
-
-	renderConfigSpatial() {
-		if (this.state.layerType !== LAYER_TYPE_SPATIAL)
-			return "";
-
-		return (
-			<div>
-				<Form.Group controlId="formSpatialLayer">
-					<Form.Label>Spatial layer</Form.Label>
-					<Select
-						className="form-control select"
-						options={this.state.spatialLayers}
-						onChange={this.handleSpatialLayerChanged}
-						isMulti={false}
-						defaultValue={this.state.spatialLayer}
-						name="nodeLabel"
-					/>
-				</Form.Group>
-				<Form.Group
-					controlId="formTooltipProperty"
-					hidden={this.state.rendering !== RENDERING_MARKERS && this.state.rendering !== RENDERING_CLUSTERS}
-					name="formgroupTooltip"
-				>
-					<Form.Label>Tooltip property</Form.Label>
-					<Select
-						className="form-control select"
-						options={this.state.propertyNames}
-						onChange={this.handleTooltipPropertyChange}
-						isMulti={false}
-						defaultValue={this.state.tooltipProperty.value}
-						name="tooltipProperty"
-					/>
-				</Form.Group>
-			</div>
-		)
-	};
-
-
-	renderConfigCypher() {
-		/*If layerType==cypher, then we display the CypherEditor
-         */
-		if (this.state.layerType !== LAYER_TYPE_CYPHER)
-			return "";
-		return (
-			<Form.Group controlId="formCypher">
-				<Form.Label>Query</Form.Label>
-				<Form.Text>
-					<p>Checkout <a href="https://github.com/stellasia/neomap/wiki" target="_blank" rel="noopener noreferrer" >the documentation</a> (Ctrl+SPACE for autocomplete)</p>
-					<p className="font-italic">Be careful, the browser can only display a limited number of nodes (less than a few 10000)</p>
-				</Form.Text>
-				<CypherEditor
-					value={this.state.cypher}
-					onValueChange={this.handleCypherChange}
-					name="cypher"
-				/>
-			</Form.Group>
-		)
-	};
-
-
-	renderConfigPoint() {
-		if (this.state.layerType !== LAYER_TYPE_POINT)
-			return "";
-		return (
-			<div>
-				<Form.Group controlId="formNodeLabel">
-					<Form.Label>Node label(s)</Form.Label>
-					<Select
-						className="form-control select"
-						options={this.state.nodes}
-						onChange={this.handleNodeLabelChange}
-						isMulti={true}
-						defaultValue={this.state.nodeLabel}
-						name="nodeLabel"
-					/>
-				</Form.Group>
-
-				<Form.Group controlId="formPointProperty">
-					<Form.Label>Point property</Form.Label>
-					<Select
-						className="form-control select"
-						options={this.state.propertyNames}
-						onChange={this.handlePointPropertyChange}
-						isMulti={false}
-						defaultValue={this.state.pointProperty}
-						name="pointProperty"
-					/>
-				</Form.Group>
-
-				<Form.Group
-					controlId="formTooltipProperty"
-					hidden={this.state.rendering !== RENDERING_MARKERS && this.state.rendering !== RENDERING_CLUSTERS}
-					name="formgroupTooltip"
-				>
-					<Form.Label>Tooltip property</Form.Label>
-					<Select
-						className="form-control select"
-						options={this.state.propertyNames}
-						onChange={this.handleTooltipPropertyChange}
-						isMulti={false}
-						defaultValue={this.state.tooltipProperty}
-						name="tooltipProperty"
-					/>
-				</Form.Group>
-
-				<Form.Group controlId="formLimit">
-					<Form.Label>Max. nodes</Form.Label>
-					<Form.Control
-						type="text"
-						className="form-control"
-						placeholder="limit"
-						defaultValue={this.state.limit}
-						onChange={this.handleLimitChange}
-						name="limit"
-					/>
-				</Form.Group>
-			</div>
-		)
-	}
-
-
-	renderConfigDefault() {
-		/*If layerType==latlon, then we display the elements to choose
-           node labels and properties to be used.
-         */
-		if (this.state.layerType !== LAYER_TYPE_LATLON)
-			return "";
-
-		return (
-			<div>
-				<Form.Group controlId="formNodeLabel">
-					<Form.Label>Node label(s)</Form.Label>
-					<Select
-						className="form-control select"
-						options={this.state.nodes}
-						onChange={this.handleNodeLabelChange}
-						isMulti={true}
-						defaultValue={this.state.nodeLabel}
-						name="nodeLabel"
-					/>
-				</Form.Group>
-
-				<Form.Group controlId="formLatitudeProperty">
-					<Form.Label>Latitude property</Form.Label>
-					<Select
-						className="form-control select"
-						options={this.state.propertyNames}
-						onChange={this.handleLatPropertyChange}
-						isMulti={false}
-						defaultValue={this.state.latitudeProperty}
-						name="latitudeProperty"
-					/>
-				</Form.Group>
-
-				<Form.Group controlId="formLongitudeProperty">
-					<Form.Label>Longitude property</Form.Label>
-					<Select
-						className="form-control select"
-						options={this.state.propertyNames}
-						onChange={this.handleLonPropertyChange}
-						isMulti={false}
-						defaultValue={this.state.longitudeProperty}
-						name="longitudeProperty"
-					/>
-				</Form.Group>
-
-				<Form.Group
-					controlId="formTooltipProperty"
-					hidden={this.state.rendering !== RENDERING_MARKERS  && this.state.rendering !== RENDERING_CLUSTERS}
-					name="formgroupTooltip"
-				>
-					<Form.Label>Tooltip property</Form.Label>
-					<Select
-						className="form-control select"
-						options={this.state.propertyNames}
-						onChange={this.handleTooltipPropertyChange}
-						isMulti={false}
-						defaultValue={this.state.tooltipProperty}
-						name="tooltipProperty"
-					/>
-				</Form.Group>
-
-				<Form.Group controlId="formLimit">
-					<Form.Label>Max. nodes</Form.Label>
-					<Form.Control
-						type="text"
-						className="form-control"
-						placeholder="limit"
-						defaultValue={this.state.limit}
-						onChange={this.handleLimitChange}
-						name="limit"
-					/>
-				</Form.Group>
-			</div>
-		)
-	};
-
-
-	render() {
-		let color = `rgba(${this.state.color.r}, ${this.state.color.g}, ${this.state.color.b}, ${this.state.color.a})`;
-
-		return (
-
-			<Card>
-
-				<Accordion.Toggle as={Card.Header} eventKey={this.state.ukey} >
-					<h3>{this.state.name}
-						<small hidden>({this.state.ukey})</small>
-						<span
-							hidden={ this.state.rendering === RENDERING_HEATMAP }
-							style={{background: color, float: 'right', height: '20px', width: '50px'}}>
-						</span>
-					</h3>
-				</Accordion.Toggle>
-
-				<Accordion.Collapse eventKey={this.state.ukey} >
-
-					<Card.Body>
-
-						<Form action="" >
-
-							<Form.Group controlId="formLayerName">
-								<Form.Label>Name</Form.Label>
-								<Form.Control
-									type="text"
-									className="form-control"
-									placeholder="Layer name"
-									defaultValue={this.state.name}
-									onChange={this.handleNameChange}
-									name="name"
-								/>
-							</Form.Group>
-
-
-							<h4>{'  > Data'}</h4>
-
-							<Form.Group controlId="formLayerType">
-								<Form.Label>Layer type</Form.Label>
-								<Form.Check
-									type="radio"
-									id={LAYER_TYPE_LATLON}
-									label={"Lat/Lon"}
-									value={LAYER_TYPE_LATLON}
-									checked={this.state.layerType === LAYER_TYPE_LATLON}
-									onChange={this.handleLayerTypeChange}
-									name="layerTypeLatLon"
-								/>
-								<Form.Check
-									type="radio"
-									id={LAYER_TYPE_POINT}
-									label={"Point (neo4j built-in)"}
-									value={LAYER_TYPE_POINT}
-									checked={this.state.layerType === LAYER_TYPE_POINT}
-									onChange={this.handleLayerTypeChange}
-									name="layerTypePoint"
-								/>
-								<Form.Check
-									type="radio"
-									id={LAYER_TYPE_SPATIAL}
-									label={"Point (neo4j-spatial plugin)"}
-									value={LAYER_TYPE_SPATIAL}
-									checked={this.state.layerType === LAYER_TYPE_SPATIAL}
-									onChange={this.handleLayerTypeChange}
-									name="layerTypeSpatial"
-									disabled={!this.state.hasSpatialPlugin}
-									className="beta"
-								/>
-								<Form.Check
-									type="radio"
-									id={LAYER_TYPE_CYPHER}
-									label={"Advanced (cypher query)"}
-									value={LAYER_TYPE_CYPHER}
-									checked={this.state.layerType === LAYER_TYPE_CYPHER}
-									onChange={this.handleLayerTypeChange}
-									name="layerTypeCypher"
-								/>
-							</Form.Group>
-
-							{this.renderConfigDefault()}
-							{this.renderConfigPoint()}
-							{this.renderConfigCypher()}
-							{this.renderConfigSpatial()}
-
-							<h4>{' > Map rendering'}</h4>
-
-							<Form.Group controlId="formRendering">
-								<Form.Label>Rendering</Form.Label>
-								<Form.Check
-									type="radio"
-									id={RENDERING_MARKERS}
-									label={"Markers"}
-									value={RENDERING_MARKERS}
-									checked={this.state.rendering === RENDERING_MARKERS}
-									onChange={this.handleRenderingChange}
-									name="mapRenderingMarker"
-								/>
-								<Form.Check
-									type="radio"
-									id={RENDERING_POLYLINE}
-									label={"Polyline"}
-									value={RENDERING_POLYLINE}
-									checked={this.state.rendering === RENDERING_POLYLINE}
-									onChange={this.handleRenderingChange}
-									name="mapRenderingPolyline"
-								/>
-								<Form.Check
-									type="radio"
-									id={RENDERING_HEATMAP}
-									label={"Heatmap"}
-									value={RENDERING_HEATMAP}
-									checked={this.state.rendering === RENDERING_HEATMAP}
-									onChange={this.handleRenderingChange}
-									name="mapRenderingHeatmap"
-									className="beta"
-								/>
-								<Form.Check
-									type="radio"
-									id={RENDERING_CLUSTERS}
-									label={"Clusters"}
-									value={RENDERING_CLUSTERS}
-									checked={this.state.rendering === RENDERING_CLUSTERS}
-									onChange={this.handleRenderingChange}
-									name="mapRenderingCluster"
-									className="beta"
-								/>
-							</Form.Group>
-
-							<Form.Group controlId="formColor"
-										hidden={this.state.rendering === RENDERING_HEATMAP}
-										name="formgroupColor">
-								<Form.Label>Color</Form.Label>
-								<ColorPicker
-									color={ this.state.color }
-									handleColorChange={this.handleColorChange}
-								/>
-							</Form.Group>
-
-							<Form.Group controlId="formRadius" hidden={this.state.rendering !== RENDERING_HEATMAP} >
-								<Form.Label>Heatmap radius</Form.Label>
-								<Form.Control
-									type="range"
-									min="1"
-									max="100"
-									defaultValue={this.state.radius}
-									className="slider"
-									onChange={this.handleRadiusChange}
-									name="radius"
-								/>
-							</Form.Group>
-
-
-							{this.state.ukey !== NEW_LAYER.ukey && (
-								<Button variant="danger" type="submit"  onClick={this.deleteLayer} hidden={this.props.layer === undefined}>
-									Delete Layer
-								</Button>
-							)}
-
-							<Button variant="info" type="submit"  onClick={this.showQuery} hidden={this.state.layerType === LAYER_TYPE_CYPHER}>
-								Show query
-							</Button>
-
-							<Button variant="success" type="submit"  onClick={this.updateLayer} >
-								Update Layer
-							</Button>
-
-							<Button variant="success" type="submit"  onClick={this.createLayer} >
-								Create New Layer
-							</Button>
-
-						</Form>
-					</Card.Body>
-
-				</Accordion.Collapse>
-
-			</Card>
-
-		);
-	}
-}
+  );
+});
