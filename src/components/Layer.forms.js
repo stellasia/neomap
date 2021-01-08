@@ -51,7 +51,11 @@ export const LayerTypeForm = React.memo(({
           checked={state.layerType === LAYER_TYPE_SPATIAL}
           onChange={handleLayerTypeChange}
           name="layerTypeSpatial"
-          disabled={!state.hasSpatialPlugin}
+          /**
+           * TODO: Should we disable this radio?
+           * Removing disabled flag on this control while we figure out a better way of flighting beta features
+           */
+          // disabled={state.spatialLayers.length < 1}
           className="beta"
         />
         <Form.Check

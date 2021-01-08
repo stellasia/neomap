@@ -45,40 +45,21 @@ export const Layer = React.memo(({ layer, addLayer, updateLayer, removeLayer }) 
   React.useEffect(() => {
     const nodes = getNodes();
     const propertyNames = getPropertyNames(state.nodeLabels);
-    const hasSpatialPlugin = checkSpatialPlugin();
+    const spatialLayers = getSpatialLayers();
 
-    updateState({ nodes, propertyNames, hasSpatialPlugin })
+    updateState({ nodes, propertyNames, spatialLayers })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  React.useEffect(() => {
-    if (state.hasSpatialPlugin) {
-      getSpatialLayers();
-    }
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.hasSpatialPlugin ])
-
-  const checkSpatialPlugin = async () => {
-    const { status, error, result:hasSpatialPlugin } = await neo4jService.hasSpatial();
-
-    if (status === 200 && hasSpatialPlugin !== undefined) {
-      return hasSpatialPlugin;
-    } else {
-      // TODO: Add Error UX. This should probably block creating/updating layer
-      console.log(error);
-      return false;
-    }
-  };
 
   const getSpatialLayers = async () => {
     const { status, error, result:spatialLayers } = await neo4jService.getSpatialLayers();
 
     if (status === 200 && spatialLayers !== undefined) {
-      updateState({ spatialLayers });
+      return spatialLayers
     } else {
       // TODO: Add Error UX. This should probably block creating/updating layer
-      console.log(error);
+      console.log(status, error);
+      return [];
     }
   };
 
@@ -90,7 +71,7 @@ export const Layer = React.memo(({ layer, addLayer, updateLayer, removeLayer }) 
       return nodes
     } else {
       // TODO: Add Error UX. This should probably block creating/updating layer
-      console.log(error);
+      console.log(status, error);
       return;
     }
   };
@@ -104,7 +85,7 @@ export const Layer = React.memo(({ layer, addLayer, updateLayer, removeLayer }) 
       return [...propertyNames, defaultNoTooltip];
     } else {
       // TODO: Add Error UX. This should probably block creating/updating layer
-      console.log(error);
+      console.log(status, error);
       return [];
     }
   };
@@ -146,7 +127,7 @@ export const Layer = React.memo(({ layer, addLayer, updateLayer, removeLayer }) 
     let filter = '';
     // filter wanted node labels
     // TODO: Revisit the sub query generator below
-    if (nodeLabels !== null && nodeLabels.length > 0) {
+    if (nodeLabels && nodeLabels.length > 0) {
       let sub_q = "(false";
       nodeLabels.forEach((value,) => {
         let lab = value.label;
@@ -315,7 +296,7 @@ export const Layer = React.memo(({ layer, addLayer, updateLayer, removeLayer }) 
 
     } else {
       // TODO: Add Error UX. This should probably block creating/updating layer
-      console.log(error, result);
+      console.log(status, error);
       alert(`Status: ${status}, ${error.message}. Create new layer failed`);
     }
   }

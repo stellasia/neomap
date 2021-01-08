@@ -14,7 +14,6 @@ jest.mock('../services/neo4jService', () => {
     neo4jService: {
       getNodeLabels: jest.fn(() => Promise.resolve({ status: 200, result: [] })),
       getProperties: jest.fn(( _nodeFilter) => Promise.resolve({ status: 200, result: [] })),
-      hasSpatial: jest.fn(() => Promise.resolve({ status: 200, result: false })),
       getSpatialLayers: jest.fn(() => Promise.resolve({ status: 200, result: [] })),
       getData: jest.fn((_query, _params) => Promise.resolve({ status: 200, result: [] }))
     }
@@ -77,7 +76,6 @@ describe('Test Layer component', () => {
     expect(latLonRadio).toBeChecked();
     expect(builtInPointRadio).not.toBeChecked();
     expect(spatialPluginPointRadio).not.toBeChecked();
-    expect(spatialPluginPointRadio).toBeDisabled();
     expect(cypherQueryRadio).not.toBeChecked();
 
     act(() => {
@@ -100,13 +98,13 @@ describe('Test Layer component', () => {
     // TODO: Assert rendering config spatial
 
     act(() => {
-      // fireEvent.click(cypherQueryRadio); // FIXME
+      fireEvent.click(cypherQueryRadio); // FIXME
     });
 
-    // expect(latLonRadio).not.toBeChecked();
-    // expect(builtInPointRadio).not.toBeChecked();
-    // expect(spatialPluginPointRadio).not.toBeChecked();
-    // expect(cypherQueryRadio).toBeChecked();
+    expect(latLonRadio).not.toBeChecked();
+    expect(builtInPointRadio).not.toBeChecked();
+    expect(spatialPluginPointRadio).not.toBeChecked();
+    expect(cypherQueryRadio).toBeChecked();
 
     // TODO: Assert rendering config cypher
   });

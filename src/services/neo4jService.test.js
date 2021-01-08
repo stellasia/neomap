@@ -77,20 +77,12 @@ describe('neo4jService tests', () => {
     expect(properties).toEqual({ status: 200, result: testProperties });
   });
 
-  it('checks for spatial', async () => {
-    // Act
-    const hasSpatial = await neo4jService.hasSpatial()
-
-    // Assert
-    expect(hasSpatial).toEqual({ status: 200, result: true });
-  });
-
   it('gets spatial layers', async () => {
     // Arrange
     const testSpatialLayers = [
       {
         value: 't-layer',
-        label: 't-layer'
+        label: 't-label'
       }
     ]
 
