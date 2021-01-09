@@ -743,7 +743,7 @@ export class Layer extends Component {
 
 
 							{this.state.ukey !== NEW_LAYER.ukey && (
-								<Button variant="danger" type="submit"  onClick={this.deleteLayer} hidden={this.props.layer === undefined}>
+								<Button variant="danger" onClick={this.deleteLayer} hidden={this.props.layer === undefined}>
 									Delete Layer
 								</Button>
 							)}

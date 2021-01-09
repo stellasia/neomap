@@ -165,8 +165,8 @@ export const Map = React.memo(({layers}) => {
 			// Remove deleted layers from the map and the layer control
 			Object.entries(currentMapOverlays).forEach((name, overlay) => {
 				if (!newMapOverlays[name]) {
-					overlay.remove(map);
-					overlay.remove(layerControl);
+					map.remove(overlay);
+					layerControl.remove(overlay);
 				}
 			});
 
