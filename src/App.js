@@ -16,7 +16,7 @@ export const App = React.memo(() => {
 	 * 
 	 * TODO: FIXME! Redesign neo4jService instansiation with full consideration for global window dependency
 	 */
-	neo4jService;
+	neo4jService._getNeo4jDriver();
 
 	const [layers, setLayers] = React.useState([]);
 

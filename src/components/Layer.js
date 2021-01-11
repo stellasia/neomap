@@ -11,6 +11,7 @@ import {CypherEditor} from "graph-app-kit/components/Editor"
 import {confirmAlert} from 'react-confirm-alert'; // Import
 import { neo4jService } from '../services/neo4jService'
 import { ColorPicker } from "./ColorPicker";
+import { generateRandomName, generateUkeyFromName } from './utils';
 
 
 import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
@@ -308,8 +309,17 @@ export class Layer extends Component {
 	 */
 	createLayer = async () => {
 		await this.updateData();
-		// TODO: Create new ukey for layer
-		this.props.addLayer(this.state);
+		const proposedLayer = {...this.state};
+
+		if (proposedLayer.name === NEW_LAYER.name) {
+			// No name was provided, generate a new name
+			proposedLayer.name = generateRandomName();
+		}
+
+		// Generate new ukey
+		proposedLayer.ukey = generateUkeyFromName(proposedLayer.name);
+
+		this.props.addLayer(proposedLayer);
 	}
 
 
@@ -742,23 +752,27 @@ export class Layer extends Component {
 							</Form.Group>
 
 
-							{this.state.ukey !== NEW_LAYER.ukey && (
-								<Button variant="danger" onClick={this.deleteLayer} hidden={this.props.layer === undefined}>
-									Delete Layer
+							<div class="row">
+								<Button variant="info" onClick={this.showQuery} hidden={this.state.layerType === LAYER_TYPE_CYPHER}>
+									Show query
 								</Button>
-							)}
 
-							<Button variant="info" onClick={this.showQuery} hidden={this.state.layerType === LAYER_TYPE_CYPHER}>
-								Show query
-							</Button>
+								<Button variant="success" onClick={this.createLayer} >
+									Create New Layer
+								</Button>
 
-							<Button variant="success" onClick={this.updateLayer} >
-								Update Layer
-							</Button>
+								{this.state.ukey !== NEW_LAYER.ukey && (
+									<>
+										<Button variant="success" onClick={this.updateLayer} >
+											Update Layer
+										</Button>
 
-							<Button variant="success" onClick={this.createLayer} >
-								Create New Layer
-							</Button>
+										<Button variant="danger" onClick={this.deleteLayer} hidden={this.props.layer === undefined}>
+											Delete Layer
+										</Button>
+									</>
+								)}								
+							</div>
 
 						</Form>
 					</Card.Body>

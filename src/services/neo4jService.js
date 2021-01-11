@@ -1,13 +1,6 @@
 import { driver as createDriver, auth } from "neo4j-driver";
 
 class Neo4JService {
-  driver=undefined;
-
-  constructor() {
-    // Locate and reference neo4jDesktopApi driver on instance create
-    this._getNeo4jDriver();
-  }
-
   _getNeo4jDriver = async () => {
     if (!this.driver) {
       try {

@@ -17,6 +17,8 @@ export const Map = React.memo(({layers}) => {
 	const mapOverlaysRef = React.useRef({});
 	const layerControlRef = React.useRef(new L.control.layers([]));
 
+	const renderedBounds = React.useRef(new L.LatLngBounds());
+
 	React.useEffect(() => {
 		const mapElement = mapElementRef.current;
 
@@ -41,7 +43,7 @@ export const Map = React.memo(({layers}) => {
 		const layerControl = layerControlRef.current;
 
 		if (map) {
-			let globalBounds = new L.LatLngBounds();
+			let mapBounds = new L.LatLngBounds();
 
 			// On a new render pass, build new map overlays object,
 			// and replace the current map overlays object created on the last render pass
@@ -51,10 +53,10 @@ export const Map = React.memo(({layers}) => {
 			layers.forEach((layer) => {
 				const {name, bounds, rendering, data, radius, color } = layer;
 
-				const latLngBounds = new L.LatLngBounds(bounds);
+				const layerBounds = new L.LatLngBounds(bounds);
 
-				if (latLngBounds.isValid()) {
-					globalBounds.extend(latLngBounds);
+				if (layerBounds.isValid()) {
+					mapBounds.extend(layerBounds);
 				}
 
 				const rgbColor = `rgb(${color.r}, ${color.g}, ${color.b})`;
@@ -163,22 +165,26 @@ export const Map = React.memo(({layers}) => {
 			});
 
 			// Remove deleted layers from the map and the layer control
-			Object.entries(currentMapOverlays).forEach((name, overlay) => {
-				if (!newMapOverlays[name]) {
-					map.remove(overlay);
-					layerControl.remove(overlay);
+			try {
+				for (const [name, overlay] of Object.entries(currentMapOverlays)) {
+					if (!newMapOverlays[name]) {
+						map.removeLayer(overlay);
+						layerControl.remove(overlay);
+					}
 				}
-			});
+			} catch (error) {
+				console.log(error)
+			}
 
 			// Persist overlays for the next render pass
 			mapOverlaysRef.current = newMapOverlays;
 
-			// Zoom to bounds
-			if (!globalBounds.isValid()) {
-				globalBounds = new L.LatLngBounds([[90, -180], [-90, 180]]);
+			// Zoom to bounds if different
+			if (mapBounds.isValid() && !mapBounds.equals(renderedBounds.current)) {
+				map.flyToBounds(mapBounds);
+				renderedBounds.current = mapBounds;
 			}
 
-			map.flyToBounds(globalBounds);
 		}
 	}, [layers]);
 
