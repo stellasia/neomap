@@ -752,7 +752,7 @@ export class Layer extends Component {
 							</Form.Group>
 
 
-							<div class="row">
+							<div className="row">
 								<Button variant="info" onClick={this.showQuery} hidden={this.state.layerType === LAYER_TYPE_CYPHER}>
 									Show query
 								</Button>
