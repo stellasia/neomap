@@ -33,6 +33,24 @@ const renderNewLayer = () => {
   );
 }
 
+const testLayer1 = {
+  ...NEW_LAYER,
+  ukey: "tl1",
+  name: 'Test Layer 1'
+};
+
+const renderTestLayer = () => {
+  return render(
+    <Layer
+      key={testLayer1.ukey}
+      layer={testLayer1}
+      addLayer={mockAddLayer}
+      updateLayer={mockUpdateLayer}
+      removeLayer={mockRemoveLayer}
+    />
+  );
+}
+
 describe('Test Layer component', () => {
   it('Starts out in a collapsed accordion which expands on click', () => {
     const renderResult = renderNewLayer();
@@ -179,8 +197,18 @@ describe('Test Layer component', () => {
     expect(mockAddLayer).toHaveBeenCalledTimes(1);
   });
 
-  it('Has an `Update Layer` button that makes call to update current layer', async () => {
+  it('New layer has no `Update Layer` button', () => {
     const renderResult = renderNewLayer();
+    expect(renderResult.queryByText('Update Layer')).toBe(null);
+  });
+
+  it('New layer has no `Delete Layer` button', () => {
+    const renderResult = renderNewLayer();
+    expect(renderResult.queryByText('Delete Layer')).toBe(null);
+  });
+
+  it('Created layer has an `Update Layer` button that makes call to update current layer', async () => {
+    const renderResult = renderTestLayer();
     const updateLayerButton = renderResult.getByText('Update Layer');
 
     expect(updateLayerButton).toBeDefined();
@@ -192,28 +220,9 @@ describe('Test Layer component', () => {
     expect(mockUpdateLayer).toHaveBeenCalledTimes(1);
   });
 
-  it('New layer has no `Delete Layer` button', () => {
-    const renderResult = renderNewLayer();
-    expect(renderResult.queryByText('Delete Layer')).toBe(null);
-  });
-
-
   it('Created layer has a `Delete Layer` button that makes call to delete current layer', async () => {
-    const testLayer1 = {
-      ...NEW_LAYER,
-      ukey: "tl1",
-      name: 'Test Layer 1'
-    };
-
-    const deleteLayerButton = render(
-      <Layer
-        key={testLayer1.ukey}
-        layer={testLayer1}
-        addLayer={mockAddLayer}
-        updateLayer={mockUpdateLayer}
-        removeLayer={mockRemoveLayer}
-      />
-    ).queryByText('Delete Layer')
+    const renderResult = renderTestLayer();
+    const deleteLayerButton = renderResult.getByText('Delete Layer')
 
     expect(deleteLayerButton).toBeDefined();
 

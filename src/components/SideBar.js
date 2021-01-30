@@ -6,7 +6,7 @@ import { NEW_LAYER } from './constants';
 export const SideBar = React.memo(({ layers, addLayer, updateLayer, removeLayer }) => {
 
 	const renderLayers = () => {
-		return layers.map((layer) => {
+		return [...layers, NEW_LAYER].map((layer) => {
 			return (
 				<Layer
 					key={layer.ukey}
@@ -23,14 +23,6 @@ export const SideBar = React.memo(({ layers, addLayer, updateLayer, removeLayer 
 	return (
 		<Accordion>
 			{renderLayers()}
-			<Layer
-				key={NEW_LAYER.ukey}
-				data-id="new-layer"
-				layer={NEW_LAYER}
-				addLayer={addLayer}
-				updateLayer={updateLayer}
-				removeLayer={removeLayer}
-			/>
 		</Accordion>
 	)
 });
