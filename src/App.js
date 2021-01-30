@@ -3,10 +3,20 @@ import download from "downloadjs";
 import { Map } from "./components/Map";
 import { Menu } from "./components/Menu";
 import { SideBar } from "./components/SideBar";
+import { neo4jService } from './services/neo4jService'
 import "./App.css";
 
 
 export const App = React.memo(() => {
+	/**
+	 * Given the underlying neo4jDesktop drivers' dependency on global window context,
+	 * we need to import an instance here to the boot a service instance that reads
+	 * App.js window instance. The service is a singleton,
+	 * and subsequent windows will get the same instance with drivers created here.
+	 * 
+	 * TODO: FIXME! Redesign neo4jService instansiation with full consideration for global window dependency
+	 */
+	neo4jService._getNeo4jDriver();
 
 	const [layers, setLayers] = React.useState([]);
 
@@ -63,7 +73,7 @@ export const App = React.memo(() => {
 	return (
 		<div id="wrapper" className="row">
 			<div id="sidebar" className="col-md-4">
-				<Menu saveConfigToFile={saveConfigToFile} loadConfigFromFile={loadConfigFromFile} />
+				<Menu saveConfigToFile={saveConfigToFile} loadConfigFromFile={loadConfigFromFile}/>
 				<SideBar
 					layers={layers}
 					addLayer={addLayer}
@@ -78,5 +88,5 @@ export const App = React.memo(() => {
 				/>
 			</div>
 		</div>
-	);
+	)
 });
