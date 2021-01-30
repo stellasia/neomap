@@ -11,5 +11,6 @@ export function generateRandomName(){
 }
 
 export function generateUkeyFromName(name) {
-    return `${name.replace(/\s/g,'')}${getRandomInt(0,100)}`
+	let thisName = name || generateRandomName();
+    return `${thisName.replace(/\s/g,'')}${getRandomInt(0,100)}`
 }

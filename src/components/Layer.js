@@ -11,7 +11,7 @@ import {CypherEditor} from "graph-app-kit/components/Editor"
 import {confirmAlert} from 'react-confirm-alert'; // Import
 import { neo4jService } from '../services/neo4jService'
 import { ColorPicker } from "./ColorPicker";
-import { generateRandomName, generateUkeyFromName } from './utils';
+import { generateUkeyFromName } from './utils';
 
 
 import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
@@ -310,12 +310,6 @@ export class Layer extends Component {
 	createLayer = async () => {
 		await this.updateData();
 		const proposedLayer = {...this.state};
-
-		if (proposedLayer.name === NEW_LAYER.name) {
-			// No name was provided, generate a new name
-			proposedLayer.name = generateRandomName();
-		}
-
 		// Generate new ukey
 		proposedLayer.ukey = generateUkeyFromName(proposedLayer.name);
 
