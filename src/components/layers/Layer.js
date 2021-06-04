@@ -40,14 +40,15 @@ export const RENDERING_CLUSTERS = "clusters";
 const DEFAULT_LAYER = {
 	name: "New layer",
 	layerType: LAYER_TYPE_LATLON,
-	latitudeProperty: {value: "latitude", label: "latitude"},
-	longitudeProperty: {value: "longitude", label: "longitude"},
+	latitudeProperty: {value: "lat", label: "lat"},
+	longitudeProperty: {value: "lon", label: "lon"},
 	pointProperty: {value: "point", label: "point"},
 	tooltipProperty: {value: "", label: ""},
 	nodeLabel: [],
 	propertyNames: [],
 	spatialLayers: [],
 	data: [],
+	relations: [],
 	bounds: [],
 	color: {r: 0, g: 0, b: 255, a: 1},
 	limit: null,
@@ -100,6 +101,7 @@ export class UnconnectedLayer extends Component {
 		this.getPropertyNames();
 		this.hasSpatialPlugin();
 		this.getSpatialLayers();
+		this.getRelations();
 	}
 
 
@@ -210,9 +212,27 @@ export class UnconnectedLayer extends Component {
 		// limit the number of points to avoid browser crash...
 		if (this.state.limit)
 			query += `\nLIMIT ${this.state.limit}`;
-
+		console.log(query)
 		return query;
 	};
+
+	getRelations() {
+		const query = "match ()-[r]->() return r";
+		neo4jService.getRelationData(this.driver, query, {}).then( res => {
+			if (res.status === "ERROR") {
+				let message = "Invalid cypher query.";
+				if (this.state.layerType !== LAYER_TYPE_CYPHER) {
+					message += "\nContact the development team";
+				} else {
+					message += "\nFix your query and try again";
+				}
+				message += "\n\n" + res.result;
+				alert(message);
+			} else {
+				this.setState({relations: res.result}, () => console.log('yo', res.result));
+			}
+		});
+	}
 
 
 	updateData() {

@@ -162,6 +162,7 @@ export default {
               result: query,
             };
           }
+          console.log("NODES", response)
           response.records.forEach((record) => {
             let el = {
               pos: [record.get("latitude"), record.get("longitude")],
@@ -181,5 +182,39 @@ export default {
         .catch((error) => {
           return {status: "ERROR", result: error};
         });
+        
   },
+  getRelationData: async function (driver, query, params) {
+    const session = driver.session();
+    return await session
+        .run(query, params)
+        .then((response) => {
+          let res = [];
+          if (response.records === undefined || response.records.length === 0) {
+            alert("No result found, please check your query");
+            return {
+              status: "ERROR",
+              result: query,
+            };
+          }
+          response.records.forEach((record) => {
+            let el = {
+              nodes: [Number(record._fields[0].start), Number(record._fields[0].end)],
+            };
+            if (record.has("tooltip") && record.get("tooltip") !== null) {
+              // make sure tooltip is a string, otherwise leaflet is not happy AT ALL!
+              el["tooltip"] = record.get("tooltip").toString();
+            }
+            res.push(el);
+          });
+          session.close();
+          return {
+            status: "OK",
+            result: res,
+          };
+        })
+        .catch((error) => {
+          return {status: "ERROR", result: error};
+        });
+      }
 };
