@@ -197,10 +197,30 @@ export class UnconnectedMap extends Component {
 		// todo check if the layer has changed before rerendering it
 		// this.leafletLayers[ukey].clearLayers();
 		let rgbColor = `rgb(${color.r}, ${color.g}, ${color.b})`;
-		
 		for (let i = 0; i < relations_data.length; i++) {
 			this.leafletPolylineLayers[ukey] = L.polyline([relations_data[i].start, relations_data[i].end], {color: rgbColor}).addTo(this.map);
 		}
+		
+		// this.leafletPolylineLayers[ukey].clearLayers();
+		let m = null;
+		data.forEach(entry => {
+			m = L.circleMarker(
+				entry.pos,
+				{
+					title: entry.tooltip,
+					fill: true,
+					radius: 2,
+					color: 'rgb(255, 0, 0)',
+					fillColor: rgbColor,
+					opacity: color.a,
+					fillOpacity: color.a
+				}
+			).addTo(this.map);
+			if (entry.tooltip !== undefined)
+				m.bindPopup(entry.tooltip);
+		});
+		
+		
 		// L.polyline(polylineData, {color: rgbColor}).addTo(this.map);
 		// this.leafletPolylineLayers[ukey].setLatLngs(polylineData);
 		// this.leafletPolylineLayers[ukey].setConfig??({ color });
