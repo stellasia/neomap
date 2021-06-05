@@ -4,7 +4,7 @@
  */
 import React, {Component} from 'react'
 import {connect} from 'react-redux';
-import {RENDERING_CLUSTERS, RENDERING_HEATMAP, RENDERING_MARKERS, RENDERING_POLYLINE} from "./layers/Layer";
+import {RENDERING_CLUSTERS, RENDERING_HEATMAP, RENDERING_MARKERS, RENDERING_POLYLINE, RENDERING_RELATIONS} from "./layers/Layer";
 import L from 'leaflet';
 import 'leaflet.heat';
 import 'leaflet.markercluster';
@@ -42,8 +42,11 @@ export class UnconnectedMap extends Component {
 		let ukeyPolylineArray = [];
 		let ukeyHeatmapArray = [];
 		let ukeyClusterArray = [];
+		// TODO
+		
 		// Iterate through layers
 		layers.map((layer) => {
+			layer.rendering = RENDERING_RELATIONS
 			if (layer.ukey === undefined)
 				return null;
 			let bds = new L.LatLngBounds(layer.bounds);
@@ -62,6 +65,13 @@ export class UnconnectedMap extends Component {
 					this.map.removeLayer(this.leafletPolylineLayers[layer.ukey]);
 				}
 				this.updatePolylineLayer(layer.data, layer.color, layer.ukey);
+			} else if (layer.rendering === RENDERING_RELATIONS) {
+				ukeyPolylineArray.push(layer.ukey);
+				if (this.leafletPolylineLayers[layer.ukey]) {
+					// todo find a way of updating the polyline layer instead of delete & recreate
+					this.map.removeLayer(this.leafletPolylineLayers[layer.ukey]);
+				}
+				this.updateRelationsLayer(layer.data, layer.relations, layer.color, layer.ukey);
 			} else if (layer.rendering === RENDERING_HEATMAP) {
 				ukeyHeatmapArray.push(layer.ukey);
 				if (this.leafletHeatmapLayers[layer.ukey]) {
@@ -179,6 +189,19 @@ export class UnconnectedMap extends Component {
 			return entry.pos;
 		});
 		this.leafletPolylineLayers[ukey] = L.polyline(polylineData, {color: rgbColor}).addTo(this.map);
+		// this.leafletPolylineLayers[ukey].setLatLngs(polylineData);
+		// this.leafletPolylineLayers[ukey].setConfig??({ color });
+	}
+
+	updateRelationsLayer(data, relations_data, color, ukey) {
+		// todo check if the layer has changed before rerendering it
+		// this.leafletLayers[ukey].clearLayers();
+		let rgbColor = `rgb(${color.r}, ${color.g}, ${color.b})`;
+		
+		for (let i = 0; i < relations_data.length; i++) {
+			this.leafletPolylineLayers[ukey] = L.polyline([relations_data[i].start, relations_data[i].end], {color: rgbColor}).addTo(this.map);
+		}
+		// L.polyline(polylineData, {color: rgbColor}).addTo(this.map);
 		// this.leafletPolylineLayers[ukey].setLatLngs(polylineData);
 		// this.leafletPolylineLayers[ukey].setConfig??({ color });
 	}

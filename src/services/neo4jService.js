@@ -199,7 +199,8 @@ export default {
           }
           response.records.forEach((record) => {
             let el = {
-              nodes: [Number(record._fields[0].start), Number(record._fields[0].end)],
+              start: [record.get("start_lat"), record.get("start_lon")],
+              end: [record.get("end_lat"), record.get("end_lon")],
             };
             if (record.has("tooltip") && record.get("tooltip") !== null) {
               // make sure tooltip is a string, otherwise leaflet is not happy AT ALL!

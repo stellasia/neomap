@@ -32,6 +32,7 @@ const LAYER_TYPE_SPATIAL = "spatial";
 // TODO: move this into a separate configuration/constants file
 export const RENDERING_MARKERS = "markers";
 export const RENDERING_POLYLINE = "polyline";
+export const RENDERING_RELATIONS = "relations";
 export const RENDERING_HEATMAP = "heatmap";
 export const RENDERING_CLUSTERS = "clusters";
 
@@ -217,7 +218,7 @@ export class UnconnectedLayer extends Component {
 	};
 
 	getRelations() {
-		const query = "match ()-[r]->() return r";
+		const query = "match (n)-[r]->(m) return n.lat as start_lat, n.lon as start_lon, m.lat as end_lat, m.lon as end_lon;";
 		neo4jService.getRelationData(this.driver, query, {}).then( res => {
 			if (res.status === "ERROR") {
 				let message = "Invalid cypher query.";
