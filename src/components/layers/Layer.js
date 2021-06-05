@@ -46,10 +46,12 @@ const DEFAULT_LAYER = {
 	pointProperty: {value: "point", label: "point"},
 	tooltipProperty: {value: "", label: ""},
 	nodeLabel: [],
+	relationshipLabel: [],
 	propertyNames: [],
 	spatialLayers: [],
 	data: [],
-	relations: [],
+	relationshipsData: [],
+	relationships: [],
 	bounds: [],
 	color: {r: 0, g: 0, b: 255, a: 1},
 	limit: null,
@@ -82,6 +84,7 @@ export class UnconnectedLayer extends Component {
 		this.handleNameChange = this.handleNameChange.bind(this);
 		this.handleLayerTypeChange = this.handleLayerTypeChange.bind(this);
 		this.handleNodeLabelChange = this.handleNodeLabelChange.bind(this);
+		this.handleRelationshipLabelChange = this.handleRelationshipLabelChange.bind(this);
 		this.handleLatPropertyChange = this.handleLatPropertyChange.bind(this);
 		this.handleLonPropertyChange = this.handleLonPropertyChange.bind(this);
 		this.handlePointPropertyChange = this.handlePointPropertyChange.bind(this);
@@ -96,13 +99,13 @@ export class UnconnectedLayer extends Component {
 	};
 
 
-	componentDidMount() {
+	componentDidMount () {
 		// list of available nodes
-		this.getNodes();
+		this.getNodeLabels();
+		this.getRelationshipLabels();
 		this.getPropertyNames();
 		this.hasSpatialPlugin();
 		this.getSpatialLayers();
-		this.getRelations();
 	}
 
 
@@ -156,7 +159,24 @@ export class UnconnectedLayer extends Component {
 			let sub_q = "(false";
 			this.state.nodeLabel.forEach((value,) => {
 				let lab = value.label;
-				sub_q += ` OR n:${lab}`;
+				// added backtics to support labels with spaces
+				sub_q += ` OR n:\`${lab}\``;
+			});
+			sub_q += ")";
+			filter += "\nAND " + sub_q;
+		}
+		return filter;
+	};
+
+	getRelationshipsFilter() {
+		let filter = '';
+		// filter wanted node labels
+		const {nodeLabel} = this.state;
+		if (nodeLabel != null && nodeLabel.length > 0) {
+			let sub_q = "(false";
+			nodeLabel.forEach(value => {
+				// added backtics to support labels with spaces
+				sub_q += ` OR (n:\`${value.label}\` and m:\`${value.label}\`)`;
 			});
 			sub_q += ")";
 			filter += "\nAND " + sub_q;
@@ -178,61 +198,100 @@ export class UnconnectedLayer extends Component {
 		return query;
 	};
 
-
-	getQuery() {
-		/*If layerType==cypher, query is inside the CypherEditor,
-           otherwise, we need to build the query manually.
-         */
-		if (this.state.layerType === LAYER_TYPE_CYPHER)
-			return this.getCypherQuery();
-
-		if (this.state.layerType === LAYER_TYPE_SPATIAL)
-			return this.getSpatialQuery();
-
+	getNodesQuery() {
+		const { layerType, limit } = this.state;
+		const { value: latValue } = this.state.latitudeProperty;
+		const { value: lonValue } = this.state.longitudeProperty;
+		const { value: pointValue } = this.state.pointProperty;
+		const { value: tooltipValue } = this.state.tooltipProperty;
 		// lat lon query
 		// TODO: improve this method...
 		let query = 'MATCH (n) WHERE true';
 		// filter wanted node labels
 		query += this.getNodeFilter();
 		// filter out nodes with null latitude or longitude
-		if (this.state.layerType === LAYER_TYPE_LATLON) {
-			query += `\nAND exists(n.${this.state.latitudeProperty.value}) AND exists(n.${this.state.longitudeProperty.value})`;
+		if (layerType === LAYER_TYPE_LATLON) {
+			query += `\nAND exists(n.${latValue}) AND exists(n.${lonValue})`;
 			// return latitude, longitude
-			query += `\nRETURN n.${this.state.latitudeProperty.value} as latitude, n.${this.state.longitudeProperty.value} as longitude`;
-		} else if (this.state.layerType === LAYER_TYPE_POINT) {
-			query += `\nAND exists(n.${this.state.pointProperty.value})`;
+			query += `\nRETURN n.${latValue} as latitude, n.${lonValue} as longitude`;
+		} else if (layerType === LAYER_TYPE_POINT) {
+			query += `\nAND exists(n.${pointValue})`;
 			// return latitude, longitude
-			query += `\nRETURN n.${this.state.pointProperty.value}.y as latitude, n.${this.state.pointProperty.value}.x as longitude`;
+			query += `\nRETURN n.${pointValue}.y as latitude, n.${pointValue}.x as longitude`;
 		}
 
 		// if tooltip is not null, also return tooltip
-		if (this.state.tooltipProperty.value !== '')
-			query += `, n.${this.state.tooltipProperty.value} as tooltip`;
+		if (tooltipValue !== '')
+			query += `, n.${tooltipValue} as tooltip`;
 
 		// TODO: is that really needed???
 		// limit the number of points to avoid browser crash...
-		if (this.state.limit)
-			query += `\nLIMIT ${this.state.limit}`;
+		if (limit)
+			query += `\nLIMIT ${limit}`;
 		console.log(query)
 		return query;
+	}
+
+
+	getQuery() {
+		/*If layerType==cypher, query is inside the CypherEditor,
+           otherwise, we need to build the query manually.
+         */
+		const { layerType } = this.state;
+		if (layerType === LAYER_TYPE_CYPHER)
+			return this.getCypherQuery();
+
+		if (layerType === LAYER_TYPE_SPATIAL)
+			return this.getSpatialQuery();
+		const rel_q = this.getRelationshipsQuery();
+		console.log("REL QUERY!", rel_q);
+		return this.getNodesQuery();		
 	};
 
-	getRelations() {
-		const query = "match (n)-[r]->(m) return n.lat as start_lat, n.lon as start_lon, m.lat as end_lat, m.lon as end_lon;";
-		neo4jService.getRelationData(this.driver, query, {}).then( res => {
-			if (res.status === "ERROR") {
-				let message = "Invalid cypher query.";
-				if (this.state.layerType !== LAYER_TYPE_CYPHER) {
-					message += "\nContact the development team";
-				} else {
-					message += "\nFix your query and try again";
-				}
-				message += "\n\n" + res.result;
-				alert(message);
-			} else {
-				this.setState({relations: res.result}, () => console.log('yo', res.result));
-			}
-		});
+	getRelationshipTypes() {
+		const query = "CALL db.relationshipTypes()"
+	}
+
+	getRelationshipsQuery() {
+		// SUPPORTS ONLY LAT LON FOR NOW
+		const { value: latValue } = this.state.latitudeProperty;
+		const { value: lonValue } = this.state.longitudeProperty;
+		const { limit } = this.state;
+		// lat lon query
+		// TODO: improve this method...
+		let query = 'MATCH (n)-[r]->(m) WHERE true';
+		// filter wanted node labels
+		query += this.getRelationshipsFilter();
+		
+		// filter out nodes with null latitude or longitude
+		query += `\nAND exists(n.${latValue}) AND exists(n.${lonValue}) AND exists(m.${latValue}) AND exists(m.${lonValue})`;
+		// return latitude, longitude
+		query += `\nRETURN n.${latValue} as start_latitude, n.${lonValue} as start_longitude, m.${latValue} as end_latitude, m.${lonValue} as end_longitude`;
+
+		// TODO tooltip
+
+		// TODO: is that really needed???
+		// limit the number of points to avoid browser crash...
+		if (limit)
+			query += `\nLIMIT ${limit}`;
+		console.log(query)
+		return query;
+
+		// const query = "match (n)-[r]->(m) return n.lat as start_lat, n.lon as start_lon, m.lat as end_lat, m.lon as end_lon;";
+		// neo4jService.getRelationData(this.driver, query, {}).then( res => {
+		// 	if (res.status === "ERROR") {
+		// 		let message = "Invalid cypher query.";
+		// 		if (this.state.layerType !== LAYER_TYPE_CYPHER) {
+		// 			message += "\nContact the development team";
+		// 		} else {
+		// 			message += "\nFix your query and try again";
+		// 		}
+		// 		message += "\n\n" + res.result;
+		// 		alert(message);
+		// 	} else {
+		// 		this.setState({relations: res.result}, () => console.log('yo', res.result));
+		// 	}
+		// });
 	}
 
 
@@ -250,9 +309,7 @@ export class UnconnectedLayer extends Component {
 				message += "\n\n" + res.result;
 				alert(message);
 			} else {
-				this.setState({data: res.result}, function () {
-					this.updateBounds()
-				});
+				this.setState({data: res.result}, this.updateBounds);
 			}
 		});
 	};
@@ -314,6 +371,11 @@ export class UnconnectedLayer extends Component {
 		this.setState({nodeLabel: e}, function() {
 			this.getPropertyNames();
 		});
+	};
+
+	handleRelationshipLabelChange(e) {
+		console.log('AAAAAA', e)
+		this.setState({relationshipLabel: e});
 	};
 
 
@@ -393,13 +455,21 @@ export class UnconnectedLayer extends Component {
 	};
 
 
-	getNodes() {
+	getNodeLabels() {
 		/*This will be updated quite often,
            is that what we want?
          */
 		neo4jService.getNodeLabels(this.driver).then( result => {
 			this.setState({
 				nodes: result
+			})
+		});
+	};
+
+	getRelationshipLabels() {  
+		neo4jService.getRelationshipLabels(this.driver).then( result => {
+			this.setState({
+				relationships: result
 			})
 		});
 	};
@@ -544,7 +614,10 @@ export class UnconnectedLayer extends Component {
 		/*If layerType==latlon, then we display the elements to choose
            node labels and properties to be used.
          */
-		if (this.state.layerType !== LAYER_TYPE_LATLON)
+		const { rendering, layerType, nodes, nodeLabel, relationships, relationshipLabel,
+			propertyNames, latitudeProperty, longitudeProperty, tooltipProperty, limit
+		} = this.state;
+		if (layerType !== LAYER_TYPE_LATLON)
 			return "";
 
 		return (
@@ -553,11 +626,24 @@ export class UnconnectedLayer extends Component {
 					<Form.Label>Node label(s)</Form.Label>
 					<Select
 						className="form-control select"
-						options={this.state.nodes}
+						options={nodes}
 						onChange={this.handleNodeLabelChange}
 						isMulti={true}
-						defaultValue={this.state.nodeLabel}
+						defaultValue={nodeLabel}
 						name="nodeLabel"
+					/>
+				</Form.Group>
+				
+				{/* TODO MOVE */}
+				<Form.Group controlId="formRelationshipLabel">
+					<Form.Label>Relationship label(s)</Form.Label>
+					<Select
+						className="form-control select"
+						options={relationships}
+						onChange={this.handleRelationshipLabelChange}
+						isMulti={true}
+						defaultValue={relationshipLabel}
+						name="relationshipLabel"
 					/>
 				</Form.Group>
 
@@ -565,10 +651,10 @@ export class UnconnectedLayer extends Component {
 					<Form.Label>Latitude property</Form.Label>
 					<Select
 						className="form-control select"
-						options={this.state.propertyNames}
+						options={propertyNames}
 						onChange={this.handleLatPropertyChange}
 						isMulti={false}
-						defaultValue={this.state.latitudeProperty}
+						defaultValue={latitudeProperty}
 						name="latitudeProperty"
 					/>
 				</Form.Group>
@@ -577,26 +663,26 @@ export class UnconnectedLayer extends Component {
 					<Form.Label>Longitude property</Form.Label>
 					<Select
 						className="form-control select"
-						options={this.state.propertyNames}
+						options={propertyNames}
 						onChange={this.handleLonPropertyChange}
 						isMulti={false}
-						defaultValue={this.state.longitudeProperty}
+						defaultValue={longitudeProperty}
 						name="longitudeProperty"
 					/>
 				</Form.Group>
 
 				<Form.Group 
 					controlId="formTooltipProperty" 
-					hidden={this.state.rendering !== RENDERING_MARKERS  && this.state.rendering !== RENDERING_CLUSTERS}  
+					hidden={rendering !== RENDERING_MARKERS  && rendering !== RENDERING_CLUSTERS}  
 					name="formgroupTooltip"
 				>
 					<Form.Label>Tooltip property</Form.Label>
 					<Select
 						className="form-control select"
-						options={this.state.propertyNames}
+						options={propertyNames}
 						onChange={this.handleTooltipPropertyChange}
 						isMulti={false}
-						defaultValue={this.state.tooltipProperty}
+						defaultValue={tooltipProperty}
 						name="tooltipProperty"
 					/>
 				</Form.Group>
@@ -607,7 +693,7 @@ export class UnconnectedLayer extends Component {
 						type="text"
 						className="form-control"
 						placeholder="limit"
-						defaultValue={this.state.limit}
+						defaultValue={limit}
 						onChange={this.handleLimitChange}
 						name="limit"
 					/>
@@ -618,23 +704,25 @@ export class UnconnectedLayer extends Component {
 
 
 	render() {
-		let color = `rgba(${this.state.color.r}, ${this.state.color.g}, ${this.state.color.b}, ${this.state.color.a})`;
-
+		const { name, ukey, rendering, layerType, hasSpatialPlugin, color, 
+			radius,
+		} = this.state;
+		const colorString = `rgba(${this.state.color.r}, ${this.state.color.g}, ${this.state.color.b}, ${this.state.color.a})`;
 		return (
 
 			<Card>
 
 				<Accordion.Toggle as={Card.Header} eventKey={this.state.ukey} >
-					<h3>{this.state.name}
-						<small hidden>({this.state.ukey})</small>
+					<h3>{name}
+						<small hidden>({ukey})</small>
 						<span
-							hidden={ this.state.rendering === RENDERING_HEATMAP }
-							style={{background: color, float: 'right', height: '20px', width: '50px'}}> 
+							hidden={ rendering === RENDERING_HEATMAP }
+							style={{background: colorString, float: 'right', height: '20px', width: '50px'}}> 
 						</span>
 					</h3>
 				</Accordion.Toggle>
 
-				<Accordion.Collapse eventKey={this.state.ukey} >
+				<Accordion.Collapse eventKey={ukey} >
 
 					<Card.Body>
 
@@ -646,7 +734,7 @@ export class UnconnectedLayer extends Component {
 									type="text"
 									className="form-control"
 									placeholder="Layer name"
-									defaultValue={this.state.name}
+									defaultValue={name}
 									onChange={this.handleNameChange}
 									name="name"
 								/>
@@ -662,7 +750,7 @@ export class UnconnectedLayer extends Component {
 									id={LAYER_TYPE_LATLON}
 									label={"Lat/Lon"}
 									value={LAYER_TYPE_LATLON}
-									checked={this.state.layerType === LAYER_TYPE_LATLON}
+									checked={layerType === LAYER_TYPE_LATLON}
 									onChange={this.handleLayerTypeChange}
 									name="layerTypeLatLon"
 								/>
@@ -671,7 +759,7 @@ export class UnconnectedLayer extends Component {
 									id={LAYER_TYPE_POINT}
 									label={"Point (neo4j built-in)"}
 									value={LAYER_TYPE_POINT}
-									checked={this.state.layerType === LAYER_TYPE_POINT}
+									checked={layerType === LAYER_TYPE_POINT}
 									onChange={this.handleLayerTypeChange}
 									name="layerTypePoint"
 								/>
@@ -680,10 +768,10 @@ export class UnconnectedLayer extends Component {
 									id={LAYER_TYPE_SPATIAL}
 									label={"Point (neo4j-spatial plugin)"}
 									value={LAYER_TYPE_SPATIAL}
-									checked={this.state.layerType === LAYER_TYPE_SPATIAL}
+									checked={layerType === LAYER_TYPE_SPATIAL}
 									onChange={this.handleLayerTypeChange}
 									name="layerTypeSpatial"
-									disabled={!this.state.hasSpatialPlugin}
+									disabled={!hasSpatialPlugin}
 									className="beta"
 								/>
 								<Form.Check
@@ -691,7 +779,7 @@ export class UnconnectedLayer extends Component {
 									id={LAYER_TYPE_CYPHER}
 									label={"Advanced (cypher query)"}
 									value={LAYER_TYPE_CYPHER}
-									checked={this.state.layerType === LAYER_TYPE_CYPHER}
+									checked={layerType === LAYER_TYPE_CYPHER}
 									onChange={this.handleLayerTypeChange}
 									name="layerTypeCypher"
 								/>
@@ -726,6 +814,15 @@ export class UnconnectedLayer extends Component {
 								/>
 								<Form.Check
 									type="radio"
+									id={RENDERING_RELATIONS}
+									label={"Nodes and Relationships"}
+									value={RENDERING_RELATIONS}
+									checked={this.state.rendering === RENDERING_RELATIONS}
+									onChange={this.handleRenderingChange}
+									name="mapRenderingRelationships"
+								/>
+								<Form.Check
+									type="radio"
 									id={RENDERING_HEATMAP}
 									label={"Heatmap"}
 									value={RENDERING_HEATMAP}
@@ -747,22 +844,22 @@ export class UnconnectedLayer extends Component {
 							</Form.Group>
 
 							<Form.Group controlId="formColor"
-										hidden={this.state.rendering === RENDERING_HEATMAP}
+										hidden={rendering === RENDERING_HEATMAP}
 										name="formgroupColor">
 								<Form.Label>Color</Form.Label>
 								<ColorPicker
-									color={ this.state.color }
+									color={ color }
 									handleColorChange={this.handleColorChange}
 								/>
 							</Form.Group>
 
-							<Form.Group controlId="formRadius" hidden={this.state.rendering !== RENDERING_HEATMAP} >
+							<Form.Group controlId="formRadius" hidden={rendering !== RENDERING_HEATMAP} >
 								<Form.Label>Heatmap radius</Form.Label>
 								<Form.Control
 									type="range"
 									min="1"
 									max="100"
-									defaultValue={this.state.radius}
+									defaultValue={radius}
 									className="slider"
 									onChange={this.handleRadiusChange}
 									name="radius"
@@ -774,7 +871,7 @@ export class UnconnectedLayer extends Component {
 								Delete Layer
 							</Button>
 
-							<Button variant="info" type="submit"  onClick={this.showQuery} hidden={this.state.layerType === LAYER_TYPE_CYPHER}>
+							<Button variant="info" type="submit"  onClick={this.showQuery} hidden={layerType === LAYER_TYPE_CYPHER}>
 								Show query
 							</Button>
 

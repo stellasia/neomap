@@ -46,7 +46,6 @@ export class UnconnectedMap extends Component {
 		
 		// Iterate through layers
 		layers.map((layer) => {
-			layer.rendering = RENDERING_RELATIONS
 			if (layer.ukey === undefined)
 				return null;
 			let bds = new L.LatLngBounds(layer.bounds);
@@ -196,7 +195,7 @@ export class UnconnectedMap extends Component {
 	updateRelationsLayer(data, relations_data, color, ukey) {
 		// todo check if the layer has changed before rerendering it
 		// this.leafletLayers[ukey].clearLayers();
-		let rgbColor = `rgb(${color.r}, ${color.g}, ${color.b})`;
+		let rgbColor = 'rgb(150, 150, 255)';
 		for (let i = 0; i < relations_data.length; i++) {
 			this.leafletPolylineLayers[ukey] = L.polyline([relations_data[i].start, relations_data[i].end], {color: rgbColor}).addTo(this.map);
 		}
@@ -210,7 +209,7 @@ export class UnconnectedMap extends Component {
 					title: entry.tooltip,
 					fill: true,
 					radius: 2,
-					color: 'rgb(255, 0, 0)',
+					color: `rgb(${color.r}, ${color.g}, ${color.b})`,
 					fillColor: rgbColor,
 					opacity: color.a,
 					fillOpacity: color.a

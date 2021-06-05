@@ -53,7 +53,7 @@ export default {
     let res = [];
     const session = driver.session();
     await session
-      .run(`CALL db.labels() YIELD label RETURN label ORDER BY label`)
+      .run('CALL db.labels() YIELD label RETURN label ORDER BY label')
       .then(function (result) {
         result.records.forEach(function (record) {
           let el = {
@@ -68,6 +68,19 @@ export default {
         console.log(error);
       });
 
+    return res;
+  },
+
+  getRelationshipLabels: async function (driver) {
+    if (driver == null) return [];
+
+    const session = driver.session();
+    const result = await session.run('CALL db.relationshipTypes() YIELD relationshipType RETURN relationshipType ORDER BY relationshipType;')
+    const res = result.records.map(record => ({
+            value: record.get("relationshipType"),
+            label: record.get("relationshipType"),
+          }));    
+    session.close();
     return res;
   },
 
@@ -199,10 +212,10 @@ export default {
           }
           response.records.forEach((record) => {
             let el = {
-              start: [record.get("start_lat"), record.get("start_lon")],
-              end: [record.get("end_lat"), record.get("end_lon")],
+              start: [record.get("start_latitude"), record.get("start_longtitude")],
+              end: [record.get("end_latitude"), record.get("end_longtitude")],
             };
-            if (record.has("tooltip") && record.get("tooltip") !== null) {
+            if (record.has("tooltip") && record.get("tooltip") != null) {
               // make sure tooltip is a string, otherwise leaflet is not happy AT ALL!
               el["tooltip"] = record.get("tooltip").toString();
             }
