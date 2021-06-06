@@ -45,12 +45,13 @@ const DEFAULT_LAYER = {
 	longitudeProperty: {value: "lon", label: "lon"},
 	pointProperty: {value: "point", label: "point"},
 	tooltipProperty: {value: "", label: ""},
+	relationshipTooltipProperty: {value: "", label: ""},
 	nodeLabel: [],
 	relationshipLabel: [],
 	propertyNames: [],
 	spatialLayers: [],
 	data: [],
-	relationshipsData: [],
+	relationshipData: [],
 	relationships: [],
 	bounds: [],
 	color: {r: 0, g: 0, b: 255, a: 1},
@@ -89,6 +90,7 @@ export class UnconnectedLayer extends Component {
 		this.handleLonPropertyChange = this.handleLonPropertyChange.bind(this);
 		this.handlePointPropertyChange = this.handlePointPropertyChange.bind(this);
 		this.handleTooltipPropertyChange = this.handleTooltipPropertyChange.bind(this);
+		this.handleRelationshipTooltipPropertyChange = this.handleRelationshipTooltipPropertyChange.bind(this);
 		this.handleLimitChange = this.handleLimitChange.bind(this);
 		this.handleColorChange = this.handleColorChange.bind(this);
 		this.handleRenderingChange = this.handleRenderingChange.bind(this);
@@ -171,12 +173,20 @@ export class UnconnectedLayer extends Component {
 	getRelationshipsFilter() {
 		let filter = '';
 		// filter wanted node labels
-		const {nodeLabel} = this.state;
+		const {nodeLabel, relationshipLabel} = this.state;
 		if (nodeLabel != null && nodeLabel.length > 0) {
 			let sub_q = "(false";
 			nodeLabel.forEach(value => {
 				// added backtics to support labels with spaces
 				sub_q += ` OR (n:\`${value.label}\` and m:\`${value.label}\`)`;
+			});
+			sub_q += ")";
+			filter += "\nAND " + sub_q;
+		}
+		if (relationshipLabel != null && relationshipLabel.length > 0) {
+			let sub_q = "(false";
+			relationshipLabel.forEach(value => {
+				sub_q += ` OR r:\`${value.label}\``;
 			});
 			sub_q += ")";
 			filter += "\nAND " + sub_q;
@@ -256,6 +266,7 @@ export class UnconnectedLayer extends Component {
 		// SUPPORTS ONLY LAT LON FOR NOW
 		const { value: latValue } = this.state.latitudeProperty;
 		const { value: lonValue } = this.state.longitudeProperty;
+		const { value: tooltipValue } = this.state.relationshipTooltipProperty;
 		const { limit } = this.state;
 		// lat lon query
 		// TODO: improve this method...
@@ -268,7 +279,9 @@ export class UnconnectedLayer extends Component {
 		// return latitude, longitude
 		query += `\nRETURN n.${latValue} as start_latitude, n.${lonValue} as start_longitude, m.${latValue} as end_latitude, m.${lonValue} as end_longitude`;
 
-		// TODO tooltip
+		// if tooltip is not null, also return tooltip
+		if (tooltipValue !== '')
+			query += `, n.${tooltipValue} as tooltip`;
 
 		// TODO: is that really needed???
 		// limit the number of points to avoid browser crash...
@@ -298,6 +311,7 @@ export class UnconnectedLayer extends Component {
 	updateData() {
 		/*Query database and update `this.state.data`
          */
+		const { rendering } = this.state;
 		neo4jService.getData(this.driver, this.getQuery(), {}).then( res => {
 			if (res.status === "ERROR") {
 				let message = "Invalid cypher query.";
@@ -312,6 +326,23 @@ export class UnconnectedLayer extends Component {
 				this.setState({data: res.result}, this.updateBounds);
 			}
 		});
+		if (rendering === RENDERING_RELATIONS) {
+			neo4jService.getRelationshipData(this.driver, this.getRelationshipsQuery(), {}).then( res => {
+				if (res.status === "ERROR") {
+					let message = "Invalid cypher query.";
+					if (this.state.layerType !== LAYER_TYPE_CYPHER) {
+						message += "\nContact the development team";
+					} else {
+						message += "\nFix your query and try again";
+					}
+					message += "\n\n" + res.result;
+					alert(message);
+				} else {
+					console.log("GOT RES", res)
+					this.setState({relationshipData: res.result}, () => console.log('argh', this.state.relationshipData));
+				}
+			});
+		}
 	};
 
 
@@ -366,6 +397,10 @@ export class UnconnectedLayer extends Component {
 		this.setState({tooltipProperty: e});
 	};
 
+	handleRelationshipTooltipPropertyChange(e) {
+		this.setState({relationshipTooltipProperty: e});
+	};
+
 
 	handleNodeLabelChange(e) {
 		this.setState({nodeLabel: e}, function() {
@@ -374,7 +409,6 @@ export class UnconnectedLayer extends Component {
 	};
 
 	handleRelationshipLabelChange(e) {
-		console.log('AAAAAA', e)
 		this.setState({relationshipLabel: e});
 	};
 
@@ -615,11 +649,12 @@ export class UnconnectedLayer extends Component {
            node labels and properties to be used.
          */
 		const { rendering, layerType, nodes, nodeLabel, relationships, relationshipLabel,
-			propertyNames, latitudeProperty, longitudeProperty, tooltipProperty, limit
+			propertyNames, latitudeProperty, longitudeProperty, tooltipProperty, relationshipTooltipProperty,
+			limit
 		} = this.state;
 		if (layerType !== LAYER_TYPE_LATLON)
 			return "";
-
+		console.log(rendering, RENDERING_RELATIONS)
 		return (
 			<div>
 				<Form.Group controlId="formNodeLabel">
@@ -633,9 +668,8 @@ export class UnconnectedLayer extends Component {
 						name="nodeLabel"
 					/>
 				</Form.Group>
-				
 				{/* TODO MOVE */}
-				<Form.Group controlId="formRelationshipLabel">
+				<Form.Group controlId="formRelationshipLabel" hidden={rendering !== RENDERING_RELATIONS }>
 					<Form.Label>Relationship label(s)</Form.Label>
 					<Select
 						className="form-control select"
@@ -646,7 +680,6 @@ export class UnconnectedLayer extends Component {
 						name="relationshipLabel"
 					/>
 				</Form.Group>
-
 				<Form.Group controlId="formLatitudeProperty">
 					<Form.Label>Latitude property</Form.Label>
 					<Select
@@ -673,7 +706,7 @@ export class UnconnectedLayer extends Component {
 
 				<Form.Group 
 					controlId="formTooltipProperty" 
-					hidden={rendering !== RENDERING_MARKERS  && rendering !== RENDERING_CLUSTERS}  
+					hidden={rendering !== RENDERING_MARKERS  && rendering !== RENDERING_CLUSTERS && rendering !== RENDERING_RELATIONS}  
 					name="formgroupTooltip"
 				>
 					<Form.Label>Tooltip property</Form.Label>
@@ -684,6 +717,22 @@ export class UnconnectedLayer extends Component {
 						isMulti={false}
 						defaultValue={tooltipProperty}
 						name="tooltipProperty"
+					/>
+				</Form.Group>
+
+				<Form.Group 
+					controlId="formRelationshipTooltipProperty" 
+					hidden={ rendering !== RENDERING_RELATIONS }  
+					name="formgroupRelationshipTooltip"
+				>
+					<Form.Label>Relationship Tooltip property</Form.Label>
+					<Select
+						className="form-control select"
+						options={propertyNames}
+						onChange={this.handleRelationshipTooltipPropertyChange}
+						isMulti={false}
+						defaultValue={relationshipTooltipProperty}
+						name="relationshipTooltipProperty"
 					/>
 				</Form.Group>
 
@@ -707,12 +756,12 @@ export class UnconnectedLayer extends Component {
 		const { name, ukey, rendering, layerType, hasSpatialPlugin, color, 
 			radius,
 		} = this.state;
-		const colorString = `rgba(${this.state.color.r}, ${this.state.color.g}, ${this.state.color.b}, ${this.state.color.a})`;
+		const colorString = `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
 		return (
 
 			<Card>
 
-				<Accordion.Toggle as={Card.Header} eventKey={this.state.ukey} >
+				<Accordion.Toggle as={Card.Header} eventKey={ukey} >
 					<h3>{name}
 						<small hidden>({ukey})</small>
 						<span
@@ -799,7 +848,7 @@ export class UnconnectedLayer extends Component {
 									id={RENDERING_MARKERS}
 									label={"Markers"}
 									value={RENDERING_MARKERS}
-									checked={this.state.rendering === RENDERING_MARKERS}
+									checked={rendering === RENDERING_MARKERS}
 									onChange={this.handleRenderingChange}
 									name="mapRenderingMarker"
 								/>
@@ -808,7 +857,7 @@ export class UnconnectedLayer extends Component {
 									id={RENDERING_POLYLINE}
 									label={"Polyline"}
 									value={RENDERING_POLYLINE}
-									checked={this.state.rendering === RENDERING_POLYLINE}
+									checked={rendering === RENDERING_POLYLINE}
 									onChange={this.handleRenderingChange}
 									name="mapRenderingPolyline"
 								/>
@@ -817,7 +866,7 @@ export class UnconnectedLayer extends Component {
 									id={RENDERING_RELATIONS}
 									label={"Nodes and Relationships"}
 									value={RENDERING_RELATIONS}
-									checked={this.state.rendering === RENDERING_RELATIONS}
+									checked={rendering === RENDERING_RELATIONS}
 									onChange={this.handleRenderingChange}
 									name="mapRenderingRelationships"
 								/>
@@ -826,7 +875,7 @@ export class UnconnectedLayer extends Component {
 									id={RENDERING_HEATMAP}
 									label={"Heatmap"}
 									value={RENDERING_HEATMAP}
-									checked={this.state.rendering === RENDERING_HEATMAP}
+									checked={rendering === RENDERING_HEATMAP}
 									onChange={this.handleRenderingChange}
 									name="mapRenderingHeatmap"
 									className="beta"
@@ -836,7 +885,7 @@ export class UnconnectedLayer extends Component {
 									id={RENDERING_CLUSTERS}
 									label={"Clusters"}
 									value={RENDERING_CLUSTERS}
-									checked={this.state.rendering === RENDERING_CLUSTERS}
+									checked={rendering === RENDERING_CLUSTERS}
 									onChange={this.handleRenderingChange}
 									name="mapRenderingCluster"
 									className="beta"

@@ -42,7 +42,6 @@ export class UnconnectedMap extends Component {
 		let ukeyPolylineArray = [];
 		let ukeyHeatmapArray = [];
 		let ukeyClusterArray = [];
-		// TODO
 		
 		// Iterate through layers
 		layers.map((layer) => {
@@ -70,7 +69,7 @@ export class UnconnectedMap extends Component {
 					// todo find a way of updating the polyline layer instead of delete & recreate
 					this.map.removeLayer(this.leafletPolylineLayers[layer.ukey]);
 				}
-				this.updateRelationsLayer(layer.data, layer.relations, layer.color, layer.ukey);
+				this.updateRelationsLayer(layer.data, layer.relationshipData, layer.color, layer.ukey);
 			} else if (layer.rendering === RENDERING_HEATMAP) {
 				ukeyHeatmapArray.push(layer.ukey);
 				if (this.leafletHeatmapLayers[layer.ukey]) {
@@ -192,12 +191,13 @@ export class UnconnectedMap extends Component {
 		// this.leafletPolylineLayers[ukey].setConfig??({ color });
 	}
 
-	updateRelationsLayer(data, relations_data, color, ukey) {
+	updateRelationsLayer(data, relationshipData, color, ukey) {
 		// todo check if the layer has changed before rerendering it
 		// this.leafletLayers[ukey].clearLayers();
 		let rgbColor = 'rgb(150, 150, 255)';
-		for (let i = 0; i < relations_data.length; i++) {
-			this.leafletPolylineLayers[ukey] = L.polyline([relations_data[i].start, relations_data[i].end], {color: rgbColor}).addTo(this.map);
+		console.log('HEY', relationshipData)
+		for (let i = 0; i < relationshipData.length; i++) {
+			this.leafletPolylineLayers[ukey] = L.polyline([relationshipData[i].start, relationshipData[i].end], {color: rgbColor}).addTo(this.map);
 		}
 		
 		// this.leafletPolylineLayers[ukey].clearLayers();

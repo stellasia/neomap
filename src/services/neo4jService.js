@@ -175,7 +175,6 @@ export default {
               result: query,
             };
           }
-          console.log("NODES", response)
           response.records.forEach((record) => {
             let el = {
               pos: [record.get("latitude"), record.get("longitude")],
@@ -197,7 +196,7 @@ export default {
         });
         
   },
-  getRelationData: async function (driver, query, params) {
+  getRelationshipData: async function (driver, query, params) {
     const session = driver.session();
     return await session
         .run(query, params)
@@ -212,8 +211,8 @@ export default {
           }
           response.records.forEach((record) => {
             let el = {
-              start: [record.get("start_latitude"), record.get("start_longtitude")],
-              end: [record.get("end_latitude"), record.get("end_longtitude")],
+              start: [record.get("start_latitude"), record.get("start_longitude")],
+              end: [record.get("end_latitude"), record.get("end_longitude")],
             };
             if (record.has("tooltip") && record.get("tooltip") != null) {
               // make sure tooltip is a string, otherwise leaflet is not happy AT ALL!
