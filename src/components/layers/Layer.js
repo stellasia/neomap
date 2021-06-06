@@ -41,8 +41,8 @@ export const RENDERING_CLUSTERS = "clusters";
 const DEFAULT_LAYER = {
 	name: "New layer",
 	layerType: LAYER_TYPE_LATLON,
-	latitudeProperty: {value: "lat", label: "lat"},
-	longitudeProperty: {value: "lon", label: "lon"},
+	latitudeProperty: {value: "latitude", label: "latitude"},
+	longitudeProperty: {value: "longitude", label: "longitude"},
 	pointProperty: {value: "point", label: "point"},
 	tooltipProperty: {value: "", label: ""},
 	relationshipTooltipProperty: {value: "", label: ""},
