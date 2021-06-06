@@ -323,7 +323,7 @@ export class UnconnectedLayer extends Component {
 				message += "\n\n" + res.result;
 				alert(message);
 			} else {
-				this.setState({data: res.result}, this.updateBounds);
+				this.setState({data: res.result}, () => {if (rendering !== RENDERING_RELATIONS) {this.updateBounds()}});
 			}
 		});
 		if (rendering === RENDERING_RELATIONS) {
@@ -339,7 +339,7 @@ export class UnconnectedLayer extends Component {
 					alert(message);
 				} else {
 					console.log("GOT RES", res)
-					this.setState({relationshipData: res.result}, () => console.log('argh', this.state.relationshipData));
+					this.setState({relationshipData: res.result}, this.updateBounds);
 				}
 			});
 		}
