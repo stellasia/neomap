@@ -710,7 +710,7 @@ export class UnconnectedLayer extends Component {
 
 				<Form.Group 
 					controlId="formRelationshipTooltipProperty" 
-					hidden={ rendering !== RENDERING_RELATIONS }  
+					hidden={true}  // TODO figure out how to display tooltip at polyline
 					name="formgroupRelationshipTooltip"
 				>
 					<Form.Label>Relationship Tooltip property</Form.Label>
@@ -719,7 +719,6 @@ export class UnconnectedLayer extends Component {
 						options={propertyNames}
 						onChange={this.handleRelationshipTooltipPropertyChange}
 						isMulti={false}
-						hidden={true}  // TODO figure out how to display tooltip at polyline
 						defaultValue={relationshipTooltipProperty}
 						name="relationshipTooltipProperty"
 					/>
