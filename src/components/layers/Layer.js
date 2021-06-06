@@ -55,6 +55,7 @@ const DEFAULT_LAYER = {
 	relationships: [],
 	bounds: [],
 	color: {r: 0, g: 0, b: 255, a: 1},
+	relationshipColor: {r: 0, g: 0, b: 255, a: 1},
 	limit: null,
 	rendering: RENDERING_MARKERS,
 	radius: 30,
@@ -93,6 +94,7 @@ export class UnconnectedLayer extends Component {
 		this.handleRelationshipTooltipPropertyChange = this.handleRelationshipTooltipPropertyChange.bind(this);
 		this.handleLimitChange = this.handleLimitChange.bind(this);
 		this.handleColorChange = this.handleColorChange.bind(this);
+		this.handleRelationshipColorChange = this.handleRelationshipColorChange.bind(this);
 		this.handleRenderingChange = this.handleRenderingChange.bind(this);
 		this.handleRadiusChange = this.handleRadiusChange.bind(this);
 		this.handleCypherChange = this.handleCypherChange.bind(this);
@@ -253,8 +255,6 @@ export class UnconnectedLayer extends Component {
 
 		if (layerType === LAYER_TYPE_SPATIAL)
 			return this.getSpatialQuery();
-		const rel_q = this.getRelationshipsQuery();
-		console.log("REL QUERY!", rel_q);
 		return this.getNodesQuery();		
 	};
 
@@ -289,22 +289,6 @@ export class UnconnectedLayer extends Component {
 			query += `\nLIMIT ${limit}`;
 		console.log(query)
 		return query;
-
-		// const query = "match (n)-[r]->(m) return n.lat as start_lat, n.lon as start_lon, m.lat as end_lat, m.lon as end_lon;";
-		// neo4jService.getRelationData(this.driver, query, {}).then( res => {
-		// 	if (res.status === "ERROR") {
-		// 		let message = "Invalid cypher query.";
-		// 		if (this.state.layerType !== LAYER_TYPE_CYPHER) {
-		// 			message += "\nContact the development team";
-		// 		} else {
-		// 			message += "\nFix your query and try again";
-		// 		}
-		// 		message += "\n\n" + res.result;
-		// 		alert(message);
-		// 	} else {
-		// 		this.setState({relations: res.result}, () => console.log('yo', res.result));
-		// 	}
-		// });
 	}
 
 
@@ -338,7 +322,6 @@ export class UnconnectedLayer extends Component {
 					message += "\n\n" + res.result;
 					alert(message);
 				} else {
-					console.log("GOT RES", res)
 					this.setState({relationshipData: res.result}, this.updateBounds);
 				}
 			});
@@ -416,6 +399,12 @@ export class UnconnectedLayer extends Component {
 	handleColorChange(color) {
 		this.setState({
 			color: color,
+		});
+	};
+
+	handleRelationshipColorChange(color) {
+		this.setState({
+			relationshipColor: color,
 		});
 	};
 
@@ -654,7 +643,6 @@ export class UnconnectedLayer extends Component {
 		} = this.state;
 		if (layerType !== LAYER_TYPE_LATLON)
 			return "";
-		console.log(rendering, RENDERING_RELATIONS)
 		return (
 			<div>
 				<Form.Group controlId="formNodeLabel">
@@ -731,6 +719,7 @@ export class UnconnectedLayer extends Component {
 						options={propertyNames}
 						onChange={this.handleRelationshipTooltipPropertyChange}
 						isMulti={false}
+						hidden={true}  // TODO figure out how to display tooltip at polyline
 						defaultValue={relationshipTooltipProperty}
 						name="relationshipTooltipProperty"
 					/>
@@ -753,7 +742,7 @@ export class UnconnectedLayer extends Component {
 
 
 	render() {
-		const { name, ukey, rendering, layerType, hasSpatialPlugin, color, 
+		const { name, ukey, rendering, layerType, hasSpatialPlugin, color, relationshipColor,
 			radius,
 		} = this.state;
 		const colorString = `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
@@ -899,6 +888,16 @@ export class UnconnectedLayer extends Component {
 								<ColorPicker
 									color={ color }
 									handleColorChange={this.handleColorChange}
+								/>
+							</Form.Group>
+
+							<Form.Group controlId="formRelationshipColor"
+										hidden={rendering !== RENDERING_RELATIONS}
+										name="formgroupRelationshipColor">
+								<Form.Label>Relationship Color</Form.Label>
+								<ColorPicker
+									color={ relationshipColor }
+									handleColorChange={this.handleRelationshipColorChange}
 								/>
 							</Form.Group>
 

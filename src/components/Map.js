@@ -71,7 +71,13 @@ export class UnconnectedMap extends Component {
 					// todo find a way of updating the polyline layer instead of delete & recreate
 					this.map.removeLayer(this.leafletRelationshipLayers[layer.ukey]);
 				}
-				this.updateRelationsLayer(layer.data, layer.relationshipData, layer.color, layer.ukey);
+				this.updateRelationsLayer(layer.data, layer.relationshipData, layer.relationshipColor, layer.ukey);
+				// have to use separate marker layer
+				ukeyMarkerArray.push(layer.ukey);
+				if (!this.leafletMarkerLayers[layer.ukey]) {
+					this.leafletMarkerLayers[layer.ukey] = L.layerGroup().addTo(this.map);
+				}
+				this.updateMarkerLayer(layer.data, layer.color, layer.ukey);
 			} else if (layer.rendering === RENDERING_HEATMAP) {
 				ukeyHeatmapArray.push(layer.ukey);
 				if (this.leafletHeatmapLayers[layer.ukey]) {
@@ -207,32 +213,13 @@ export class UnconnectedMap extends Component {
 	updateRelationsLayer(data, relationshipData, color, ukey) {
 		// todo check if the layer has changed before rerendering it
 		// this.leafletLayers[ukey].clearLayers();
-		let rgbColor = 'rgb(150, 150, 255)';
+		let rgbColor = `rgb(${color.r}, ${color.g}, ${color.b})`;
 		
 		let polylineData = relationshipData.map(part => [part.start, part.end]); // array of arrays does the trick
 		this.leafletRelationshipLayers[ukey] = L.polyline(polylineData, {color: rgbColor}).addTo(this.map);
 		
 		// this.leafletPolylineLayers[ukey].clearLayers();
-		let m = null;
-		data.forEach(entry => {
-			m = L.circleMarker(
-				entry.pos,
-				{
-					title: entry.tooltip,
-					fill: true,
-					radius: 2,
-					color: `rgb(${color.r}, ${color.g}, ${color.b})`,
-					fillColor: rgbColor,
-					opacity: color.a,
-					fillOpacity: color.a
-				}
-			).addTo(this.map);
-			if (entry.tooltip !== undefined)
-				m.bindPopup(entry.tooltip);
-		});
-		
-		
-		// L.polyline(polylineData, {color: rgbColor}).addTo(this.map);
+        // L.polyline(polylineData, {color: rgbColor}).addTo(this.map);
 		// this.leafletPolylineLayers[ukey].setLatLngs(polylineData);
 		// this.leafletPolylineLayers[ukey].setConfig??({ color });
 	}
