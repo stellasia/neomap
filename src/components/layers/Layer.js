@@ -652,8 +652,7 @@ export class UnconnectedLayer extends Component {
 						name="nodeLabel"
 					/>
 				</Form.Group>
-				{/* TODO MOVE */}
-				<Form.Group controlId="formRelationshipLabel" hidden={rendering !== RENDERING_RELATIONS }>
+				<Form.Group controlId="formRelationshipLabel" hidden={ rendering !== RENDERING_RELATIONS }>
 					<Form.Label>Relationship label(s)</Form.Label>
 					<Select
 						className="form-control select"
