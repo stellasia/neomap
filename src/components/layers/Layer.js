@@ -258,10 +258,6 @@ export class UnconnectedLayer extends Component {
 		return this.getNodesQuery();		
 	};
 
-	getRelationshipTypes() {
-		const query = "CALL db.relationshipTypes()"
-	}
-
 	getRelationshipsQuery() {
 		// SUPPORTS ONLY LAT LON FOR NOW
 		const { value: latValue } = this.state.latitudeProperty;
