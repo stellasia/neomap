@@ -53,7 +53,7 @@ export default {
     let res = [];
     const session = driver.session();
     await session
-      .run(`CALL db.labels() YIELD label RETURN label ORDER BY label`)
+      .run('CALL db.labels() YIELD label RETURN label ORDER BY label')
       .then(function (result) {
         result.records.forEach(function (record) {
           let el = {
@@ -68,6 +68,19 @@ export default {
         console.log(error);
       });
 
+    return res;
+  },
+
+  getRelationshipLabels: async function (driver) {
+    if (driver == null) return [];
+
+    const session = driver.session();
+    const result = await session.run('CALL db.relationshipTypes() YIELD relationshipType RETURN relationshipType ORDER BY relationshipType;')
+    const res = result.records.map(record => ({
+            value: record.get("relationshipType"),
+            label: record.get("relationshipType"),
+          }));    
+    session.close();
     return res;
   },
 
@@ -181,5 +194,40 @@ export default {
         .catch((error) => {
           return {status: "ERROR", result: error};
         });
+        
   },
+  getRelationshipData: async function (driver, query, params) {
+    const session = driver.session();
+    return await session
+        .run(query, params)
+        .then((response) => {
+          let res = [];
+          if (response.records === undefined || response.records.length === 0) {
+            alert("No result found, please check your query");
+            return {
+              status: "ERROR",
+              result: query,
+            };
+          }
+          response.records.forEach((record) => {
+            let el = {
+              start: [record.get("start_latitude"), record.get("start_longitude")],
+              end: [record.get("end_latitude"), record.get("end_longitude")],
+            };
+            if (record.has("tooltip") && record.get("tooltip") != null) {
+              // make sure tooltip is a string, otherwise leaflet is not happy AT ALL!
+              el["tooltip"] = record.get("tooltip").toString();
+            }
+            res.push(el);
+          });
+          session.close();
+          return {
+            status: "OK",
+            result: res,
+          };
+        })
+        .catch((error) => {
+          return {status: "ERROR", result: error};
+        });
+      }
 };

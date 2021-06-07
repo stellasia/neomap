@@ -4,7 +4,7 @@
  */
 import React, {Component} from 'react'
 import {connect} from 'react-redux';
-import {RENDERING_CLUSTERS, RENDERING_HEATMAP, RENDERING_MARKERS, RENDERING_POLYLINE} from "./layers/Layer";
+import {RENDERING_CLUSTERS, RENDERING_HEATMAP, RENDERING_MARKERS, RENDERING_POLYLINE, RENDERING_RELATIONS} from "./layers/Layer";
 import L from 'leaflet';
 import 'leaflet.heat';
 import 'leaflet.markercluster';
@@ -29,6 +29,7 @@ export class UnconnectedMap extends Component {
 
 		this.leafletMarkerLayers = {};
 		this.leafletPolylineLayers = {};
+		this.leafletRelationshipLayers = {};
 		this.leafletHeatmapLayers = {};
 		this.leafletClusterLayers = {};
 		this.layerControl = null;
@@ -40,8 +41,10 @@ export class UnconnectedMap extends Component {
 		let globalBounds = new L.LatLngBounds();
 		let ukeyMarkerArray = [];
 		let ukeyPolylineArray = [];
+		let ukeyRelationshipArray = [];
 		let ukeyHeatmapArray = [];
 		let ukeyClusterArray = [];
+		
 		// Iterate through layers
 		layers.map((layer) => {
 			if (layer.ukey === undefined)
@@ -62,6 +65,19 @@ export class UnconnectedMap extends Component {
 					this.map.removeLayer(this.leafletPolylineLayers[layer.ukey]);
 				}
 				this.updatePolylineLayer(layer.data, layer.color, layer.ukey);
+			} else if (layer.rendering === RENDERING_RELATIONS) {
+				ukeyRelationshipArray.push(layer.ukey);
+				if (this.leafletRelationshipLayers[layer.ukey]) {
+					// todo find a way of updating the polyline layer instead of delete & recreate
+					this.map.removeLayer(this.leafletRelationshipLayers[layer.ukey]);
+				}
+				this.updateRelationsLayer(layer.data, layer.relationshipData, layer.relationshipColor, layer.ukey);
+				// have to use separate marker layer
+				ukeyMarkerArray.push(layer.ukey);
+				if (!this.leafletMarkerLayers[layer.ukey]) {
+					this.leafletMarkerLayers[layer.ukey] = L.layerGroup().addTo(this.map);
+				}
+				this.updateMarkerLayer(layer.data, layer.color, layer.ukey);
 			} else if (layer.rendering === RENDERING_HEATMAP) {
 				ukeyHeatmapArray.push(layer.ukey);
 				if (this.leafletHeatmapLayers[layer.ukey]) {
@@ -97,6 +113,14 @@ export class UnconnectedMap extends Component {
 		deletedPolylineUkeyLayers.map((key) => {
 			this.map.removeLayer(this.leafletPolylineLayers[key]);
 			delete this.leafletPolylineLayers[key];
+			return null;
+		});
+		let deletedRelationshipUkeyLayers = Object.keys(this.leafletRelationshipLayers).filter(function (key) {
+			return !ukeyRelationshipArray.includes(key);
+		});
+		deletedRelationshipUkeyLayers.map((key) => {
+			this.map.removeLayer(this.leafletRelationshipLayers[key]);
+			delete this.leafletRelationshipLayers[key];
 			return null;
 		});
 		let deletedHeatmapUkeyLayers = Object.keys(this.leafletHeatmapLayers).filter(function (key) {
@@ -137,6 +161,9 @@ export class UnconnectedMap extends Component {
 					break;
 				case RENDERING_POLYLINE:
 					overlayMaps[l.name] = this.leafletPolylineLayers[l.ukey];
+					break;
+				case RENDERING_RELATIONS:
+					overlayMaps[l.name] = this.leafletRelationshipLayers[l.ukey];
 					break;
 				default:
 					break;
@@ -179,6 +206,20 @@ export class UnconnectedMap extends Component {
 			return entry.pos;
 		});
 		this.leafletPolylineLayers[ukey] = L.polyline(polylineData, {color: rgbColor}).addTo(this.map);
+		// this.leafletPolylineLayers[ukey].setLatLngs(polylineData);
+		// this.leafletPolylineLayers[ukey].setConfig??({ color });
+	}
+
+	updateRelationsLayer(data, relationshipData, color, ukey) {
+		// todo check if the layer has changed before rerendering it
+		// this.leafletLayers[ukey].clearLayers();
+		let rgbColor = `rgb(${color.r}, ${color.g}, ${color.b})`;
+		
+		let polylineData = relationshipData.map(part => [part.start, part.end]); // array of arrays does the trick
+		this.leafletRelationshipLayers[ukey] = L.polyline(polylineData, {color: rgbColor}).addTo(this.map);
+		
+		// this.leafletPolylineLayers[ukey].clearLayers();
+        // L.polyline(polylineData, {color: rgbColor}).addTo(this.map);
 		// this.leafletPolylineLayers[ukey].setLatLngs(polylineData);
 		// this.leafletPolylineLayers[ukey].setConfig??({ color });
 	}
