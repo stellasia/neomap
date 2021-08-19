@@ -90,6 +90,46 @@ class Neo4JService {
     }
   };
 
+  getRelationshipLabels = async () => {
+    const query = 'CALL db.relationshipTypes() YIELD relationshipType RETURN relationshipType ORDER BY relationshipType;'
+    const records = await this._runQuery(query)
+    console.log(records)
+    const res = records.map(record => ({
+            value: record.get("relationshipType"),
+            label: record.get("relationshipType"),
+          }));    
+    return res;
+  }
+
+  getRelationshipData = async (query, params) => {
+    const records = await this._runQuery(query, params);
+    let res = [];
+    if (records === undefined || records.length === 0) {
+      alert("No result found, please check your query");
+      return {
+        status: "ERROR",
+        result: query,
+      };
+    }
+    records.forEach((record) => {
+      let el = {
+        start: [record.get("start_latitude"), record.get("start_longitude")],
+        end: [record.get("end_latitude"), record.get("end_longitude")],
+      };
+      if (record.has("tooltip") && record.get("tooltip") != null) {
+        // make sure tooltip is a string, otherwise leaflet is not happy AT ALL!
+        el["tooltip"] = record.get("tooltip").toString();
+      }
+      res.push(el);
+    });
+    console.log(res)
+    return {
+      status: "OK",
+      result: res,
+    };
+  }
+      
+
   hasSpatial = async () => {
     const query = "CALL spatial.procedures() YIELD name RETURN name LIMIT 1";
 

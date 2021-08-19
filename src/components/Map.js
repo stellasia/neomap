@@ -5,7 +5,7 @@
  * To be improved.
  */
 import React from 'react'
-import { RENDERING_CLUSTERS, RENDERING_HEATMAP, RENDERING_MARKERS, RENDERING_POLYLINE } from "./constants";
+import { RENDERING_CLUSTERS, RENDERING_HEATMAP, RENDERING_MARKERS, RENDERING_POLYLINE, RENDERING_RELATIONS } from "./constants";
 import L from 'leaflet';
 import 'leaflet.heat';
 import 'leaflet.markercluster';
@@ -57,7 +57,7 @@ export const Map = React.memo(({layers}) => {
 			const currentMapOverlays  = mapOverlaysRef.current;
 
 			layers.forEach((layer) => {
-				const {name, bounds, rendering, data, radius, color } = layer;
+				const {name, bounds, rendering, data, radius, color, relationshipData, relationshipColor } = layer;
 
 				console.log(data);
 
@@ -75,32 +75,61 @@ export const Map = React.memo(({layers}) => {
 				}
 
 				const rgbColor = `rgb(${color.r}, ${color.g}, ${color.b})`;
+				const relRgbColor = `rgb(${relationshipColor.r}, ${relationshipColor.g}, ${relationshipColor.b})`;
+				console.log(currentMapOverlays)
+				function renderMarkers() {
+					let markerLayer = L.layerGroup().addTo(map);
+					// markerLayer.clearLayers();
+
+					data.forEach(entry => {
+						const m = L.circleMarker(
+							entry.pos,
+							{
+								title: entry.tooltip,
+								fill: true,
+								radius: 5,
+								color: rgbColor,
+								fillColor: rgbColor,
+								opacity: color.a,
+								fillOpacity: color.a
+							}
+						).addTo(markerLayer);
+
+						if (entry.tooltip !== undefined) {
+							m.bindPopup(entry.tooltip);
+						}
+					});
+
+					newMapOverlays[name] = markerLayer;
+				}
 
 				switch(rendering) {
 					case RENDERING_MARKERS:
-						let markerLayer = L.layerGroup().addTo(map);
-						// markerLayer.clearLayers();
+						renderMarkers()
 
-						data.forEach(entry => {
-							const m = L.circleMarker(
-								entry.pos,
-								{
-									title: entry.tooltip,
-									fill: true,
-									radius: 5,
-									color: rgbColor,
-									fillColor: rgbColor,
-									opacity: color.a,
-									fillOpacity: color.a
-								}
-							).addTo(markerLayer);
+						break;
 
-							if (entry.tooltip !== undefined) {
+					case RENDERING_RELATIONS:
+						renderMarkers()
+						let relationsLayer = currentMapOverlays[name];
+
+						if (!relationsLayer) {
+							relationsLayer = L.layerGroup().addTo(map);
+						}
+
+						// TODO: check if the layer has changed before rerendering it
+						relationsLayer.clearLayers();
+						console.log("DATA", relationshipData)
+
+						relationshipData.forEach(entry => {
+							const m = L.polyline([entry.start, entry.end], {color: relRgbColor}).addTo(relationsLayer);
+
+							if (entry.tooltip != null) {
 								m.bindPopup(entry.tooltip);
 							}
 						});
 
-						newMapOverlays[name] = markerLayer;
+						newMapOverlays[name] = relationsLayer;
 
 						break;
 
