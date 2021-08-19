@@ -34,7 +34,7 @@ export const NEW_LAYER = {
 	cypher: "",
 	relationshipData: [],
 	relationships: [],
-	relationshipColor: {r: 0, g: 0, b: 255, a: 1},
+	relationshipColor: {r: 0, g: 100, b: 255, a: 0.8},
 	// TODO: this should not be in Layer state?
 	hasSpatialPlugin: false,
 	spatialLayer: {value: "", label: ""},

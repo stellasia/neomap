@@ -238,7 +238,7 @@ export class Layer extends Component {
 
 		// if tooltip is not null, also return tooltip
 		if (tooltipValue !== '')
-			query += `, n.${tooltipValue} as tooltip`;
+			query += `, r.${tooltipValue} as tooltip`;
 
 		// TODO: is that really needed???
 		// limit the number of points to avoid browser crash...
@@ -635,7 +635,7 @@ export class Layer extends Component {
 					/>
 				</Form.Group>
 				<Form.Group controlId="formRelationshipLabel" hidden={ rendering !== RENDERING_RELATIONS }>
-					<Form.Label>Relationship label(s)</Form.Label>
+					<Form.Label>Relationship type(s)</Form.Label>
 					<Select
 						className="form-control select"
 						options={relationships}
@@ -671,7 +671,7 @@ export class Layer extends Component {
 
 				<Form.Group
 					controlId="formTooltipProperty"
-					hidden={this.state.rendering !== RENDERING_MARKERS  && this.state.rendering !== RENDERING_CLUSTERS}
+					hidden={rendering !== RENDERING_MARKERS  && rendering !== RENDERING_CLUSTERS && rendering !== RENDERING_RELATIONS}
 					name="formgroupTooltip"
 				>
 					<Form.Label>Tooltip property</Form.Label>
@@ -682,6 +682,21 @@ export class Layer extends Component {
 						isMulti={false}
 						defaultValue={this.state.tooltipProperty}
 						name="tooltipProperty"
+					/>
+				</Form.Group>
+				<Form.Group 
+					controlId="formRelationshipTooltipProperty" 
+					hidden={rendering !== RENDERING_RELATIONS}
+					name="formgroupRelationshipTooltip"
+				>
+					<Form.Label>Relationship Tooltip property</Form.Label>
+					<Select
+						className="form-control select"
+						options={propertyNames}
+						onChange={this.handleRelationshipTooltipPropertyChange}
+						isMulti={false}
+						defaultValue={relationshipTooltipProperty}
+						name="relationshipTooltipProperty"
 					/>
 				</Form.Group>
 
