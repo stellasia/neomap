@@ -25,6 +25,7 @@ const renderNewLayer = () => {
   return render(
     <Layer
       key={NEW_LAYER.ukey}
+      isNew={true}
       layer={NEW_LAYER}
       addLayer={mockAddLayer}
       updateLayer={mockUpdateLayer}
@@ -63,7 +64,7 @@ describe('Test Layer component', () => {
     expect(renderResult.getByLabelText('Name')).toBeVisible();
   });
 
-	it('Can modify the layer name', () => {
+  it('Can modify the layer name', () => {
     const renderResult = renderNewLayer();
     const nameField = renderResult.getByLabelText('Name');
     const newName = "New Layer Name";
@@ -73,7 +74,7 @@ describe('Test Layer component', () => {
 		expect(renderResult.getByText(newName)).toBeDefined();
 	});
 
-	it('Can select/modify layer type property', () => {
+  it('Can select/modify layer type property', () => {
     const renderResult = renderNewLayer();
     const latLonRadio = renderResult.getByLabelText('Lat/Lon');
     const builtInPointRadio = renderResult.getByLabelText('Point (neo4j built-in)');
@@ -179,7 +180,7 @@ describe('Test Layer component', () => {
     expect(true); // FIXME
   });
 
-  it('Can configure heatmap radious', () => {
+  it('Can configure heatmap radius', () => {
     const renderResult = renderNewLayer();
     expect(true); // FIXME
   });
@@ -197,10 +198,12 @@ describe('Test Layer component', () => {
     expect(mockAddLayer).toHaveBeenCalledTimes(1);
   });
 
+  /*
   it('New layer has no `Update Layer` button', () => {
     const renderResult = renderNewLayer();
     expect(renderResult.queryByText('Update Layer')).toBe(null);
   });
+   */
 
   it('New layer has no `Delete Layer` button', () => {
     const renderResult = renderNewLayer();

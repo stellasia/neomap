@@ -1,3 +1,9 @@
+/**
+ * NB: this component has been designed in order to redraw existing layers
+ * but we are not yet able to detect changes (in rendering type or color)
+ * and hence we are still redrawing all layers at each rendering.
+ * To be improved.
+ */
 import React from 'react'
 import { RENDERING_CLUSTERS, RENDERING_HEATMAP, RENDERING_MARKERS, RENDERING_POLYLINE } from "./constants";
 import L from 'leaflet';
@@ -53,24 +59,27 @@ export const Map = React.memo(({layers}) => {
 			layers.forEach((layer) => {
 				const {name, bounds, rendering, data, radius, color } = layer;
 
+				console.log(data);
+
 				const layerBounds = new L.LatLngBounds(bounds);
 
 				if (layerBounds.isValid()) {
 					mapBounds.extend(layerBounds);
 				}
 
+				// TODO: check if the layer has changed before rerendering it
+				const currentOverlay = currentMapOverlays[name]
+				if (currentOverlay) {
+					map.removeLayer(currentOverlay);
+					layerControl.removeLayer(currentOverlay);
+				}
+
 				const rgbColor = `rgb(${color.r}, ${color.g}, ${color.b})`;
 
 				switch(rendering) {
 					case RENDERING_MARKERS:
-						let markerLayer = currentMapOverlays[name];
-
-						if (!markerLayer) {
-							markerLayer = L.layerGroup().addTo(map);
-						}
-
-						// TODO: check if the layer has changed before rerendering it
-						markerLayer.clearLayers();
+						let markerLayer = L.layerGroup().addTo(map);
+						// markerLayer.clearLayers();
 
 						data.forEach(entry => {
 							const m = L.circleMarker(
@@ -96,13 +105,7 @@ export const Map = React.memo(({layers}) => {
 						break;
 
 					case RENDERING_POLYLINE:
-						let polylineLayer = currentMapOverlays[name];
-
-						if (!polylineLayer) {
-							polylineLayer = L.polyline([], {color: rgbColor}).addTo(map);
-						}
-
-						// TODO: check if the layer has changed before rerendering it
+						let polylineLayer = L.polyline([], {color: rgbColor}).addTo(map);
 						polylineLayer.setLatLngs(data.map(entry => entry.pos));
 
 						newMapOverlays[name] = polylineLayer;
@@ -110,18 +113,13 @@ export const Map = React.memo(({layers}) => {
 						break;
 
 					case RENDERING_HEATMAP:
-						let heatmapLayer = currentMapOverlays[name];
+						let heatmapLayer = L.heatLayer([], {
+							radius,
+							minOpacity: 0.1,
+							blur: 15,
+							max: 10.0
+						}).addTo(map);
 
-						if (!heatmapLayer) {
-							heatmapLayer = L.heatLayer([], {
-								radius,
-								minOpacity: 0.1,
-								blur: 15,
-								max: 10.0
-							}).addTo(map);
-						}
-
-						// TODO: check if the layer has changed before rerendering it
 						data.forEach((entry) => {
 							heatmapLayer.addLatLng(entry.pos.concat(1.0));
 						});
@@ -131,14 +129,8 @@ export const Map = React.memo(({layers}) => {
 						break;
 
 					case RENDERING_CLUSTERS:
-						let clusterLayer = currentMapOverlays[name];
-
-						if (!clusterLayer) {
-							clusterLayer = L.markerClusterGroup().addTo(map);
-						}
-
-						// TODO: check if the layer has changed before rerendering it
-						clusterLayer.clearLayers();
+						let clusterLayer = L.markerClusterGroup().addTo(map);
+						// clusterLayer.clearLayers();
 
 						data.forEach(entry => {
 							const m = L.circleMarker(entry.pos,{
@@ -162,6 +154,9 @@ export const Map = React.memo(({layers}) => {
 					default:
 						break;
 				}
+
+				layerControl.addOverlay(newMapOverlays[name], name);
+
 			});
 
 			// Remove deleted layers from the map and the layer control
@@ -169,12 +164,14 @@ export const Map = React.memo(({layers}) => {
 				for (const [name, overlay] of Object.entries(currentMapOverlays)) {
 					if (!newMapOverlays[name]) {
 						map.removeLayer(overlay);
-						layerControl.remove(overlay);
+						layerControl.removeLayer(overlay);
 					}
 				}
 			} catch (error) {
-				console.log(error)
+				console.error(error)
 			}
+
+			layerControl.addTo(map);
 
 			// Persist overlays for the next render pass
 			mapOverlaysRef.current = newMapOverlays;

@@ -13,7 +13,7 @@ export const RENDERING_CLUSTERS = "clusters";
 
 // default parameters for new layers
 export const NEW_LAYER = {
-	ukey: 'NewLayer',
+	ukey: undefined,
 	name: "New layer",
 	layerType: LAYER_TYPE_LATLON,
 	latitudeProperty: {value: "latitude", label: "latitude"},

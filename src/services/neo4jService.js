@@ -135,7 +135,7 @@ class Neo4JService {
 
         return {
           pos: position,
-          tooltip: tooltip ? tooltip.toString() : "",
+          tooltip: tooltip ? tooltip.toString() : undefined,
         };
       });
 

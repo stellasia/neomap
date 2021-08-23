@@ -13,8 +13,8 @@ export const App = React.memo(() => {
 	 * we need to import an instance here to the boot a service instance that reads
 	 * App.js window instance. The service is a singleton,
 	 * and subsequent windows will get the same instance with drivers created here.
-	 * 
-	 * TODO: FIXME! Redesign neo4jService instansiation with full consideration for global window dependency
+	 *
+	 * TODO: FIXME! Redesign neo4jService instantiation with full consideration for global window dependency
 	 */
 	neo4jService._getNeo4jDriver();
 
@@ -26,7 +26,7 @@ export const App = React.memo(() => {
 
 	const updateLayer = (layer) => {
 		const updatedLayers = layers.map(currentLayer => {
-			if (currentLayer.key === layer.ukey) {
+			if (currentLayer.ukey === layer.ukey) {
 				return layer;
 			}
 			return currentLayer;

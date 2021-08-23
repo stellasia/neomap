@@ -11,8 +11,6 @@ import {CypherEditor} from "graph-app-kit/components/Editor"
 import {confirmAlert} from 'react-confirm-alert'; // Import
 import { neo4jService } from '../services/neo4jService'
 import { ColorPicker } from "./ColorPicker";
-import { generateUkeyFromName } from './utils';
-
 
 import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
 // css needed for CypherEditor
@@ -22,7 +20,6 @@ import "codemirror/addon/hint/show-hint.css";
 import "cypher-codemirror/dist/cypher-codemirror-syntax.css";
 
 import {
-	NEW_LAYER,
 	LAYER_TYPE_LATLON,
 	LAYER_TYPE_POINT,
 	LAYER_TYPE_CYPHER,
@@ -311,7 +308,7 @@ export class Layer extends Component {
 		await this.updateData();
 		const proposedLayer = {...this.state};
 		// Generate new ukey
-		proposedLayer.ukey = generateUkeyFromName(proposedLayer.name);
+		// proposedLayer.ukey = generateUkeyFromName(proposedLayer.name);
 
 		this.props.addLayer(proposedLayer);
 	}
@@ -361,7 +358,7 @@ export class Layer extends Component {
            is that what we want?
          */
 		const { status, error, result } = await neo4jService.getNodeLabels();
-		
+
 		if (status === 200 && result !== undefined) {
 			this.setState({	nodes: result });
 		} else {
@@ -751,21 +748,20 @@ export class Layer extends Component {
 									Show query
 								</Button>
 
-								<Button variant="success" onClick={this.createLayer} >
-									Create New Layer
-								</Button>
-
-								{this.state.ukey !== NEW_LAYER.ukey && (
+								{ this.props.isNew ?
+									<Button variant="success" onClick={this.createLayer} >
+										Create New Layer
+									</Button> :
 									<>
 										<Button variant="success" onClick={this.updateLayer} >
 											Update Layer
 										</Button>
-
-										<Button variant="danger" onClick={this.deleteLayer} hidden={this.props.layer === undefined}>
+										<Button variant="danger" onClick={this.deleteLayer} >
 											Delete Layer
 										</Button>
 									</>
-								)}								
+								}
+
 							</div>
 
 						</Form>
