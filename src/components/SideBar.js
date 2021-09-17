@@ -1,19 +1,32 @@
-import React, {Component} from 'react';
-import LayersList from './layers/LayersList';
+import React from 'react';
+import Accordion from 'react-bootstrap/Accordion';
+import { Layer } from './Layer';
+import { NEW_LAYER } from './constants';
+import {generateUkeyFromName} from "./utils";
 
+export const SideBar = React.memo(({ layers, addLayer, updateLayer, removeLayer }) => {
 
-class SideBar extends Component {
-
-	// TODO: move menu bar here or consider removing this component
-
-	render() {
-		return (
-			<LayersList
-				driver={this.props.driver}
-			/>
-		);
+	const renderLayers = () => {
+		return [...layers, {...NEW_LAYER}].map((layer) => {
+			const isNew = layer.ukey === undefined;
+			layer.ukey = layer.ukey || generateUkeyFromName()
+			return (
+				<Layer
+					key={layer.ukey}
+					data-id="layers"
+					layer={layer}
+					isNew={isNew}
+					addLayer={addLayer}
+					updateLayer={updateLayer}
+					removeLayer={removeLayer}
+				/>
+			);
+		});
 	};
-}
 
-
-export default SideBar;
+	return (
+		<Accordion>
+			{renderLayers()}
+		</Accordion>
+	)
+});

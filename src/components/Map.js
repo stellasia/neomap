@@ -1,241 +1,191 @@
-/* Main map component based on leaflet map.
- *
- *
+/**
+ * NB: this component has been designed in order to redraw existing layers
+ * but we are not yet able to detect changes (in rendering type or color)
+ * and hence we are still redrawing all layers at each rendering.
+ * To be improved.
  */
-import React, {Component} from 'react'
-import {connect} from 'react-redux';
-import {RENDERING_CLUSTERS, RENDERING_HEATMAP, RENDERING_MARKERS, RENDERING_POLYLINE} from "./layers/Layer";
+import React from 'react'
+import { RENDERING_CLUSTERS, RENDERING_HEATMAP, RENDERING_MARKERS, RENDERING_POLYLINE } from "./constants";
 import L from 'leaflet';
 import 'leaflet.heat';
 import 'leaflet.markercluster';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 
+/*
+ * Main map component based on leaflet map.
+ */
+export const Map = React.memo(({layers}) => {
 
-export class UnconnectedMap extends Component {
+	const mapRef = React.useRef();
+	const mapElementRef = React.createRef();
 
-	componentDidMount() {
-		// init an empty map
-		this.map = L.map('map', {
-			preferCanvas: true,
-			center: [0, 0],
-			zoom: 2,
-			layers: [
-				L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-					attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-				}),
-			]
-		});
+	const mapOverlaysRef = React.useRef({});
+	const layerControlRef = React.useRef(new L.control.layers([]));
 
-		this.leafletMarkerLayers = {};
-		this.leafletPolylineLayers = {};
-		this.leafletHeatmapLayers = {};
-		this.leafletClusterLayers = {};
-		this.layerControl = null;
-	}
+	const renderedBounds = React.useRef(new L.LatLngBounds());
 
+	React.useEffect(() => {
+		const mapElement = mapElementRef.current;
 
-	componentDidUpdate() {
-		let layers = this.props.layers;
-		let globalBounds = new L.LatLngBounds();
-		let ukeyMarkerArray = [];
-		let ukeyPolylineArray = [];
-		let ukeyHeatmapArray = [];
-		let ukeyClusterArray = [];
-		// Iterate through layers
-		layers.map((layer) => {
-			if (layer.ukey === undefined)
-				return null;
-			let bds = new L.LatLngBounds(layer.bounds);
-			if (bds.isValid())
-				globalBounds.extend(bds);
-			if (layer.rendering === RENDERING_MARKERS) {
-				ukeyMarkerArray.push(layer.ukey);
-				if (!this.leafletMarkerLayers[layer.ukey]) {
-					this.leafletMarkerLayers[layer.ukey] = L.layerGroup().addTo(this.map);
-				}
-				this.updateMarkerLayer(layer.data, layer.color, layer.ukey);
-			} else if (layer.rendering === RENDERING_POLYLINE) {
-				ukeyPolylineArray.push(layer.ukey);
-				if (this.leafletPolylineLayers[layer.ukey]) {
-					// todo find a way of updating the polyline layer instead of delete & recreate
-					this.map.removeLayer(this.leafletPolylineLayers[layer.ukey]);
-				}
-				this.updatePolylineLayer(layer.data, layer.color, layer.ukey);
-			} else if (layer.rendering === RENDERING_HEATMAP) {
-				ukeyHeatmapArray.push(layer.ukey);
-				if (this.leafletHeatmapLayers[layer.ukey]) {
-					// todo find a way of updating the heat layer instead of delete & recreate
-					this.map.removeLayer(this.leafletHeatmapLayers[layer.ukey]);
-				}
-				this.updateHeatmapLayer(layer.data, layer.radius, layer.ukey);
-			} else if (layer.rendering === RENDERING_CLUSTERS) {
-				ukeyClusterArray.push(layer.ukey);
-				if (!this.leafletClusterLayers[layer.ukey]) {
-					this.leafletClusterLayers[layer.ukey] = L.markerClusterGroup();
-					this.map.addLayer(this.leafletClusterLayers[layer.ukey]);
-				}
-				this.updateClusterLayer(layer.data, layer.color, layer.ukey);
-			}
-			return null;
-		});
-		// Check if globalBounds is defined
-		if (!globalBounds.isValid())
-			globalBounds = new L.LatLngBounds([[90, -180], [-90, 180]]);
-		// Find and clean deleted layers
-		let deletedMarkerUkeyLayers = Object.keys(this.leafletMarkerLayers).filter(function(key) {
-			return !ukeyMarkerArray.includes(key);
-		});
-		deletedMarkerUkeyLayers.map((key) => {
-			this.map.removeLayer(this.leafletMarkerLayers[key]);
-			delete this.leafletMarkerLayers[key];
-			return null;
-		});
-		let deletedPolylineUkeyLayers = Object.keys(this.leafletPolylineLayers).filter(function (key) {
-			return !ukeyPolylineArray.includes(key);
-		});
-		deletedPolylineUkeyLayers.map((key) => {
-			this.map.removeLayer(this.leafletPolylineLayers[key]);
-			delete this.leafletPolylineLayers[key];
-			return null;
-		});
-		let deletedHeatmapUkeyLayers = Object.keys(this.leafletHeatmapLayers).filter(function (key) {
-			return !ukeyHeatmapArray.includes(key);
-		});
-		deletedHeatmapUkeyLayers.map((key) => {
-			this.map.removeLayer(this.leafletHeatmapLayers[key]);
-			delete this.leafletHeatmapLayers[key];
-			return null;
-		});
-		let deletedClusterUkeyLayers = Object.keys(this.leafletClusterLayers).filter(function (key) {
-			return !ukeyClusterArray.includes(key);
-		});
-		deletedClusterUkeyLayers.map((key) => {
-			this.map.removeLayer(this.leafletClusterLayers[key]);
-			delete this.leafletClusterLayers[key];
-			return null;
-		});
-		this.map.flyToBounds(globalBounds);
-		this.updateLayerControl();
-	}
-
-	updateLayerControl() {
-		if (this.layerControl) {
-			this.layerControl.remove(this.map);
-		}
-		var overlayMaps = {};
-		this.props.layers.map(l => {
-			switch (l.rendering) {
-				case RENDERING_MARKERS:
-					overlayMaps[l.name] = this.leafletMarkerLayers[l.ukey];
-					break;
-				case RENDERING_HEATMAP:
-					overlayMaps[l.name] = this.leafletHeatmapLayers[l.ukey];
-					break;
-				case RENDERING_CLUSTERS:
-					overlayMaps[l.name] = this.leafletClusterLayers[l.ukey];
-					break;
-				case RENDERING_POLYLINE:
-					overlayMaps[l.name] = this.leafletPolylineLayers[l.ukey];
-					break;
-				default:
-					break;
-			}
-			return null;
-		});
-		this.layerControl = L.control.layers([], overlayMaps);
-		this.layerControl.addTo(this.map);
-	}
-
-	updateMarkerLayer(data, color, ukey) {
-		// todo check if the layer has changed before rerendering it
-		this.leafletMarkerLayers[ukey].clearLayers();
-		let m = null;
-		let rgbColor = `rgb(${color.r}, ${color.g}, ${color.b})`;
-		data.forEach(entry => {
-			m = L.circleMarker(
-				entry.pos,
-				{
-					title: entry.tooltip,
-					fill: true,
-					radius: 5,
-					color: rgbColor,
-					fillColor: rgbColor,
-					opacity: color.a,
-					fillOpacity: color.a
-				}
-			).addTo(this.leafletMarkerLayers[ukey]);
-			if (entry.tooltip !== undefined)
-				m.bindPopup(entry.tooltip);
-		});
-	}
-
-
-	updatePolylineLayer(data, color, ukey) {
-		// todo check if the layer has changed before rerendering it
-		// this.leafletLayers[ukey].clearLayers();
-		let rgbColor = `rgb(${color.r}, ${color.g}, ${color.b})`;
-		let polylineData = data.map((entry) => {
-			return entry.pos;
-		});
-		this.leafletPolylineLayers[ukey] = L.polyline(polylineData, {color: rgbColor}).addTo(this.map);
-		// this.leafletPolylineLayers[ukey].setLatLngs(polylineData);
-		// this.leafletPolylineLayers[ukey].setConfig??({ color });
-	}
-
-
-	updateHeatmapLayer(data, radius,  ukey) {
-		// todo check if the layer has changed before rerendering it
-		let heatData = data.map((entry) => {
-			return entry.pos.concat(1.0);
-		});
-		this.leafletHeatmapLayers[ukey] = L.heatLayer(heatData, {
-			radius: radius,
-			minOpacity: 0.1,
-			blur: 15,
-			max: 10.0
-		}).addTo(this.map);
-	}
-
-
-	updateClusterLayer(data, color, ukey) {
-		// todo check if the layer has changed before rerendering it
-		this.leafletClusterLayers[ukey].clearLayers();
-		let m = null;
-		let rgbColor = `rgb(${color.r}, ${color.g}, ${color.b})`;
-		data.forEach(entry => {
-			m = L.circleMarker(entry.pos,{
-				title: entry.tooltip,
-				fill: true,
-				radius: 5,
-				color: rgbColor,
-				fillColor: rgbColor,
-				opacity: color.a,
-				fillOpacity: color.a
+		if (mapElement) {
+			mapRef.current = L.map(mapElement, {
+				preferCanvas: true,
+				center: [0, 0],
+				zoom: 2,
+				layers: [
+					L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+						attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+					}),
+				]
 			});
-			if (entry.tooltip !== undefined)
-				m.bindPopup(entry.tooltip);
-			this.leafletClusterLayers[ukey].addLayer(m);
-		});
-	}
+		}
 
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
 
-	render() {
-		return (
-			<div id="map">
-				text that will be replaced by the map
-			</div>
-		);
-	}
-}
+	React.useEffect(() => {
+		const map = mapRef.current;
+		const layerControl = layerControlRef.current;
 
+		if (map) {
+			let mapBounds = new L.LatLngBounds();
 
-const mapStateToProps = (state, ownProps) => {
-	return {
-		layers: state.layers,
-		...ownProps
-	}
-};
+			// On a new render pass, build new map overlays object,
+			// and replace the current map overlays object created on the last render pass
+			const newMapOverlays = {}
+			const currentMapOverlays  = mapOverlaysRef.current;
 
+			layers.forEach((layer) => {
+				const {name, bounds, rendering, data, radius, color } = layer;
 
-export default connect(mapStateToProps)(UnconnectedMap);
+				console.log(data);
+
+				const layerBounds = new L.LatLngBounds(bounds);
+
+				if (layerBounds.isValid()) {
+					mapBounds.extend(layerBounds);
+				}
+
+				// TODO: check if the layer has changed before rerendering it
+				const currentOverlay = currentMapOverlays[name]
+				if (currentOverlay) {
+					map.removeLayer(currentOverlay);
+					layerControl.removeLayer(currentOverlay);
+				}
+
+				const rgbColor = `rgb(${color.r}, ${color.g}, ${color.b})`;
+
+				switch(rendering) {
+					case RENDERING_MARKERS:
+						let markerLayer = L.layerGroup().addTo(map);
+						// markerLayer.clearLayers();
+
+						data.forEach(entry => {
+							const m = L.circleMarker(
+								entry.pos,
+								{
+									title: entry.tooltip,
+									fill: true,
+									radius: 5,
+									color: rgbColor,
+									fillColor: rgbColor,
+									opacity: color.a,
+									fillOpacity: color.a
+								}
+							).addTo(markerLayer);
+
+							if (entry.tooltip !== undefined) {
+								m.bindPopup(entry.tooltip);
+							}
+						});
+
+						newMapOverlays[name] = markerLayer;
+
+						break;
+
+					case RENDERING_POLYLINE:
+						let polylineLayer = L.polyline([], {color: rgbColor}).addTo(map);
+						polylineLayer.setLatLngs(data.map(entry => entry.pos));
+
+						newMapOverlays[name] = polylineLayer;
+
+						break;
+
+					case RENDERING_HEATMAP:
+						let heatmapLayer = L.heatLayer([], {
+							radius,
+							minOpacity: 0.1,
+							blur: 15,
+							max: 10.0
+						}).addTo(map);
+
+						data.forEach((entry) => {
+							heatmapLayer.addLatLng(entry.pos.concat(1.0));
+						});
+
+						newMapOverlays[name] = heatmapLayer;
+
+						break;
+
+					case RENDERING_CLUSTERS:
+						let clusterLayer = L.markerClusterGroup().addTo(map);
+						// clusterLayer.clearLayers();
+
+						data.forEach(entry => {
+							const m = L.circleMarker(entry.pos,{
+								title: entry.tooltip,
+								fill: true,
+								radius: 5,
+								color: rgbColor,
+								fillColor: rgbColor,
+								opacity: color.a,
+								fillOpacity: color.a
+							}).addTo(clusterLayer);
+
+							if (entry.tooltip !== undefined) {
+								m.bindPopup(entry.tooltip);
+							}
+						});
+
+						newMapOverlays[name] = clusterLayer;
+
+						break;
+					default:
+						break;
+				}
+
+				layerControl.addOverlay(newMapOverlays[name], name);
+
+			});
+
+			// Remove deleted layers from the map and the layer control
+			try {
+				for (const [name, overlay] of Object.entries(currentMapOverlays)) {
+					if (!newMapOverlays[name]) {
+						map.removeLayer(overlay);
+						layerControl.removeLayer(overlay);
+					}
+				}
+			} catch (error) {
+				console.error(error)
+			}
+
+			layerControl.addTo(map);
+
+			// Persist overlays for the next render pass
+			mapOverlaysRef.current = newMapOverlays;
+
+			// Zoom to bounds if different
+			if (mapBounds.isValid() && !mapBounds.equals(renderedBounds.current)) {
+				map.flyToBounds(mapBounds);
+				renderedBounds.current = mapBounds;
+			}
+
+		}
+	}, [layers]);
+
+	return (
+		<div id="map" ref={mapElementRef} />
+	);
+});

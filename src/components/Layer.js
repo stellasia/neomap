@@ -3,16 +3,14 @@
  TODO: split into several files?
  */
 import React, {Component} from 'react';
-import {connect} from 'react-redux';
 import Select from 'react-select'
 import Accordion from 'react-bootstrap/Accordion';
 import Card from 'react-bootstrap/Card';
 import {Button, Form} from 'react-bootstrap';
 import {CypherEditor} from "graph-app-kit/components/Editor"
 import {confirmAlert} from 'react-confirm-alert'; // Import
-import neo4jService from '../../services/neo4jService'
-import {addOrUpdateLayer, removeLayer} from "../../actions";
-
+import { neo4jService } from '../services/neo4jService'
+import { ColorPicker } from "./ColorPicker";
 
 import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
 // css needed for CypherEditor
@@ -20,62 +18,25 @@ import "codemirror/lib/codemirror.css";
 import "codemirror/addon/lint/lint.css";
 import "codemirror/addon/hint/show-hint.css";
 import "cypher-codemirror/dist/cypher-codemirror-syntax.css";
-import ColorPicker from "../ColorPicker";
 
+import {
+	LAYER_TYPE_LATLON,
+	LAYER_TYPE_POINT,
+	LAYER_TYPE_CYPHER,
+	LAYER_TYPE_SPATIAL,
+	RENDERING_MARKERS,
+	RENDERING_POLYLINE,
+	RENDERING_HEATMAP,
+	RENDERING_CLUSTERS
+} from './constants';
 
-// layer type: either from node labels or cypher
-const LAYER_TYPE_LATLON = "latlon";
-const LAYER_TYPE_POINT = "point";
-const LAYER_TYPE_CYPHER = "cypher";
-const LAYER_TYPE_SPATIAL = "spatial";
-
-// TODO: move this into a separate configuration/constants file
-export const RENDERING_MARKERS = "markers";
-export const RENDERING_POLYLINE = "polyline";
-export const RENDERING_HEATMAP = "heatmap";
-export const RENDERING_CLUSTERS = "clusters";
-
-
-// default parameters for new layers
-const DEFAULT_LAYER = {
-	name: "New layer",
-	layerType: LAYER_TYPE_LATLON,
-	latitudeProperty: {value: "latitude", label: "latitude"},
-	longitudeProperty: {value: "longitude", label: "longitude"},
-	pointProperty: {value: "point", label: "point"},
-	tooltipProperty: {value: "", label: ""},
-	nodeLabel: [],
-	propertyNames: [],
-	spatialLayers: [],
-	data: [],
-	bounds: [],
-	color: {r: 0, g: 0, b: 255, a: 1},
-	limit: null,
-	rendering: RENDERING_MARKERS,
-	radius: 30,
-	cypher: "",
-	// TODO: this should not be in Layer state?
-	hasSpatialPlugin: false,
-	spatialLayer: {value: "", label: ""},
-};
-
-
-export class UnconnectedLayer extends Component {
+export class Layer extends Component {
 
 	constructor(props) {
 		super(props);
 
-		if (props.layer !== undefined) {
-			this.state = props.layer;
-		} else {
-			this.state = DEFAULT_LAYER;
-			this.state["ukey"] = props.ukey;
-		}
+		this.state = props.layer;
 
-		this.driver = props.driver;
-
-		this.sendData = this.sendData.bind(this);
-		this.deleteLayer = this.deleteLayer.bind(this);
 		this.showQuery = this.showQuery.bind(this);
 		this.handleNameChange = this.handleNameChange.bind(this);
 		this.handleLayerTypeChange = this.handleLayerTypeChange.bind(this);
@@ -103,10 +64,10 @@ export class UnconnectedLayer extends Component {
 	}
 
 
-	updateBounds() {
+	updateBounds = () => {
 		/* Compute the map bounds based on `this.state.data`
          */
-		let arr = this.state.data;
+		let arr = this.state.data || [];
 		// TODO: delegate this job to leaflet
 		let minLat = Number.MAX_VALUE;
 		let maxLat = -Number.MAX_VALUE;
@@ -132,15 +93,18 @@ export class UnconnectedLayer extends Component {
 			});
 		}
 		let bounds = [[minLat, minLon], [maxLat, maxLon]];
-		this.setState({bounds: bounds}, function () {
-			this.props.dispatch(
-				addOrUpdateLayer({layer: this.state})
-			);
-		});
+		this.setState({ bounds });
+
+		// TODO: Should ths really have a side effect of creating / updating the layer?
+		// The call to create / update layer should be explicit, from user intent
+
+		// this.setState({bounds: bounds}, function () {
+		// 	this.props.updateLayer(this.state);
+		// });
 	};
 
 
-	getCypherQuery() {
+	getCypherQuery = () => {
 		// TODO: check that the query is valid
 		return this.state.cypher;
 	};
@@ -215,25 +179,28 @@ export class UnconnectedLayer extends Component {
 	};
 
 
-	updateData() {
-		/*Query database and update `this.state.data`
-         */
-		neo4jService.getData(this.driver, this.getQuery(), {}).then( res => {
-			if (res.status === "ERROR") {
-				let message = "Invalid cypher query.";
-				if (this.state.layerType !== LAYER_TYPE_CYPHER) {
-					message += "\nContact the development team";
-				} else {
-					message += "\nFix your query and try again";
-				}
-				message += "\n\n" + res.result;
-				alert(message);
+	async updateData() {
+		const { status, error, result } = await neo4jService.getData( this.getQuery(), {});
+
+		if (status === 200 && result !== undefined) {
+			this.setState({ data: result }, function () {
+				this.updateBounds()
+			});
+		} else if (result) {
+			// TODO: Add Error UX. This should probably block creating/updating layer
+			console.log(error);
+
+			let message = "Invalid cypher query.";
+			if (this.state.layerType !== LAYER_TYPE_CYPHER) {
+				message += "\nContact the development team";
 			} else {
-				this.setState({data: res.result}, function () {
-					this.updateBounds()
-				});
+				message += "\nFix your query and try again";
 			}
-		});
+			message += "\n\n" + result;
+
+			// Deprecate alert in favor of a less jarring error UX
+			alert(message);
+		}
 	};
 
 
@@ -324,19 +291,30 @@ export class UnconnectedLayer extends Component {
 		this.setState({cypher: e});
 	};
 
-
-	sendData(event) {
-		/*Send data to parent which will propagate to the Map component
-         */
-		this.updateData();
-		event.preventDefault();
+	/**
+	 * Update an existing Layer.
+	 * Send data to parent which will propagate to the Map component
+	 */
+	updateLayer = async () => {
+		await this.updateData();
+		this.props.updateLayer(this.state);
 	};
 
+	/**
+	 * Create a new Layer.
+	 * Send data to parent which will propagate to the Map component
+	 */
+	createLayer = async () => {
+		await this.updateData();
+		const proposedLayer = {...this.state};
+		// Generate new ukey
+		// proposedLayer.ukey = generateUkeyFromName(proposedLayer.name);
 
-	deleteLayer(event) {
-		/*Remove the layer
-         */
-		event.preventDefault();
+		this.props.addLayer(proposedLayer);
+	}
+
+
+	deleteLayer = () => {
 		if (
 			window.confirm(
 				`Delete layer ${this.state.name}? This action can not be undone.`
@@ -344,9 +322,8 @@ export class UnconnectedLayer extends Component {
 		) {
 			return;
 		}
-		this.props.dispatch(
-			removeLayer({ukey: this.state.ukey})
-		);
+
+		this.props.removeLayer(this.state.ukey);
 	};
 
 
@@ -363,39 +340,56 @@ export class UnconnectedLayer extends Component {
 	};
 
 
-	hasSpatialPlugin() {
-		neo4jService.hasSpatial(this.driver).then(result => {
-			this.setState({
-				hasSpatialPlugin: result
-			});
-		});
+	async hasSpatialPlugin() {
+		const { status, error, result } = await neo4jService.hasSpatial();
+
+		if (status === 200 && result !== undefined) {
+			this.setState({	hasSpatialPlugin: result });
+		} else {
+			// TODO: Add Error UX. This should probably block creating/updating layer
+			console.log(error);
+		}
+
 	};
 
 
-	getNodes() {
+	async getNodes() {
 		/*This will be updated quite often,
            is that what we want?
          */
-		neo4jService.getNodeLabels(this.driver).then( result => {
-			this.setState({
-				nodes: result
-			})
-		});
+		const { status, error, result } = await neo4jService.getNodeLabels();
+
+		if (status === 200 && result !== undefined) {
+			this.setState({	nodes: result });
+		} else {
+			// TODO: Add Error UX. This should probably block creating/updating layer
+			console.log(error);
+		}
 	};
 
 
-	getPropertyNames() {
-		neo4jService.getProperties(this.driver, this.getNodeFilter()).then( result => {
-			result.push({value: "", label: ""}); // This is the default: no tooltip
-			this.setState({propertyNames: result});
-		});
+	async getPropertyNames() {
+		const { status, error, result } = await neo4jService.getProperties( this.getNodeFilter());
+
+		if (status === 200 && result !== undefined) {
+			const defaultNoTooltip = {value: "", label: ""};
+			this.setState({ propertyNames: [...result, defaultNoTooltip] });
+		} else {
+			// TODO: Add Error UX. This should probably block creating/updating layer
+			console.log(error);
+		}
 	};
 
 
-	getSpatialLayers() {
-		neo4jService.getSpatialLayers(this.driver).then(result => {
-			this.setState({spatialLayers: result});
-		});
+	async getSpatialLayers() {
+		const { status, error, result } = await neo4jService.getSpatialLayers();
+
+		if (status === 200 && result !== undefined) {
+			this.setState({ spatialLayers: result });
+		} else {
+			// TODO: Add Error UX. This should probably block creating/updating layer
+			console.log(error);
+		}
 	};
 
 
@@ -416,9 +410,9 @@ export class UnconnectedLayer extends Component {
 						name="nodeLabel"
 					/>
 				</Form.Group>
-				<Form.Group 
-					controlId="formTooltipProperty" 
-					hidden={this.state.rendering !== RENDERING_MARKERS && this.state.rendering !== RENDERING_CLUSTERS}  
+				<Form.Group
+					controlId="formTooltipProperty"
+					hidden={this.state.rendering !== RENDERING_MARKERS && this.state.rendering !== RENDERING_CLUSTERS}
 					name="formgroupTooltip"
 				>
 					<Form.Label>Tooltip property</Form.Label>
@@ -518,7 +512,7 @@ export class UnconnectedLayer extends Component {
 		)
 	}
 
-  
+
 	renderConfigDefault() {
 		/*If layerType==latlon, then we display the elements to choose
            node labels and properties to be used.
@@ -564,9 +558,9 @@ export class UnconnectedLayer extends Component {
 					/>
 				</Form.Group>
 
-				<Form.Group 
-					controlId="formTooltipProperty" 
-					hidden={this.state.rendering !== RENDERING_MARKERS  && this.state.rendering !== RENDERING_CLUSTERS}  
+				<Form.Group
+					controlId="formTooltipProperty"
+					hidden={this.state.rendering !== RENDERING_MARKERS  && this.state.rendering !== RENDERING_CLUSTERS}
 					name="formgroupTooltip"
 				>
 					<Form.Label>Tooltip property</Form.Label>
@@ -608,7 +602,7 @@ export class UnconnectedLayer extends Component {
 						<small hidden>({this.state.ukey})</small>
 						<span
 							hidden={ this.state.rendering === RENDERING_HEATMAP }
-							style={{background: color, float: 'right', height: '20px', width: '50px'}}> 
+							style={{background: color, float: 'right', height: '20px', width: '50px'}}>
 						</span>
 					</h3>
 				</Accordion.Toggle>
@@ -632,7 +626,7 @@ export class UnconnectedLayer extends Component {
 							</Form.Group>
 
 
-							<h4>  > Data</h4>
+							<h4>{'  > Data'}</h4>
 
 							<Form.Group controlId="formLayerType">
 								<Form.Label>Layer type</Form.Label>
@@ -681,7 +675,7 @@ export class UnconnectedLayer extends Component {
 							{this.renderConfigCypher()}
 							{this.renderConfigSpatial()}
 
-							<h4> > Map rendering</h4>
+							<h4>{' > Map rendering'}</h4>
 
 							<Form.Group controlId="formRendering">
 								<Form.Label>Rendering</Form.Label>
@@ -749,17 +743,26 @@ export class UnconnectedLayer extends Component {
 							</Form.Group>
 
 
-							<Button variant="danger" type="submit"  onClick={this.deleteLayer} hidden={this.props.layer === undefined}>
-								Delete Layer
-							</Button>
+							<div className="row">
+								<Button variant="info" onClick={this.showQuery} hidden={this.state.layerType === LAYER_TYPE_CYPHER}>
+									Show query
+								</Button>
 
-							<Button variant="info" type="submit"  onClick={this.showQuery} hidden={this.state.layerType === LAYER_TYPE_CYPHER}>
-								Show query
-							</Button>
+								{ this.props.isNew ?
+									<Button variant="success" onClick={this.createLayer} >
+										Create New Layer
+									</Button> :
+									<>
+										<Button variant="success" onClick={this.updateLayer} >
+											Update Layer
+										</Button>
+										<Button variant="danger" onClick={this.deleteLayer} >
+											Delete Layer
+										</Button>
+									</>
+								}
 
-							<Button variant="success" type="submit"  onClick={this.sendData} >
-								Update map
-							</Button>
+							</div>
 
 						</Form>
 					</Card.Body>
@@ -771,5 +774,3 @@ export class UnconnectedLayer extends Component {
 		);
 	}
 }
-
-export default connect()(UnconnectedLayer);

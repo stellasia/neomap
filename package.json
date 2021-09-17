@@ -1,48 +1,45 @@
 {
 	"name": "neomap",
-	"version": "0.5.0",
+	"version": "0.5.1",
 	"author": "Estelle Scifo",
 	"private": false,
 	"neo4jDesktop": {
-		"apiVersion": "^1.2.4",
+		"apiVersion": ">=1.2.x <2.0.0",
 		"licenseRequired": false
 	},
 	"dependencies": {
-		"bootstrap": "^4.3.0",
+		"bootstrap": "^4.5.2",
 		"downloadjs": "^1.4.7",
 		"graph-app-kit": "^1.0.4",
 		"leaflet": "^1.5.1",
 		"leaflet.heat": "^0.2.0",
 		"leaflet.markercluster": "^1.4.1",
-		"neo4j-driver": "^4.0.2",
-		"react": "^16.3.2",
-		"react-bootstrap": "^1.0.0-beta.14",
-		"react-color": "^2.18.0",
-		"react-confirm-alert": "^2.4.1",
-		"react-dom": "^16.3.2",
-		"react-redux": "^7.2.0",
-		"react-scripts": "^3.3.1",
-		"react-select": "^3.0.4",
-		"redux": "^4.0.5"
+		"neo4j-driver": "^4.1.1",
+		"react": "^16.13.1",
+		"react-bootstrap": "^1.3.0",
+		"react-color": "^2.18.1",
+		"react-confirm-alert": "^2.6.1",
+		"react-dom": "^16.13.1",
+		"react-scripts": "^3.4.3",
+		"react-select": "^3.1.0"
 	},
 	"scripts": {
 		"start": "react-scripts start",
 		"build": "rm -rf dist && react-scripts build && mv build dist",
-		"test": "react-scripts test --env=jsdom",
+		"test": "react-scripts test",
+		"test:debug": "react-scripts --inspect-brk test --runInBand --no-cache",
 		"eject": "react-scripts eject"
 	},
 	"files": [
 		"dist/",
 		"package.json"
 	],
-	"publishConfig": {
-		"registry": "https://npm.pkg.github.com/"
-	},
 	"description": "A Neo4j Desktop application to visualize nodes with geographic attributes on a map.",
 	"main": "index.js",
 	"devDependencies": {
-		"enzyme": "^3.10.0",
-		"enzyme-adapter-react-16": "^1.15.1"
+		"@testing-library/jest-dom": "^5.11.2",
+		"@testing-library/react": "^10.4.8",
+		"jest": "^24.9.0"
 	},
 	"repository": "git://github.com/stellasia/neomap.git",
 	"icons": [
@@ -73,5 +70,8 @@
 			"last 1 firefox version",
 			"last 1 safari version"
 		]
+	},
+	"optionalDependencies": {
+		"fsevents": "^2.3.2"
 	}
 }

@@ -1,105 +1,92 @@
-import React, {Component} from "react";
-import "./App.css";
-import Map from "./components/Map";
-import Menu from "./components/Menu";
-import SideBar from "./components/SideBar";
-import neo4jService from './services/neo4jService'
+import React from "react";
 import download from "downloadjs";
-import {connect} from "react-redux";
-import {setLayers} from "./actions";
+import { Map } from "./components/Map";
+import { Menu } from "./components/Menu";
+import { SideBar } from "./components/SideBar";
+import { neo4jService } from './services/neo4jService'
+import "./App.css";
 
 
-class App extends Component {
+export const App = React.memo(() => {
+	/**
+	 * Given the underlying neo4jDesktop drivers' dependency on global window context,
+	 * we need to import an instance here to the boot a service instance that reads
+	 * App.js window instance. The service is a singleton,
+	 * and subsequent windows will get the same instance with drivers created here.
+	 *
+	 * TODO: FIXME! Redesign neo4jService instantiation with full consideration for global window dependency
+	 */
+	neo4jService._getNeo4jDriver();
 
-	constructor(props) {
-		super(props);
+	const [layers, setLayers] = React.useState([]);
 
-		this.state = {
-			ready: false
-		};
-
-		this.saveConfigToFile = this.saveConfigToFile.bind(this);
-		this.loadConfigFromFile = this.loadConfigFromFile.bind(this);
-	};
-
-	getDriver() {
-		return neo4jService.getNeo4jDriver();
+	const addLayer = (layer) => {
+		setLayers([...layers, layer]);
 	}
 
-	componentDidMount() {
-		this.getDriver().then( result => {
-			this.driver = result;
-		}).then( () => {
-			this.setState({
-				ready: true,
-			});
+	const updateLayer = (layer) => {
+		const updatedLayers = layers.map(currentLayer => {
+			if (currentLayer.ukey === layer.ukey) {
+				return layer;
+			}
+			return currentLayer;
 		});
-	};
 
+		setLayers(updatedLayers);
+	}
 
-	saveConfigToFile(e) {
-		let config = JSON.stringify(this.props.layers);
-		let fileName = "neomap_config.json";
+	const removeLayer = (key) => {
+		const filteredLayers = layers.filter(layer => layer.ukey !== key);
+
+		setLayers(filteredLayers);
+	}
+
+	const saveConfigToFile = (e) => {
+		const config = JSON.stringify(layers);
+		const fileName = "neomap_config.json";
 		download(config, fileName, "application/json");
 		e.preventDefault();
 	};
 
-
-	loadConfigFromFile(e) {
+	const loadConfigFromFile = (e) => {
 		const fileSelector = document.createElement('input');
 		fileSelector.setAttribute('type', 'file');
 		fileSelector.click();
 		fileSelector.onchange = (ev) => {
 			const file = ev.target.files[0];
-			let fileReader = new FileReader();
+			const fileReader = new FileReader();
 			fileReader.onloadend = (e) => {
 				const content = e.target.result;
-				const layers = JSON.parse(content);
-				this.props.dispatch(
-					setLayers({layers: layers})
-				);
+				try {
+					const loadedLayers = JSON.parse(content);
+					setLayers(loadedLayers);
+				} catch (err) {
+					// TODO: Build error UI
+					console.log('Failed to load and parse data from file', err);
+				}
 			};
 			fileReader.readAsText(file);
 		};
 		e.preventDefault();
 	};
 
-
-	renderUI() {
-		return (
-			<div id="wrapper" className="row">
-				<div id="sidebar" className="col-md-4">
-					<Menu saveConfigToFile={this.saveConfigToFile} loadConfigFromFile={this.loadConfigFromFile} />
-					<SideBar
-						key="sidebar"
-						ref="sidebar"
-						driver = {this.driver}
-					/>
-				</div>
-				<div id="app-maparea" className="col-md-8">
-					<Map
-						key="map"
-					/>
-				</div>
+	return (
+		<div id="wrapper" className="row">
+			<div id="sidebar" className="col-md-4">
+				<Menu saveConfigToFile={saveConfigToFile} loadConfigFromFile={loadConfigFromFile}/>
+				<SideBar
+					layers={layers}
+					addLayer={addLayer}
+					updateLayer={updateLayer}
+					removeLayer={removeLayer}
+				/>
 			</div>
-		);
-	};
-
-
-	render() {
-		// wait until driver is ready...
-		return this.state.ready ? this.renderUI() : (
-			<span>Loading...</span>
-		)
-	};
-}
-
-
-const mapStateToProps = (state, ownProps) => {
-	return {
-		layers: state.layers,
-		...ownProps
-	}
-};
-
-export default connect(mapStateToProps)(App);
+			<div id="app-maparea" className="col-md-8">
+				<Map
+					key="map"
+					layers={layers}
+				/>
+			</div>
+		</div>
+	)
+});
