@@ -57,7 +57,7 @@ export const Map = React.memo(({layers}) => {
 			const currentMapOverlays  = mapOverlaysRef.current;
 
 			layers.forEach((layer) => {
-				const {name, bounds, rendering, data, radius, color, relationshipColor } = layer;
+				const { bounds, rendering, data, radius, color, relationshipColor, ukey } = layer;
 
 				console.log(data);
 
@@ -68,7 +68,7 @@ export const Map = React.memo(({layers}) => {
 				}
 
 				// TODO: check if the layer has changed before rerendering it
-				const currentOverlay = currentMapOverlays[name]
+				const currentOverlay = currentMapOverlays[ukey]
 				if (currentOverlay) {
 					map.removeLayer(currentOverlay);
 					layerControl.removeLayer(currentOverlay);
@@ -76,10 +76,6 @@ export const Map = React.memo(({layers}) => {
 
 				const rgbColor = `rgb(${color.r}, ${color.g}, ${color.b})`;
 				const relRgbColor = `rgb(${relationshipColor.r}, ${relationshipColor.g}, ${relationshipColor.b})`;
-				console.log('overlays out', currentMapOverlays)
-				function renderMarkers() {
-					
-				}
 
 				switch(rendering) {
 					case RENDERING_MARKERS:
@@ -107,16 +103,15 @@ export const Map = React.memo(({layers}) => {
 							}
 						});
 
-						newMapOverlays[name] = markerLayer;
+						newMapOverlays[ukey] = markerLayer;
 
 						break;
 
 					case RENDERING_RELATIONS:
-						let relationsLayer = L.layerGroup().addTo(map);
+						const relationsLayer = L.layerGroup().addTo(map);
 
-						// if (!relationsLayer) {
-						// 	relationsLayer = L.layerGroup().addTo(map);
-						// }
+						// TODO: check if the layer has changed before rerendering it
+						relationsLayer.clearLayers();
 
 						console.log("DATA", data)
 
@@ -128,14 +123,14 @@ export const Map = React.memo(({layers}) => {
 							}
 						});
 
-						newMapOverlays[name] = relationsLayer;
+						newMapOverlays[ukey] = relationsLayer;
 						break;
 
 					case RENDERING_POLYLINE:
 						let polylineLayer = L.polyline([], {color: rgbColor}).addTo(map);
 						polylineLayer.setLatLngs(data.map(entry => entry.pos));
 
-						newMapOverlays[name] = polylineLayer;
+						newMapOverlays[ukey] = polylineLayer;
 
 						break;
 
@@ -151,7 +146,7 @@ export const Map = React.memo(({layers}) => {
 							heatmapLayer.addLatLng(entry.pos.concat(1.0));
 						});
 
-						newMapOverlays[name] = heatmapLayer;
+						newMapOverlays[ukey] = heatmapLayer;
 
 						break;
 
@@ -175,21 +170,21 @@ export const Map = React.memo(({layers}) => {
 							}
 						});
 
-						newMapOverlays[name] = clusterLayer;
+						newMapOverlays[ukey] = clusterLayer;
 
 						break;
 					default:
 						break;
 				}
 
-				layerControl.addOverlay(newMapOverlays[name], name);
+				layerControl.addOverlay(newMapOverlays[ukey], ukey);
 
 			});
 
 			// Remove deleted layers from the map and the layer control
 			try {
-				for (const [name, overlay] of Object.entries(currentMapOverlays)) {
-					if (!newMapOverlays[name]) {
+				for (const [_ukey, overlay] of Object.entries(currentMapOverlays)) {
+					if (!newMapOverlays[_ukey]) {
 						map.removeLayer(overlay);
 						layerControl.removeLayer(overlay);
 					}
