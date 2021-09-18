@@ -57,7 +57,7 @@ export const Map = React.memo(({layers}) => {
 			const currentMapOverlays  = mapOverlaysRef.current;
 
 			layers.forEach((layer) => {
-				const {name, bounds, rendering, data, radius, color, relationshipData, relationshipColor } = layer;
+				const {name, bounds, rendering, data, radius, color, relationshipColor } = layer;
 
 				console.log(data);
 
@@ -77,56 +77,50 @@ export const Map = React.memo(({layers}) => {
 				const rgbColor = `rgb(${color.r}, ${color.g}, ${color.b})`;
 				const relRgbColor = `rgb(${relationshipColor.r}, ${relationshipColor.g}, ${relationshipColor.b})`;
 				console.log('overlays out', currentMapOverlays)
-				function renderMarkers(layer=null) {
-					let markerLayer = layer || currentMapOverlays[name];
-
-					if (!markerLayer) {
-						markerLayer = L.layerGroup().addTo(map);
-					}
-
-					// TODO: check if the layer has changed before rerendering it
-					markerLayer.clearLayers();
-
-					data.forEach(entry => {
-						const m = L.circleMarker(
-							entry.pos,
-							{
-								title: entry.tooltip,
-								fill: true,
-								radius: 3,
-								color: rgbColor,
-								fillColor: rgbColor,
-								opacity: color.a,
-								fillOpacity: color.a
-							}
-						).addTo(markerLayer);
-
-						if (entry.tooltip !== undefined) {
-							m.bindPopup(entry.tooltip);
-						}
-					});
-
-					newMapOverlays[name] = markerLayer;
+				function renderMarkers() {
+					
 				}
 
 				switch(rendering) {
 					case RENDERING_MARKERS:
-						renderMarkers()
+						const markerLayer = L.layerGroup().addTo(map);
+					
+						// TODO: check if the layer has changed before rerendering it
+						markerLayer.clearLayers();
+
+						data.forEach(entry => {
+							const m = L.circleMarker(
+								entry.pos,
+								{
+									title: entry.tooltip,
+									fill: true,
+									radius: 3,
+									color: rgbColor,
+									fillColor: rgbColor,
+									opacity: color.a,
+									fillOpacity: color.a
+								}
+							).addTo(markerLayer);
+
+							if (entry.tooltip !== undefined) {
+								m.bindPopup(entry.tooltip);
+							}
+						});
+
+						newMapOverlays[name] = markerLayer;
 
 						break;
 
 					case RENDERING_RELATIONS:
-						let relationsLayer = currentMapOverlays[name];
+						let relationsLayer = L.layerGroup().addTo(map);
 
-						if (!relationsLayer) {
-							relationsLayer = L.layerGroup().addTo(map);
-						}
+						// if (!relationsLayer) {
+						// 	relationsLayer = L.layerGroup().addTo(map);
+						// }
 
-						// TODO: check if the layer has changed before rerendering it
-						relationsLayer.clearLayers();
-						console.log("DATA", relationshipData)
+						console.log("DATA", data)
 
-						relationshipData.forEach(entry => {
+						data.forEach(entry => {
 							const m = L.polyline([entry.start, entry.end], {color: relRgbColor, opacity: relationshipColor.a}).addTo(relationsLayer);
 
 							if (entry.tooltip != null) {
@@ -135,7 +129,6 @@ export const Map = React.memo(({layers}) => {
 						});
 
 						newMapOverlays[name] = relationsLayer;
-						renderMarkers(relationsLayer)
 						break;
 
 					case RENDERING_POLYLINE:

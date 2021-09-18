@@ -32,8 +32,7 @@ export const NEW_LAYER = {
 	rendering: RENDERING_MARKERS,
 	radius: 30,
 	cypher: "",
-	relationshipData: [],
-	relationships: [],
+	relationshipLabel: [],
 	relationshipColor: {r: 0, g: 100, b: 255, a: 0.8},
 	// TODO: this should not be in Layer state?
 	hasSpatialPlugin: false,

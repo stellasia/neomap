@@ -71,6 +71,7 @@ export class Layer extends Component {
 	updateBounds = () => {
 		/* Compute the map bounds based on `this.state.data`
          */
+		console.log("State in updateBounds:", this.state.data)
 		let arr = this.state.data || [];
 		// TODO: delegate this job to leaflet
 		let minLat = Number.MAX_VALUE;
@@ -78,22 +79,53 @@ export class Layer extends Component {
 		let minLon = Number.MAX_VALUE;
 		let maxLon = -Number.MAX_VALUE;
 		if (arr.length > 0) {
-			arr.map((item,) => {
-				let lat = item.pos[0];
-				let lon = item.pos[1];
-				if (lat > maxLat) {
-					maxLat = lat;
+			arr.forEach((item,) => {
+				// TODO refactor/optimize
+				if (item.hasOwnProperty("start")) {
+					let startLat = item.start[0];
+					let startLon = item.start[1];
+					let endLat = item.end[0];
+					let endLon = item.end[1];
+					if (startLat > maxLat) {
+						maxLat = startLat;
+					}
+					if (startLat < minLat) {
+						minLat = startLat;
+					}
+					if (startLon > maxLon) {
+						maxLon = startLon;
+					}
+					if (startLon < minLon) {
+						minLon = startLon;
+					}
+					if (endLat > maxLat) {
+						maxLat = endLat;
+					}
+					if (endLat < minLat) {
+						minLat = endLat;
+					}
+					if (endLon > maxLon) {
+						maxLon = endLon;
+					}
+					if (endLon < minLon) {
+						minLon = endLon;
+					}
+				} else {
+					let lat = item.pos[0];
+					let lon = item.pos[1];
+					if (lat > maxLat) {
+						maxLat = lat;
+					}
+					if (lat < minLat) {
+						minLat = lat;
+					}
+					if (lon > maxLon) {
+						maxLon = lon;
+					}
+					if (lon < minLon) {
+						minLon = lon;
+					}
 				}
-				if (lat < minLat) {
-					minLat = lat;
-				}
-				if (lon > maxLon) {
-					maxLon = lon;
-				}
-				if (lon < minLon) {
-					minLon = lon;
-				}
-				return undefined;
 			});
 		}
 		let bounds = [[minLat, minLon], [maxLat, maxLon]];
@@ -121,7 +153,7 @@ export class Layer extends Component {
 			let sub_q = "(false";
 			this.state.nodeLabel.forEach((value,) => {
 				let lab = value.label;
-				sub_q += ` OR n:${lab}`;
+				sub_q += ` OR n:\`${lab}\``;
 				// added backtics to support labels with spaces
 				sub_q += ` OR n:\`${lab}\``;
 			});
@@ -210,12 +242,15 @@ export class Layer extends Component {
 		/*If layerType==cypher, query is inside the CypherEditor,
            otherwise, we need to build the query manually.
          */
-		const { layerType } = this.state;
+		const { layerType, rendering } = this.state;
 		if (layerType === LAYER_TYPE_CYPHER)
 			return this.getCypherQuery();
 
 		if (layerType === LAYER_TYPE_SPATIAL)
 			return this.getSpatialQuery();
+
+		if (rendering === RENDERING_RELATIONS) 
+			return this.getRelationshipsQuery();
 		return this.getNodesQuery();		
 	};
 
@@ -251,16 +286,17 @@ export class Layer extends Component {
 
 	async updateData() {
 		const { rendering } = this.state;
-		const { status, error, result } = await neo4jService.getData( this.getQuery(), {});
 
-		if (status === 200 && result !== undefined) {
-			this.setState({ data: result }, () => {if (rendering !== RENDERING_RELATIONS) {this.updateBounds()}});
+		let fun = null;
+		if (rendering === RENDERING_RELATIONS) {
+			fun = neo4jService.getRelationshipData
+		} else {
+			fun = neo4jService.getData
+		}
+		const {status, error, result} = await fun( this.getQuery(), {});
 
-			if (rendering === RENDERING_RELATIONS) {
-				const relResult = await neo4jService.getRelationshipData( this.getRelationshipsQuery(), {});
-				console.log("REL RESULT", relResult)
-				this.setState({relationshipData: relResult.result}, this.updateBounds);
-			}
+		if (status === 200 && result != null) {
+			this.setState({ data: result }, this.updateBounds);
 		} else if (result) {
 			// TODO: Add Error UX. This should probably block creating/updating layer
 			console.log(error);
@@ -485,7 +521,7 @@ export class Layer extends Component {
 		neo4jService.getRelationshipLabels(this.driver).then( result => {
 			console.log("REL LABELS", result)
 			this.setState({
-				relationships: result
+				relationshipLabels: result
 			})
 		});
 	};
@@ -615,7 +651,7 @@ export class Layer extends Component {
 		/*If layerType==latlon, then we display the elements to choose
            node labels and properties to be used.
          */
-		const { rendering, layerType, nodes, nodeLabel, relationships, relationshipLabel,
+		const { rendering, layerType, nodes, nodeLabel, relationshipLabels, relationshipLabel,
 			propertyNames, latitudeProperty, longitudeProperty, tooltipProperty, relationshipTooltipProperty,
 			limit } = this.state;
 		if (layerType !== LAYER_TYPE_LATLON)
@@ -638,7 +674,7 @@ export class Layer extends Component {
 					<Form.Label>Relationship type(s)</Form.Label>
 					<Select
 						className="form-control select"
-						options={relationships}
+						options={relationshipLabels}
 						onChange={this.handleRelationshipLabelChange}
 						isMulti={true}
 						defaultValue={relationshipLabel}
@@ -829,7 +865,7 @@ export class Layer extends Component {
 								<Form.Check
 									type="radio"
 									id={RENDERING_RELATIONS}
-									label={"Nodes and Relationships"}
+									label={"Relationships"}
 									value={RENDERING_RELATIONS}
 									checked={rendering === RENDERING_RELATIONS}
 									onChange={this.handleRenderingChange}

@@ -124,7 +124,7 @@ class Neo4JService {
     });
     console.log(res)
     return {
-      status: "OK",
+      status: 200,
       result: res,
     };
   }
