@@ -79,9 +79,9 @@ export class Layer extends Component {
 		let minLon = Number.MAX_VALUE;
 		let maxLon = -Number.MAX_VALUE;
 		if (arr.length > 0) {
-			arr.forEach((item,) => {
-				// TODO refactor/optimize
-				if (item.hasOwnProperty("start")) {
+			// TODO refactor/optimize
+			if (arr[0].hasOwnProperty("start")) {
+				arr.forEach((item,) => {
 					let startLat = item.start[0];
 					let startLon = item.start[1];
 					let endLat = item.end[0];
@@ -110,7 +110,9 @@ export class Layer extends Component {
 					if (endLon < minLon) {
 						minLon = endLon;
 					}
-				} else {
+				})
+			} else {
+				arr.forEach((item,) => {
 					let lat = item.pos[0];
 					let lon = item.pos[1];
 					if (lat > maxLat) {
@@ -125,8 +127,8 @@ export class Layer extends Component {
 					if (lon < minLon) {
 						minLon = lon;
 					}
-				}
-			});
+				})
+			};
 		}
 		let bounds = [[minLat, minLon], [maxLat, maxLon]];
 		this.setState({ bounds });
@@ -153,7 +155,6 @@ export class Layer extends Component {
 			let sub_q = "(false";
 			this.state.nodeLabel.forEach((value,) => {
 				let lab = value.label;
-				sub_q += ` OR n:\`${lab}\``;
 				// added backtics to support labels with spaces
 				sub_q += ` OR n:\`${lab}\``;
 			});
@@ -707,7 +708,7 @@ export class Layer extends Component {
 
 				<Form.Group
 					controlId="formTooltipProperty"
-					hidden={rendering !== RENDERING_MARKERS  && rendering !== RENDERING_CLUSTERS && rendering !== RENDERING_RELATIONS}
+					hidden={rendering !== RENDERING_MARKERS  && rendering !== RENDERING_CLUSTERS}
 					name="formgroupTooltip"
 				>
 					<Form.Label>Tooltip property</Form.Label>
@@ -757,6 +758,7 @@ export class Layer extends Component {
 			radius,
 		} = this.state;
 		const colorString = `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
+		const relColorString = `rgba(${relationshipColor.r}, ${relationshipColor.g}, ${relationshipColor.b}, ${relationshipColor.a})`;
 
 		return (
 
@@ -766,8 +768,8 @@ export class Layer extends Component {
 					<h3>{this.state.name}
 						<small hidden>({this.state.ukey})</small>
 						<span
-							hidden={ this.state.rendering === RENDERING_HEATMAP }
-							style={{background: colorString, float: 'right', height: '20px', width: '50px'}}>
+							hidden={ rendering === RENDERING_HEATMAP }
+							style={{background: rendering === RENDERING_RELATIONS ? relColorString : colorString, float: 'right', height: '20px', width: '50px'}}>
 						</span>
 					</h3>
 				</Accordion.Toggle>
@@ -894,7 +896,7 @@ export class Layer extends Component {
 							</Form.Group>
 
 							<Form.Group controlId="formColor"
-										hidden={this.state.rendering === RENDERING_HEATMAP}
+										hidden={this.state.rendering === RENDERING_HEATMAP || this.state.rendering === RENDERING_RELATIONS}
 										name="formgroupColor">
 								<Form.Label>Color</Form.Label>
 								<ColorPicker
