@@ -11,6 +11,7 @@ import 'leaflet.heat';
 import 'leaflet.markercluster';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
+import 'leaflet-arrowheads'
 
 /*
  * Main map component based on leaflet map.
@@ -116,7 +117,7 @@ export const Map = React.memo(({layers}) => {
 						console.log("DATA", data)
 
 						data.forEach(entry => {
-							const m = L.polyline([entry.start, entry.end], {color: relRgbColor, opacity: relationshipColor.a}).addTo(relationsLayer);
+							const m = L.polyline([entry.start, entry.end], {color: relRgbColor, opacity: relationshipColor.a, arrowheads: true}).arrowheads({color: relRgbColor, yawn: 40, size: "10px"}).addTo(relationsLayer);
 
 							if (entry.tooltip != null) {
 								m.bindPopup(entry.tooltip);
