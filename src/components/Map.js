@@ -13,17 +13,6 @@ import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import 'leaflet-polylinedecorator'
 
-const arrow = [
-	{
-		offset: "50%",
-		repeat: 0,
-		symbol: L.Symbol.arrowHead({
-			pixelSize: 10,
-			polygon: false,
-			pathOptions: { stroke: true }
-		})
-	}
-];
 
 /*
  * Main map component based on leaflet map.
@@ -121,6 +110,18 @@ export const Map = React.memo(({layers}) => {
 						break;
 
 					case RENDERING_RELATIONS:
+						const arrow = [
+							{
+								offset: "50%",
+								repeat: 0,
+								symbol: L.Symbol.arrowHead({
+									pixelSize: 10,
+									polygon: false,
+									pathOptions: { stroke: true }
+								})
+							}
+						];
+
 						const relationsLayer = L.layerGroup().addTo(map);
 
 						// TODO: check if the layer has changed before rerendering it
