@@ -864,7 +864,8 @@ export class Layer extends Component {
 									onChange={this.handleRenderingChange}
 									name="mapRenderingPolyline"
 								/>
-								<Form.Check
+								{(layerType === LAYER_TYPE_LATLON || layerType === LAYER_TYPE_CYPHER) &&
+								(<Form.Check
 									type="radio"
 									id={RENDERING_RELATIONS}
 									label={"Relationships"}
@@ -873,6 +874,7 @@ export class Layer extends Component {
 									onChange={this.handleRenderingChange}
 									name="mapRenderingRelationships"
 								/>
+								)}
 								<Form.Check
 									type="radio"
 									id={RENDERING_HEATMAP}
