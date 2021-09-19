@@ -752,9 +752,7 @@ export class Layer extends Component {
 
 
 	render() {
-		const { rendering, layerType, color, relationshipColor,
-			radius,
-		} = this.state;
+		const { rendering, layerType, color, relationshipColor } = this.state;
 		const colorString = `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
 		const relColorString = `rgba(${relationshipColor.r}, ${relationshipColor.g}, ${relationshipColor.b}, ${relationshipColor.a})`;
 
