@@ -87,4 +87,4 @@ I am a data scientist, not a front-end developer. If someone with expertise with
 
 4. Publish to NPM: (after npm login):
 
-    npm publish neomap-<VERSION>.tgz #  --registry=https://registry.npmjs.org
+    `npm publish neomap-<VERSION>.tgz #  --registry=https://registry.npmjs.org`
