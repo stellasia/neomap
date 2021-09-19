@@ -652,9 +652,7 @@ export class Layer extends Component {
 		/*If layerType==latlon, then we display the elements to choose
            node labels and properties to be used.
          */
-		const { rendering, layerType, nodes, nodeLabel, relationshipLabels, relationshipLabel,
-			propertyNames, latitudeProperty, longitudeProperty, tooltipProperty, relationshipTooltipProperty,
-			limit } = this.state;
+		const { rendering, layerType, relationshipLabels, relationshipLabel, propertyNames, relationshipTooltipProperty } = this.state;
 		if (layerType !== LAYER_TYPE_LATLON)
 			return "";
 
@@ -754,7 +752,7 @@ export class Layer extends Component {
 
 
 	render() {
-		const { name, ukey, rendering, layerType, hasSpatialPlugin, color, relationshipColor,
+		const { rendering, layerType, color, relationshipColor,
 			radius,
 		} = this.state;
 		const colorString = `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
