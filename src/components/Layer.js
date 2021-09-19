@@ -71,7 +71,6 @@ export class Layer extends Component {
 	updateBounds = () => {
 		/* Compute the map bounds based on `this.state.data`
          */
-		console.log("State in updateBounds:", this.state.data)
 		let arr = this.state.data || [];
 		// TODO: delegate this job to leaflet
 		let minLat = Number.MAX_VALUE;
@@ -520,7 +519,6 @@ export class Layer extends Component {
 
 	getRelationshipLabels() {  
 		neo4jService.getRelationshipLabels(this.driver).then( result => {
-			console.log("REL LABELS", result)
 			this.setState({
 				relationshipLabels: result
 			})

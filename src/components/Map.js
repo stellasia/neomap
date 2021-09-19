@@ -127,8 +127,6 @@ export const Map = React.memo(({layers}) => {
 						// TODO: check if the layer has changed before rerendering it
 						relationsLayer.clearLayers();
 
-						console.log("DATA", data)
-
 						data.forEach(entry => {
 							const polyline = L.polyline([entry.start, entry.end], {color: relRgbColor, opacity: relationshipColor.a}).addTo(relationsLayer)
 

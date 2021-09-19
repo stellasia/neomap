@@ -93,7 +93,7 @@ class Neo4JService {
   getRelationshipLabels = async () => {
     const query = 'CALL db.relationshipTypes() YIELD relationshipType RETURN relationshipType ORDER BY relationshipType;'
     const records = await this._runQuery(query)
-    console.log(records)
+
     const res = records.map(record => ({
             value: record.get("relationshipType"),
             label: record.get("relationshipType"),
@@ -122,7 +122,7 @@ class Neo4JService {
       }
       res.push(el);
     });
-    console.log(res)
+
     return {
       status: 200,
       result: res,
