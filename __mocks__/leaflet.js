@@ -7,6 +7,8 @@
 
 import { L } from 'leaflet';
 const LeafletMock = jest.createMockFromModule('leaflet')
+LeafletMock.Symbol.arrowHead = jest.fn(()=>{})
+
 
 class ControlMock extends LeafletMock.Control {
   constructor(options) {
