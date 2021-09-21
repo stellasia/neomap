@@ -3,7 +3,6 @@ import '@testing-library/jest-dom'
 import { render, fireEvent, cleanup, act } from '@testing-library/react'
 import { Layer } from './Layer';
 import { NEW_LAYER } from './constants';
-import "../../__mocks__/window";
 
 // Use these to assert invocations of App callbacks
 const mockAddLayer = jest.fn((_layer) => {});
@@ -14,7 +13,6 @@ jest.mock('../services/neo4jService', () => {
   return {
     neo4jService: {
       getNodeLabels: jest.fn(() => Promise.resolve({ status: 200, result: [] })),
-      getRelationshipLabels: jest.fn(() => Promise.resolve({ status: 200, result: [] })),
       getProperties: jest.fn(( _nodeFilter) => Promise.resolve({ status: 200, result: [] })),
       hasSpatial: jest.fn(() => Promise.resolve({ status: 200, result: false })),
       getSpatialLayers: jest.fn(() => Promise.resolve({ status: 200, result: [] })),

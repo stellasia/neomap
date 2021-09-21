@@ -5,14 +5,12 @@
  * To be improved.
  */
 import React from 'react'
-import { RENDERING_CLUSTERS, RENDERING_HEATMAP, RENDERING_MARKERS, RENDERING_POLYLINE, RENDERING_RELATIONS } from "./constants";
+import { RENDERING_CLUSTERS, RENDERING_HEATMAP, RENDERING_MARKERS, RENDERING_POLYLINE } from "./constants";
 import L from 'leaflet';
 import 'leaflet.heat';
 import 'leaflet.markercluster';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
-import 'leaflet-polylinedecorator'
-
 
 /*
  * Main map component based on leaflet map.
@@ -59,7 +57,7 @@ export const Map = React.memo(({layers}) => {
 			const currentMapOverlays  = mapOverlaysRef.current;
 
 			layers.forEach((layer) => {
-				const { bounds, rendering, data, radius, color, relationshipColor, ukey } = layer;
+				const {name, bounds, rendering, data, radius, color } = layer;
 
 				console.log(data);
 
@@ -70,21 +68,18 @@ export const Map = React.memo(({layers}) => {
 				}
 
 				// TODO: check if the layer has changed before rerendering it
-				const currentOverlay = currentMapOverlays[ukey]
+				const currentOverlay = currentMapOverlays[name]
 				if (currentOverlay) {
 					map.removeLayer(currentOverlay);
 					layerControl.removeLayer(currentOverlay);
 				}
 
 				const rgbColor = `rgb(${color.r}, ${color.g}, ${color.b})`;
-				const relRgbColor = `rgb(${relationshipColor.r}, ${relationshipColor.g}, ${relationshipColor.b})`;
 
 				switch(rendering) {
 					case RENDERING_MARKERS:
-						const markerLayer = L.layerGroup().addTo(map);
-					
-						// TODO: check if the layer has changed before rerendering it
-						markerLayer.clearLayers();
+						let markerLayer = L.layerGroup().addTo(map);
+						// markerLayer.clearLayers();
 
 						data.forEach(entry => {
 							const m = L.circleMarker(
@@ -92,7 +87,7 @@ export const Map = React.memo(({layers}) => {
 								{
 									title: entry.tooltip,
 									fill: true,
-									radius: 3,
+									radius: 5,
 									color: rgbColor,
 									fillColor: rgbColor,
 									opacity: color.a,
@@ -105,48 +100,15 @@ export const Map = React.memo(({layers}) => {
 							}
 						});
 
-						newMapOverlays[ukey] = markerLayer;
+						newMapOverlays[name] = markerLayer;
 
-						break;
-
-					case RENDERING_RELATIONS:
-						const arrow = [
-							{
-								offset: "50%",
-								repeat: 0,
-								symbol: L.Symbol.arrowHead({
-									pixelSize: 10,
-									polygon: false,
-									pathOptions: { stroke: true }
-								})
-							}
-						];
-
-						const relationsLayer = L.layerGroup().addTo(map);
-
-						// TODO: check if the layer has changed before rerendering it
-						relationsLayer.clearLayers();
-
-						data.forEach(entry => {
-							const polyline = L.polyline([entry.start, entry.end], {color: relRgbColor, opacity: relationshipColor.a}).addTo(relationsLayer)
-
-							if (entry.tooltip != null) {
-								polyline.bindPopup(entry.tooltip);
-							}
-							const arrowheads = L.polylineDecorator(polyline, {
-								patterns: arrow,
-							})
-							arrowheads.addTo(relationsLayer);
-						});
-
-						newMapOverlays[ukey] = relationsLayer;
 						break;
 
 					case RENDERING_POLYLINE:
 						let polylineLayer = L.polyline([], {color: rgbColor}).addTo(map);
 						polylineLayer.setLatLngs(data.map(entry => entry.pos));
 
-						newMapOverlays[ukey] = polylineLayer;
+						newMapOverlays[name] = polylineLayer;
 
 						break;
 
@@ -162,7 +124,7 @@ export const Map = React.memo(({layers}) => {
 							heatmapLayer.addLatLng(entry.pos.concat(1.0));
 						});
 
-						newMapOverlays[ukey] = heatmapLayer;
+						newMapOverlays[name] = heatmapLayer;
 
 						break;
 
@@ -186,21 +148,21 @@ export const Map = React.memo(({layers}) => {
 							}
 						});
 
-						newMapOverlays[ukey] = clusterLayer;
+						newMapOverlays[name] = clusterLayer;
 
 						break;
 					default:
 						break;
 				}
 
-				layerControl.addOverlay(newMapOverlays[ukey], ukey);
+				layerControl.addOverlay(newMapOverlays[name], name);
 
 			});
 
 			// Remove deleted layers from the map and the layer control
 			try {
-				for (const [_ukey, overlay] of Object.entries(currentMapOverlays)) {
-					if (!newMapOverlays[_ukey]) {
+				for (const [name, overlay] of Object.entries(currentMapOverlays)) {
+					if (!newMapOverlays[name]) {
 						map.removeLayer(overlay);
 						layerControl.removeLayer(overlay);
 					}

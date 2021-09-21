@@ -12,7 +12,6 @@
 		"downloadjs": "^1.4.7",
 		"graph-app-kit": "^1.0.4",
 		"leaflet": "^1.5.1",
-		"leaflet-polylinedecorator": "^1.6.0",
 		"leaflet.heat": "^0.2.0",
 		"leaflet.markercluster": "^1.4.1",
 		"neo4j-driver": "^4.1.1",

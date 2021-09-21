@@ -27,8 +27,7 @@ import {
 	RENDERING_MARKERS,
 	RENDERING_POLYLINE,
 	RENDERING_HEATMAP,
-	RENDERING_CLUSTERS,
-	RENDERING_RELATIONS,
+	RENDERING_CLUSTERS
 } from './constants';
 
 export class Layer extends Component {
@@ -52,16 +51,13 @@ export class Layer extends Component {
 		this.handleRadiusChange = this.handleRadiusChange.bind(this);
 		this.handleCypherChange = this.handleCypherChange.bind(this);
 		this.handleSpatialLayerChanged = this.handleSpatialLayerChanged.bind(this);
-		this.handleRelationshipLabelChange = this.handleRelationshipLabelChange.bind(this);
-		this.handleRelationshipTooltipPropertyChange = this.handleRelationshipTooltipPropertyChange.bind(this);
-		this.handleRelationshipColorChange = this.handleRelationshipColorChange.bind(this);
+
 	};
 
 
 	componentDidMount() {
 		// list of available nodes
 		this.getNodes();
-		this.getRelationshipLabels();
 		this.getPropertyNames();
 		this.hasSpatialPlugin();
 		this.getSpatialLayers();
@@ -78,56 +74,23 @@ export class Layer extends Component {
 		let minLon = Number.MAX_VALUE;
 		let maxLon = -Number.MAX_VALUE;
 		if (arr.length > 0) {
-			// TODO refactor/optimize
-			if (arr[0].hasOwnProperty("start")) {
-				arr.forEach((item,) => {
-					let startLat = item.start[0];
-					let startLon = item.start[1];
-					let endLat = item.end[0];
-					let endLon = item.end[1];
-					if (startLat > maxLat) {
-						maxLat = startLat;
-					}
-					if (startLat < minLat) {
-						minLat = startLat;
-					}
-					if (startLon > maxLon) {
-						maxLon = startLon;
-					}
-					if (startLon < minLon) {
-						minLon = startLon;
-					}
-					if (endLat > maxLat) {
-						maxLat = endLat;
-					}
-					if (endLat < minLat) {
-						minLat = endLat;
-					}
-					if (endLon > maxLon) {
-						maxLon = endLon;
-					}
-					if (endLon < minLon) {
-						minLon = endLon;
-					}
-				})
-			} else {
-				arr.forEach((item,) => {
-					let lat = item.pos[0];
-					let lon = item.pos[1];
-					if (lat > maxLat) {
-						maxLat = lat;
-					}
-					if (lat < minLat) {
-						minLat = lat;
-					}
-					if (lon > maxLon) {
-						maxLon = lon;
-					}
-					if (lon < minLon) {
-						minLon = lon;
-					}
-				})
-			};
+			arr.map((item,) => {
+				let lat = item.pos[0];
+				let lon = item.pos[1];
+				if (lat > maxLat) {
+					maxLat = lat;
+				}
+				if (lat < minLat) {
+					minLat = lat;
+				}
+				if (lon > maxLon) {
+					maxLon = lon;
+				}
+				if (lon < minLon) {
+					minLon = lon;
+				}
+				return undefined;
+			});
 		}
 		let bounds = [[minLat, minLon], [maxLat, maxLon]];
 		this.setState({ bounds });
@@ -154,40 +117,13 @@ export class Layer extends Component {
 			let sub_q = "(false";
 			this.state.nodeLabel.forEach((value,) => {
 				let lab = value.label;
-				// added backtics to support labels with spaces
-				sub_q += ` OR n:\`${lab}\``;
+				sub_q += ` OR n:${lab}`;
 			});
 			sub_q += ")";
 			filter += "\nAND " + sub_q;
 		}
 		return filter;
 	};
-
-
-	getRelationshipsFilter() {
-		let filter = '';
-		// filter wanted node labels
-		const {nodeLabel, relationshipLabel} = this.state;
-		if (nodeLabel != null && nodeLabel.length > 0) {
-			let sub_q = "(false";
-			nodeLabel.forEach(value => {
-				// added backtics to support labels with spaces
-				sub_q += ` OR (n:\`${value.label}\` and m:\`${value.label}\`)`;
-			});
-			sub_q += ")";
-			filter += "\nAND " + sub_q;
-		}
-		if (relationshipLabel != null && relationshipLabel.length > 0) {
-			let sub_q = "(false";
-			relationshipLabel.forEach(value => {
-				sub_q += ` OR r:\`${value.label}\``;
-			});
-			sub_q += ")";
-			filter += "\nAND " + sub_q;
-		}
-		return filter;
-	};
-
 
 
 	getSpatialQuery() {
@@ -203,100 +139,53 @@ export class Layer extends Component {
 		return query;
 	};
 
-	getNodesQuery() {
-		const { layerType, limit } = this.state;
-		const { value: latValue } = this.state.latitudeProperty;
-		const { value: lonValue } = this.state.longitudeProperty;
-		const { value: pointValue } = this.state.pointProperty;
-		const { value: tooltipValue } = this.state.tooltipProperty;
+
+	getQuery() {
+		/*If layerType==cypher, query is inside the CypherEditor,
+           otherwise, we need to build the query manually.
+         */
+		if (this.state.layerType === LAYER_TYPE_CYPHER)
+			return this.getCypherQuery();
+
+		if (this.state.layerType === LAYER_TYPE_SPATIAL)
+			return this.getSpatialQuery();
+
 		// lat lon query
 		// TODO: improve this method...
 		let query = 'MATCH (n) WHERE true';
 		// filter wanted node labels
 		query += this.getNodeFilter();
 		// filter out nodes with null latitude or longitude
-		if (layerType === LAYER_TYPE_LATLON) {
-			query += `\nAND exists(n.${latValue}) AND exists(n.${lonValue})`;
+		if (this.state.layerType === LAYER_TYPE_LATLON) {
+			query += `\nAND exists(n.${this.state.latitudeProperty.value}) AND exists(n.${this.state.longitudeProperty.value})`;
 			// return latitude, longitude
-			query += `\nRETURN n.${latValue} as latitude, n.${lonValue} as longitude`;
-		} else if (layerType === LAYER_TYPE_POINT) {
-			query += `\nAND exists(n.${pointValue})`;
+			query += `\nRETURN n.${this.state.latitudeProperty.value} as latitude, n.${this.state.longitudeProperty.value} as longitude`;
+		} else if (this.state.layerType === LAYER_TYPE_POINT) {
+			query += `\nAND exists(n.${this.state.pointProperty.value})`;
 			// return latitude, longitude
-			query += `\nRETURN n.${pointValue}.y as latitude, n.${pointValue}.x as longitude`;
+			query += `\nRETURN n.${this.state.pointProperty.value}.y as latitude, n.${this.state.pointProperty.value}.x as longitude`;
 		}
 
 		// if tooltip is not null, also return tooltip
-		if (tooltipValue !== '')
-			query += `, n.${tooltipValue} as tooltip`;
+		if (this.state.tooltipProperty.value !== '')
+			query += `, n.${this.state.tooltipProperty.value} as tooltip`;
 
 		// TODO: is that really needed???
 		// limit the number of points to avoid browser crash...
-		if (limit)
-			query += `\nLIMIT ${limit}`;
-		console.log(query)
+		if (this.state.limit)
+			query += `\nLIMIT ${this.state.limit}`;
+
 		return query;
-	}
-
-
-	getQuery() {
-		/*If layerType==cypher, query is inside the CypherEditor,
-           otherwise, we need to build the query manually.
-         */
-		const { layerType, rendering } = this.state;
-		if (layerType === LAYER_TYPE_CYPHER)
-			return this.getCypherQuery();
-
-		if (layerType === LAYER_TYPE_SPATIAL)
-			return this.getSpatialQuery();
-
-		if (rendering === RENDERING_RELATIONS) 
-			return this.getRelationshipsQuery();
-		return this.getNodesQuery();		
 	};
-
-	getRelationshipsQuery() {
-		// SUPPORTS ONLY LAT LON FOR NOW
-		const { value: latValue } = this.state.latitudeProperty;
-		const { value: lonValue } = this.state.longitudeProperty;
-		const { value: tooltipValue } = this.state.relationshipTooltipProperty;
-		const { limit } = this.state;
-		// lat lon query
-		// TODO: improve this method...
-		let query = 'MATCH (n)-[r]->(m) WHERE true';
-		// filter wanted node labels
-		query += this.getRelationshipsFilter();
-		
-		// filter out nodes with null latitude or longitude
-		query += `\nAND exists(n.${latValue}) AND exists(n.${lonValue}) AND exists(m.${latValue}) AND exists(m.${lonValue})`;
-		// return latitude, longitude
-		query += `\nRETURN n.${latValue} as start_latitude, n.${lonValue} as start_longitude, m.${latValue} as end_latitude, m.${lonValue} as end_longitude`;
-
-		// if tooltip is not null, also return tooltip
-		if (tooltipValue !== '')
-			query += `, r.${tooltipValue} as tooltip`;
-
-		// TODO: is that really needed???
-		// limit the number of points to avoid browser crash...
-		if (limit)
-			query += `\nLIMIT ${limit}`;
-		console.log(query)
-		return query;
-	}
 
 
 	async updateData() {
-		const { rendering } = this.state;
+		const { status, error, result } = await neo4jService.getData( this.getQuery(), {});
 
-		let fun = null;
-		if (rendering === RENDERING_RELATIONS) {
-			fun = neo4jService.getRelationshipData
-		} else {
-			fun = neo4jService.getData
-		}
-		const {status, error, result} = await fun( this.getQuery(), {});
-
-		if (status === 200 && result != null) {
-			this.setState({ data: result }, this.updateBounds);
+		if (status === 200 && result !== undefined) {
+			this.setState({ data: result }, function () {
+				this.updateBounds()
+			});
 		} else if (result) {
 			// TODO: Add Error UX. This should probably block creating/updating layer
 			console.log(error);
@@ -503,28 +392,6 @@ export class Layer extends Component {
 		}
 	};
 
-	handleRelationshipTooltipPropertyChange(e) {
-		this.setState({relationshipTooltipProperty: e});
-	};
-
-	handleRelationshipLabelChange(e) {
-		this.setState({relationshipLabel: e});
-	};
-
-	handleRelationshipColorChange(color) {
-		this.setState({
-			relationshipColor: color,
-		});
-	};
-
-	getRelationshipLabels() {  
-		neo4jService.getRelationshipLabels(this.driver).then( result => {
-			this.setState({
-				relationshipLabels: result
-			})
-		});
-	};
-
 
 	renderConfigSpatial() {
 		if (this.state.layerType !== LAYER_TYPE_SPATIAL)
@@ -650,8 +517,7 @@ export class Layer extends Component {
 		/*If layerType==latlon, then we display the elements to choose
            node labels and properties to be used.
          */
-		const { rendering, layerType, relationshipLabels, relationshipLabel, propertyNames, relationshipTooltipProperty } = this.state;
-		if (layerType !== LAYER_TYPE_LATLON)
+		if (this.state.layerType !== LAYER_TYPE_LATLON)
 			return "";
 
 		return (
@@ -667,17 +533,7 @@ export class Layer extends Component {
 						name="nodeLabel"
 					/>
 				</Form.Group>
-				<Form.Group controlId="formRelationshipLabel" hidden={ rendering !== RENDERING_RELATIONS }>
-					<Form.Label>Relationship type(s)</Form.Label>
-					<Select
-						className="form-control select"
-						options={relationshipLabels}
-						onChange={this.handleRelationshipLabelChange}
-						isMulti={true}
-						defaultValue={relationshipLabel}
-						name="relationshipLabel"
-					/>
-				</Form.Group>
+
 				<Form.Group controlId="formLatitudeProperty">
 					<Form.Label>Latitude property</Form.Label>
 					<Select
@@ -704,7 +560,7 @@ export class Layer extends Component {
 
 				<Form.Group
 					controlId="formTooltipProperty"
-					hidden={rendering !== RENDERING_MARKERS  && rendering !== RENDERING_CLUSTERS}
+					hidden={this.state.rendering !== RENDERING_MARKERS  && this.state.rendering !== RENDERING_CLUSTERS}
 					name="formgroupTooltip"
 				>
 					<Form.Label>Tooltip property</Form.Label>
@@ -715,21 +571,6 @@ export class Layer extends Component {
 						isMulti={false}
 						defaultValue={this.state.tooltipProperty}
 						name="tooltipProperty"
-					/>
-				</Form.Group>
-				<Form.Group 
-					controlId="formRelationshipTooltipProperty" 
-					hidden={rendering !== RENDERING_RELATIONS}
-					name="formgroupRelationshipTooltip"
-				>
-					<Form.Label>Relationship Tooltip property</Form.Label>
-					<Select
-						className="form-control select"
-						options={propertyNames}
-						onChange={this.handleRelationshipTooltipPropertyChange}
-						isMulti={false}
-						defaultValue={relationshipTooltipProperty}
-						name="relationshipTooltipProperty"
 					/>
 				</Form.Group>
 
@@ -750,9 +591,7 @@ export class Layer extends Component {
 
 
 	render() {
-		const { rendering, layerType, color, relationshipColor } = this.state;
-		const colorString = `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
-		const relColorString = `rgba(${relationshipColor.r}, ${relationshipColor.g}, ${relationshipColor.b}, ${relationshipColor.a})`;
+		let color = `rgba(${this.state.color.r}, ${this.state.color.g}, ${this.state.color.b}, ${this.state.color.a})`;
 
 		return (
 
@@ -762,8 +601,8 @@ export class Layer extends Component {
 					<h3>{this.state.name}
 						<small hidden>({this.state.ukey})</small>
 						<span
-							hidden={ rendering === RENDERING_HEATMAP }
-							style={{background: rendering === RENDERING_RELATIONS ? relColorString : colorString, float: 'right', height: '20px', width: '50px'}}>
+							hidden={ this.state.rendering === RENDERING_HEATMAP }
+							style={{background: color, float: 'right', height: '20px', width: '50px'}}>
 						</span>
 					</h3>
 				</Accordion.Toggle>
@@ -858,17 +697,6 @@ export class Layer extends Component {
 									onChange={this.handleRenderingChange}
 									name="mapRenderingPolyline"
 								/>
-								{(layerType === LAYER_TYPE_LATLON || layerType === LAYER_TYPE_CYPHER) &&
-								(<Form.Check
-									type="radio"
-									id={RENDERING_RELATIONS}
-									label={"Relationships"}
-									value={RENDERING_RELATIONS}
-									checked={rendering === RENDERING_RELATIONS}
-									onChange={this.handleRenderingChange}
-									name="mapRenderingRelationships"
-								/>
-								)}
 								<Form.Check
 									type="radio"
 									id={RENDERING_HEATMAP}
@@ -892,22 +720,12 @@ export class Layer extends Component {
 							</Form.Group>
 
 							<Form.Group controlId="formColor"
-										hidden={this.state.rendering === RENDERING_HEATMAP || this.state.rendering === RENDERING_RELATIONS}
+										hidden={this.state.rendering === RENDERING_HEATMAP}
 										name="formgroupColor">
 								<Form.Label>Color</Form.Label>
 								<ColorPicker
 									color={ this.state.color }
 									handleColorChange={this.handleColorChange}
-								/>
-							</Form.Group>
-
-							<Form.Group controlId="formRelationshipColor"
-										hidden={rendering !== RENDERING_RELATIONS}
-										name="formgroupRelationshipColor">
-								<Form.Label>Relationship Color</Form.Label>
-								<ColorPicker
-									color={ relationshipColor }
-									handleColorChange={this.handleRelationshipColorChange}
 								/>
 							</Form.Group>
 
