@@ -11,7 +11,7 @@ export default function SettingsModal({ handleClose, show }) {
   });
 
   const getOptions = () => {
-    const databases = localStorage.getItem("available_databases").split(",");
+    const databases = (localStorage.getItem("available_databases") || "").split(",");
     return databases.map((dbName) => {
       return { value: dbName, label: dbName };
     });

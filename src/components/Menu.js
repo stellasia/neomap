@@ -33,7 +33,7 @@ export const Menu = React.memo(({ saveConfigToFile, loadConfigFromFile }) => {
           </Nav>
         </Navbar.Collapse>
       </Navbar>
-      <SettingsModal handleClose={handleClose} show={showModal}/>
+      <SettingsModal handleClose={handleClose} show={showModal} />
     </>
   );
 });
