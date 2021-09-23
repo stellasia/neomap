@@ -23,32 +23,30 @@ export default function SettingsModal({ handleClose, show }) {
   };
 
   return (
-    <>
-      <Modal show={show} onHide={handleClose}>
-        <Modal.Header closeButton>
-          <Modal.Title style={{ color: "black" }}>Settings</Modal.Title>
-        </Modal.Header>
-        <Modal.Body style={{ color: "black" }}>
-          <Form.Group controlId="formBasicSelect">
-            <Form.Label>Select Database</Form.Label>
-            <Select
-              className="form-control select"
-              aria-label="Default select example"
-              options={getOptions()}
-              defaultValue={database}
-              onChange={(value) => setDatabase(value)}
-            />
-          </Form.Group>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={handleClose}>
-              Close
-            </Button>
-            <Button variant="primary" onClick={onSave}>
-              Save Changes
-            </Button>
-          </Modal.Footer>
-        </Modal.Body>
-      </Modal>
-    </>
+    <Modal show={show} onHide={handleClose}>
+      <Modal.Header closeButton>
+        <Modal.Title>Settings</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <Form.Group controlId="formBasicSelect">
+          <Form.Label>Select Database</Form.Label>
+          <Select
+            className="form-control select"
+            aria-label="Default select example"
+            options={getOptions()}
+            defaultValue={database}
+            onChange={(value) => setDatabase(value)}
+          />
+        </Form.Group>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleClose}>
+            Close
+          </Button>
+          <Button variant="primary" onClick={onSave}>
+            Save Changes
+          </Button>
+        </Modal.Footer>
+      </Modal.Body>
+    </Modal>
   );
 }
