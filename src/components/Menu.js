@@ -3,10 +3,10 @@ import { Nav, Navbar, NavDropdown } from "react-bootstrap";
 import SettingsModal from "./SettingsModal";
 
 export const Menu = React.memo(({ saveConfigToFile, loadConfigFromFile }) => {
-  const [show, setShow] = React.useState(false);
+  const [showModal, setShowModal] = React.useState(false);
 
-  const handleClose = () => setShow(false);
-  const handleShow = () => setShow(true);
+  const handleClose = () => setShowModal(false);
+  const handleShow = () => setShowModal(true);
 
   return (
     <>
@@ -33,7 +33,7 @@ export const Menu = React.memo(({ saveConfigToFile, loadConfigFromFile }) => {
           </Nav>
         </Navbar.Collapse>
       </Navbar>
-      <SettingsModal handleClose={handleClose} handleShow={handleShow} show={show}/>
+      <SettingsModal handleClose={handleClose} show={showModal}/>
     </>
   );
 });
