@@ -28,11 +28,11 @@ export default function SettingsModal({ handleClose, show }) {
         <Modal.Title>Settings</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <Form.Group controlId="formBasicSelect">
+        <Form.Group controlId="databaseSelect">
           <Form.Label>Select Database</Form.Label>
           <Select
             className="form-control select"
-            aria-label="Default select example"
+            aria-label="Database select"
             options={getOptions()}
             defaultValue={database}
             onChange={(value) => setDatabase(value)}
