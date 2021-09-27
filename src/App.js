@@ -16,6 +16,13 @@ export const App = React.memo(() => {
 	 *
 	 * TODO: FIXME! Redesign neo4jService instantiation with full consideration for global window dependency
 	 */
+
+	React.useEffect(() => {
+		// on App component mount clear coordinates of shapes that could've been drawn during previous session
+		localStorage.removeItem("rectangle_coordinates");
+	}, [])
+	
+
 	neo4jService._getNeo4jDriver();
 
 	const [layers, setLayers] = React.useState([]);

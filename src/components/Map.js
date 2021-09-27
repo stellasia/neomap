@@ -11,7 +11,8 @@ import 'leaflet.heat';
 import 'leaflet.markercluster';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
-import 'leaflet-polylinedecorator'
+import 'leaflet-polylinedecorator';
+import "@geoman-io/leaflet-geoman-free";
 
 
 /*
@@ -41,6 +42,7 @@ export const Map = React.memo(({layers}) => {
 					}),
 				]
 			});
+
 		}
 
 	// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -52,6 +54,38 @@ export const Map = React.memo(({layers}) => {
 
 		if (map) {
 			let mapBounds = new L.LatLngBounds();
+
+			// init geoman available tools 
+			map.pm.addControls({
+				drawRectangle: true,
+				removalMode: true,
+				drawMarker: false,
+				drawPolyline: false,
+				drawCircle: false,
+				drawCircleMarker: false,
+				drawPolygon: false,
+				cutPolygon: false,
+				editMode: false,
+				dragMode: false,
+				rotateMode: false,
+			});  
+			
+			// listen to `create` and `remove` events and update rectangle coordinates in local storage
+			map.on("pm:create", (e) => {
+				if (e.layer && e.layer.pm) {
+					const coords = map.pm.getGeomanDrawLayers(true).toGeoJSON().features.flatMap(f => {
+						return f.geometry.coordinates
+					})
+					localStorage.setItem("rectangle_coordinates", JSON.stringify(coords))
+				}
+			});
+
+			map.on("pm:remove", (e) => {
+				const coords = map.pm.getGeomanLayers(true).toGeoJSON().features.flatMap(f => {
+					return f.geometry.coordinates
+				})
+				localStorage.setItem("rectangle_coordinates", JSON.stringify(coords))
+			});
 
 			// On a new render pass, build new map overlays object,
 			// and replace the current map overlays object created on the last render pass

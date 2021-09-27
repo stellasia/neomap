@@ -18,7 +18,7 @@ import "codemirror/lib/codemirror.css";
 import "codemirror/addon/lint/lint.css";
 import "codemirror/addon/hint/show-hint.css";
 import "cypher-codemirror/dist/cypher-codemirror-syntax.css";
-
+import { getMinMaxLatLongs } from './utils';
 import {
 	LAYER_TYPE_LATLON,
 	LAYER_TYPE_POINT,
@@ -209,6 +209,7 @@ export class Layer extends Component {
 		const { value: lonValue } = this.state.longitudeProperty;
 		const { value: pointValue } = this.state.pointProperty;
 		const { value: tooltipValue } = this.state.tooltipProperty;
+		const bounds = getMinMaxLatLongs();
 		// lat lon query
 		// TODO: improve this method...
 		let query = 'MATCH (n) WHERE true';
@@ -217,6 +218,17 @@ export class Layer extends Component {
 		// filter out nodes with null latitude or longitude
 		if (layerType === LAYER_TYPE_LATLON) {
 			query += `\nAND exists(n.${latValue}) AND exists(n.${lonValue})`;
+			if (bounds.length > 0) {
+				query += "\n AND (false OR ("
+				bounds.forEach((coords, idx) => {
+					query += `n.${latValue} > ${coords.minLat} AND n.${latValue} < ${coords.maxLat}`;
+					query += `\nAND n.${lonValue} > ${coords.minLon} AND n.${lonValue} < ${coords.maxLon})`;
+					if (idx < bounds.length - 1) {
+						query += "\nOR ("
+					}
+				})
+				query += ")"
+			}
 			// return latitude, longitude
 			query += `\nRETURN n.${latValue} as latitude, n.${lonValue} as longitude`;
 		} else if (layerType === LAYER_TYPE_POINT) {
