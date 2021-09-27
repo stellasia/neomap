@@ -50,8 +50,8 @@ class Neo4JService {
       throw new Error("Failed to get driver");
     }
 
-    const selected_database = localStorage.getItem("selected_database") || "neo4j";
-    const session = driver.session({database: selected_database});
+    const selectedDatabase = localStorage.getItem("selected_database") || "neo4j";
+    const session = driver.session({database: selectedDatabase});
     const records = (await session.run(query, params)).records;
     session.close();
 
