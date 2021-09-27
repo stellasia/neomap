@@ -131,3 +131,7 @@ h4 {
 .leaflet-control-layers section {
     padding: 5px 10px;
 }
+
+.modal-content {
+    color: #111;
+ }

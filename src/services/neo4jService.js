@@ -27,6 +27,7 @@ class Neo4JService {
           } = activeGraph.connection.configuration.protocols.bolt;
 
           this.driver = createDriver(url, auth.basic(username, password));
+          await this._getAvailableDatabases();
         }
       } catch (error) {
         console.log(error);
@@ -36,6 +37,12 @@ class Neo4JService {
     return this.driver;
   };
 
+  _getAvailableDatabases = async () => {
+    const records = await this._runQuery("SHOW DATABASES YIELD name RETURN name;");
+    const dbNames = records.map(rec => rec._fields[0]).filter(name => name !== "system");
+    localStorage.setItem("available_databases", dbNames)
+  }
+
   _runQuery = async (query, params = undefined) => {
     const driver = this.driver || (await this._getNeo4jDriver());
 
@@ -43,7 +50,8 @@ class Neo4JService {
       throw new Error("Failed to get driver");
     }
 
-    const session = driver.session();
+    const selectedDatabase = localStorage.getItem("selected_database") || "neo4j";
+    const session = driver.session({database: selectedDatabase});
     const records = (await session.run(query, params)).records;
     session.close();
 
