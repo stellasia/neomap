@@ -81,7 +81,7 @@ export const Map = React.memo(({layers}) => {
 			});
 
 			map.on("pm:remove", (e) => {
-				const coords = map.pm.getGeomanLayers(true).toGeoJSON().features.flatMap(f => {
+				const coords = map.pm.getGeomanDrawLayers(true).toGeoJSON().features.flatMap(f => {
 					return f.geometry.coordinates
 				})
 				localStorage.setItem("rectangle_coordinates", JSON.stringify(coords))
