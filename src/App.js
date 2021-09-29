@@ -70,7 +70,7 @@ export const App = React.memo(() => {
     e.preventDefault();
   };
 
-	const defaultMapOffset = 30;
+  const defaultMapOffset = 30;
   const sidebarOffset = collapsed ? -27 : 0;
   const mapOffset = defaultMapOffset + sidebarOffset;
   const mapWidth = 100 - mapOffset;
