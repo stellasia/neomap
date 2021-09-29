@@ -12,10 +12,12 @@ body {
 #wrapper {
     height: 100%;
     position: relative;
+    margin: auto;
     width: 100%;
 }
 
 #sidebar {
+    position: absolute;
     width: 30%;
     min-height: 100%;
     padding: 0;
@@ -36,8 +38,7 @@ body {
 }
 
 #app-maparea {
-    position: relative;
-    width: 70%;
+    position: absolute;
     height: inherit;
     padding: 0;
 }
