@@ -18,7 +18,7 @@ import "@geoman-io/leaflet-geoman-free";
 /*
  * Main map component based on leaflet map.
  */
-export const Map = React.memo(({layers}) => {
+export const Map = React.memo(({layers, sideBarCollapsed}) => {
 
 	const mapRef = React.useRef();
 	const mapElementRef = React.createRef();
@@ -27,6 +27,13 @@ export const Map = React.memo(({layers}) => {
 	const layerControlRef = React.useRef(new L.control.layers([]));
 
 	const renderedBounds = React.useRef(new L.LatLngBounds());
+
+	React.useEffect(() => {
+		const map = mapRef.current;
+		if (map) {
+			map.invalidateSize();
+		}
+	}, [sideBarCollapsed]);
 
 	React.useEffect(() => {
 		const mapElement = mapElementRef.current;

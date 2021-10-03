@@ -3,9 +3,8 @@ import download from "downloadjs";
 import { Map } from "./components/Map";
 import { Menu } from "./components/Menu";
 import { SideBar } from "./components/SideBar";
-import { neo4jService } from './services/neo4jService'
+import { neo4jService } from "./services/neo4jService";
 import "./App.css";
-
 
 export const App = React.memo(() => {
 	/**
@@ -21,79 +20,110 @@ export const App = React.memo(() => {
 		// on App component mount clear coordinates of shapes that could've been drawn during previous session
 		localStorage.removeItem("rectangle_coordinates");
 	}, [])
-	
+
 
 	neo4jService._getNeo4jDriver();
 
-	const [layers, setLayers] = React.useState([]);
 
-	const addLayer = (layer) => {
-		setLayers([...layers, layer]);
-	}
+  const defaultMapOffset = 30;
+  const calcOffset = () => {
+    // guarantees 60px wide sidebar
+    return (60 / window.innerWidth) * 100 - defaultMapOffset;;
+  }
 
-	const updateLayer = (layer) => {
-		const updatedLayers = layers.map(currentLayer => {
-			if (currentLayer.ukey === layer.ukey) {
-				return layer;
-			}
-			return currentLayer;
-		});
+  const [layers, setLayers] = React.useState([]);
+  const [collapsed, setCollapse] = React.useState(false);
+  const [hiddenSidebarOffset, setHiddenSidebarOffset] = React.useState(calcOffset());
 
-		setLayers(updatedLayers);
-	}
+  const addLayer = (layer) => {
+    setLayers([...layers, layer]);
+  };
 
-	const removeLayer = (key) => {
-		const filteredLayers = layers.filter(layer => layer.ukey !== key);
+  const updateLayer = (layer) => {
+    const updatedLayers = layers.map((currentLayer) => {
+      if (currentLayer.ukey === layer.ukey) {
+        return layer;
+      }
+      return currentLayer;
+    });
 
-		setLayers(filteredLayers);
-	}
+    setLayers(updatedLayers);
+  };
 
-	const saveConfigToFile = (e) => {
-		const config = JSON.stringify(layers);
-		const fileName = "neomap_config.json";
-		download(config, fileName, "application/json");
-		e.preventDefault();
-	};
+  const removeLayer = (key) => {
+    const filteredLayers = layers.filter((layer) => layer.ukey !== key);
 
-	const loadConfigFromFile = (e) => {
-		const fileSelector = document.createElement('input');
-		fileSelector.setAttribute('type', 'file');
-		fileSelector.click();
-		fileSelector.onchange = (ev) => {
-			const file = ev.target.files[0];
-			const fileReader = new FileReader();
-			fileReader.onloadend = (e) => {
-				const content = e.target.result;
-				try {
-					const loadedLayers = JSON.parse(content);
-					setLayers(loadedLayers);
-				} catch (err) {
-					// TODO: Build error UI
-					console.log('Failed to load and parse data from file', err);
-				}
-			};
-			fileReader.readAsText(file);
-		};
-		e.preventDefault();
-	};
+    setLayers(filteredLayers);
+  };
 
-	return (
-		<div id="wrapper" className="row">
-			<div id="sidebar" className="col-md-4">
-				<Menu saveConfigToFile={saveConfigToFile} loadConfigFromFile={loadConfigFromFile}/>
-				<SideBar
-					layers={layers}
-					addLayer={addLayer}
-					updateLayer={updateLayer}
-					removeLayer={removeLayer}
-				/>
-			</div>
-			<div id="app-maparea" className="col-md-8">
-				<Map
-					key="map"
-					layers={layers}
-				/>
-			</div>
-		</div>
-	)
+  const saveConfigToFile = (e) => {
+    const config = JSON.stringify(layers);
+    const fileName = "neomap_config.json";
+    download(config, fileName, "application/json");
+    e.preventDefault();
+  };
+
+  const loadConfigFromFile = (e) => {
+    const fileSelector = document.createElement("input");
+    fileSelector.setAttribute("type", "file");
+    fileSelector.click();
+    fileSelector.onchange = (ev) => {
+      const file = ev.target.files[0];
+      const fileReader = new FileReader();
+      fileReader.onloadend = (e) => {
+        const content = e.target.result;
+        try {
+          const loadedLayers = JSON.parse(content);
+          setLayers(loadedLayers);
+        } catch (err) {
+          // TODO: Build error UI
+          console.log("Failed to load and parse data from file", err);
+        }
+      };
+      fileReader.readAsText(file);
+    };
+    e.preventDefault();
+  };
+
+  React.useEffect(() => {
+    const handleResize = () => setHiddenSidebarOffset(calcOffset());
+
+    window.addEventListener("resize", handleResize);
+    // Remove event listener on cleanup
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const sidebarOffset = collapsed ? hiddenSidebarOffset : 0;
+  const mapOffset = defaultMapOffset + sidebarOffset;
+  const mapWidth = 100 - mapOffset;
+
+  const toggleCollapse = () => {
+    setCollapse(!collapsed);
+  };
+
+  return (
+    <div id="wrapper" className="row">
+      <div id="sidebar" className="col" style={{ left: `${sidebarOffset}%` }}>
+        <Menu
+          saveConfigToFile={saveConfigToFile}
+          loadConfigFromFile={loadConfigFromFile}
+          toggleCollapse={toggleCollapse}
+          collapsed={collapsed}
+        />
+        <SideBar
+          layers={layers}
+          addLayer={addLayer}
+          updateLayer={updateLayer}
+          removeLayer={removeLayer}
+        />
+      </div>
+      <div
+        id="app-maparea"
+        className="col"
+        style={{ left: `${mapOffset}%`, width: `${mapWidth}%` }}
+      >
+        <Map key="map" layers={layers} sideBarCollapsed={collapsed}/>
+      </div>
+    </div>
+  );
 });
