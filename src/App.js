@@ -70,15 +70,19 @@ export const App = React.memo(() => {
     };
     e.preventDefault();
   };
-
-  React.useEffect(() => {
-    window.addEventListener("resize", () => setHiddenSidebarOffset(calcOffset()));
-  }, []);
+  
+  const handleResize = () => setHiddenSidebarOffset(calcOffset());
 
   const calcOffset = () => {
     // guarantees 60px wide sidebar
     return (60 / window.innerWidth) * 100 - defaultMapOffset;;  
   }
+
+  React.useEffect(() => {
+    window.addEventListener("resize", handleResize);
+    // Remove event listener on cleanup
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const defaultMapOffset = 30;
   const sidebarOffset = collapsed ? hiddenSidebarOffset : 0;
