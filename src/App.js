@@ -19,6 +19,7 @@ export const App = React.memo(() => {
 
   const [layers, setLayers] = React.useState([]);
   const [collapsed, setCollapse] = React.useState(false);
+  const [hiddenSidebarOffset, setHiddenSidebarOffset] = React.useState(-27);
 
   const addLayer = (layer) => {
     setLayers([...layers, layer]);
@@ -70,8 +71,17 @@ export const App = React.memo(() => {
     e.preventDefault();
   };
 
+  React.useEffect(() => {
+    window.addEventListener("resize", () => setHiddenSidebarOffset(calcOffset()));
+  }, []);
+
+  const calcOffset = () => {
+    // guarantees 60px wide sidebar
+    return (60 / window.innerWidth) * 100 - defaultMapOffset;;  
+  }
+
   const defaultMapOffset = 30;
-  const sidebarOffset = collapsed ? -27 : 0;
+  const sidebarOffset = collapsed ? hiddenSidebarOffset : 0;
   const mapOffset = defaultMapOffset + sidebarOffset;
   const mapWidth = 100 - mapOffset;
 

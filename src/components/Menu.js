@@ -1,6 +1,8 @@
 import React from "react";
 import { Nav, Navbar, NavDropdown } from "react-bootstrap";
 import SettingsModal from "./SettingsModal";
+import ChevronLeftIcon from "@icons/material/ChevronLeftIcon";
+import ChevronRightIcon from "@icons/material/ChevronRightIcon";
 
 export const Menu = React.memo(
   ({ saveConfigToFile, loadConfigFromFile, toggleCollapse, collapsed }) => {
@@ -34,8 +36,8 @@ export const Menu = React.memo(
               <Nav.Link onClick={handleShow}> Settings </Nav.Link>
             </Nav>
             <Nav>
-              <Nav.Link onClick={toggleCollapse} style={{ marginLeft: "auto" }}>
-                {collapsed ? ">" : "<"}
+              <Nav.Link id="collapse-button" onClick={toggleCollapse} style={{ marginLeft: "auto" }}>
+                { collapsed ? <ChevronRightIcon /> : <ChevronLeftIcon /> }
               </Nav.Link>
             </Nav>
           </Navbar.Collapse>
