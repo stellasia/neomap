@@ -17,9 +17,16 @@ export const App = React.memo(() => {
    */
   neo4jService._getNeo4jDriver();
 
+
+  const defaultMapOffset = 30;
+  const calcOffset = () => {
+    // guarantees 60px wide sidebar
+    return (60 / window.innerWidth) * 100 - defaultMapOffset;;  
+  }
+
   const [layers, setLayers] = React.useState([]);
   const [collapsed, setCollapse] = React.useState(false);
-  const [hiddenSidebarOffset, setHiddenSidebarOffset] = React.useState(-27);
+  const [hiddenSidebarOffset, setHiddenSidebarOffset] = React.useState(calcOffset());
 
   const addLayer = (layer) => {
     setLayers([...layers, layer]);
@@ -70,21 +77,15 @@ export const App = React.memo(() => {
     };
     e.preventDefault();
   };
-  
-  const handleResize = () => setHiddenSidebarOffset(calcOffset());
-
-  const calcOffset = () => {
-    // guarantees 60px wide sidebar
-    return (60 / window.innerWidth) * 100 - defaultMapOffset;;  
-  }
 
   React.useEffect(() => {
+    const handleResize = () => setHiddenSidebarOffset(calcOffset());
+
     window.addEventListener("resize", handleResize);
     // Remove event listener on cleanup
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const defaultMapOffset = 30;
   const sidebarOffset = collapsed ? hiddenSidebarOffset : 0;
   const mapOffset = defaultMapOffset + sidebarOffset;
   const mapWidth = 100 - mapOffset;
