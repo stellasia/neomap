@@ -12,8 +12,7 @@ import 'leaflet.markercluster';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import 'leaflet-polylinedecorator';
-import "@geoman-io/leaflet-geoman-free";
-
+import initGeoman from './Geoman';
 
 /*
  * Main map component based on leaflet map.
@@ -62,51 +61,7 @@ export const Map = React.memo(({layers, sideBarCollapsed}) => {
 		if (map) {
 			let mapBounds = new L.LatLngBounds();
 
-			// init geoman available tools 
-			map.pm.addControls({
-				drawRectangle: true,
-				removalMode: true,
-				editMode: true,
-				dragMode: true,
-				drawMarker: false,
-				drawPolyline: false,
-				drawCircle: false,
-				drawCircleMarker: false,
-				drawPolygon: false,
-				cutPolygon: false,
-				rotateMode: false,
-			});  
-
-			const setRectangleCoordinates = () => {
-				const coords = map.pm.getGeomanDrawLayers(true).toGeoJSON().features.flatMap(f => {
-					return f.geometry.coordinates
-				})
-				localStorage.setItem("rectangle_coordinates", JSON.stringify(coords))
-			};
-
-			map.on("pm:drawstart", () => {
-				const layers = map.pm.getGeomanDrawLayers()
-				if (layers.length > 1) {
-					window.alert("Using more than two shapes leads to performance issues with Neo4j.");
-					map.pm.disableDraw()
-				}
-			})
-			
-			// listen to `create` and `remove` events and update rectangle coordinates in local storage
-			map.on("pm:create", (e) => {
-				if (e.layer && e.layer.pm) {
-					setRectangleCoordinates();
-					// also need to add listener for a new layer
-					e.layer.on("pm:edit", (e) => {
-							setRectangleCoordinates();
-						}
-					)
-				}
-			});
-
-			map.on("pm:remove", (e) => {
-				setRectangleCoordinates();
-			});
+			initGeoman(map);
 
 			// On a new render pass, build new map overlays object,
 			// and replace the current map overlays object created on the last render pass
