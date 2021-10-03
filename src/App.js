@@ -75,13 +75,17 @@ export const App = React.memo(() => {
   const mapOffset = defaultMapOffset + sidebarOffset;
   const mapWidth = 100 - mapOffset;
 
+  const toggleCollapse = () => {
+    setCollapse(!collapsed);
+  };
+
   return (
     <div id="wrapper" className="row">
       <div id="sidebar" className="col" style={{ left: `${sidebarOffset}%` }}>
         <Menu
           saveConfigToFile={saveConfigToFile}
           loadConfigFromFile={loadConfigFromFile}
-          setCollapse={setCollapse}
+          toggleCollapse={toggleCollapse}
           collapsed={collapsed}
         />
         <SideBar
@@ -96,7 +100,7 @@ export const App = React.memo(() => {
         className="col"
         style={{ left: `${mapOffset}%`, width: `${mapWidth}%` }}
       >
-        <Map key="map" layers={layers} />
+        <Map key="map" layers={layers} sideBarCollapsed={collapsed}/>
       </div>
     </div>
   );

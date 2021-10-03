@@ -3,12 +3,12 @@ import { Nav, Navbar, NavDropdown } from "react-bootstrap";
 import SettingsModal from "./SettingsModal";
 
 export const Menu = React.memo(
-  ({ saveConfigToFile, loadConfigFromFile, setCollapse, collapsed }) => {
+  ({ saveConfigToFile, loadConfigFromFile, toggleCollapse, collapsed }) => {
     const [showModal, setShowModal] = React.useState(false);
 
     const handleClose = () => setShowModal(false);
     const handleShow = () => setShowModal(true);
-    const toggleCollapse = () => setCollapse(!collapsed);
+    
 
     return (
       <>
