@@ -7,33 +7,33 @@ import { neo4jService } from "./services/neo4jService";
 import "./App.css";
 
 export const App = React.memo(() => {
-	/**
-	 * Given the underlying neo4jDesktop drivers' dependency on global window context,
-	 * we need to import an instance here to the boot a service instance that reads
-	 * App.js window instance. The service is a singleton,
-	 * and subsequent windows will get the same instance with drivers created here.
-	 *
-	 * TODO: FIXME! Redesign neo4jService instantiation with full consideration for global window dependency
-	 */
+  /**
+   * Given the underlying neo4jDesktop drivers' dependency on global window context,
+   * we need to import an instance here to the boot a service instance that reads
+   * App.js window instance. The service is a singleton,
+   * and subsequent windows will get the same instance with drivers created here.
+   *
+   * TODO: FIXME! Redesign neo4jService instantiation with full consideration for global window dependency
+   */
 
-	React.useEffect(() => {
-		// on App component mount clear coordinates of shapes that could've been drawn during previous session
-		localStorage.removeItem("rectangle_coordinates");
-	}, [])
+  React.useEffect(() => {
+    // on App component mount clear coordinates of shapes that could've been drawn during previous session
+    localStorage.removeItem("rectangle_coordinates");
+  }, []);
 
-
-	neo4jService._getNeo4jDriver();
-
+  neo4jService._getNeo4jDriver();
 
   const defaultMapOffset = 30;
   const calcOffset = () => {
     // guarantees 60px wide sidebar
-    return (60 / window.innerWidth) * 100 - defaultMapOffset;;
-  }
+    return (60 / window.innerWidth) * 100 - defaultMapOffset;
+  };
 
   const [layers, setLayers] = React.useState([]);
   const [collapsed, setCollapse] = React.useState(false);
-  const [hiddenSidebarOffset, setHiddenSidebarOffset] = React.useState(calcOffset());
+  const [hiddenSidebarOffset, setHiddenSidebarOffset] = React.useState(
+    calcOffset()
+  );
 
   const addLayer = (layer) => {
     setLayers([...layers, layer]);
@@ -122,7 +122,7 @@ export const App = React.memo(() => {
         className="col"
         style={{ left: `${mapOffset}%`, width: `${mapWidth}%` }}
       >
-        <Map key="map" layers={layers} sideBarCollapsed={collapsed}/>
+        <Map key="map" layers={layers} sideBarCollapsed={collapsed} />
       </div>
     </div>
   );
