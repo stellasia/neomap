@@ -14,3 +14,17 @@ export function generateUkeyFromName(name) {
 	let thisName = name || generateRandomName();
     return `${thisName.replace(/\s/g,'')}${getRandomInt(0,100)}`
 }
+
+export function getMinMaxLatLongs() {
+	const rawCoords = localStorage.getItem("rectangle_coordinates") || "[]";
+	const coords = JSON.parse(rawCoords);
+	
+	const bounds = coords.map(shape => {
+		const minLat = Math.min(...shape.map(latlon => latlon[1]));
+		const minLon = Math.min(...shape.map(latlon => latlon[0]));
+		const maxLat = Math.max(...shape.map(latlon => latlon[1]));
+		const maxLon = Math.max(...shape.map(latlon => latlon[0]));
+		return {minLat, minLon, maxLat, maxLon};
+	})
+	return bounds
+}

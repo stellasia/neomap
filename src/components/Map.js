@@ -11,8 +11,8 @@ import 'leaflet.heat';
 import 'leaflet.markercluster';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
-import 'leaflet-polylinedecorator'
-
+import 'leaflet-polylinedecorator';
+import initGeoman from './Geoman';
 
 /*
  * Main map component based on leaflet map.
@@ -48,6 +48,7 @@ export const Map = React.memo(({layers, sideBarCollapsed}) => {
 					}),
 				]
 			});
+
 		}
 
 	// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -59,6 +60,8 @@ export const Map = React.memo(({layers, sideBarCollapsed}) => {
 
 		if (map) {
 			let mapBounds = new L.LatLngBounds();
+
+			initGeoman(map);
 
 			// On a new render pass, build new map overlays object,
 			// and replace the current map overlays object created on the last render pass

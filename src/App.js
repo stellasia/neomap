@@ -17,16 +17,24 @@ export const App = React.memo(() => {
    */
   neo4jService._getNeo4jDriver();
 
+  React.useEffect(() => {
+    // on App component mount clear coordinates of shapes that could've been drawn during previous session
+    localStorage.removeItem("rectangle_coordinates");
+  }, []);
+
+  
 
   const defaultMapOffset = 30;
   const calcOffset = () => {
     // guarantees 60px wide sidebar
-    return (60 / window.innerWidth) * 100 - defaultMapOffset;;  
-  }
+    return (60 / window.innerWidth) * 100 - defaultMapOffset;
+  };
 
   const [layers, setLayers] = React.useState([]);
   const [collapsed, setCollapse] = React.useState(false);
-  const [hiddenSidebarOffset, setHiddenSidebarOffset] = React.useState(calcOffset());
+  const [hiddenSidebarOffset, setHiddenSidebarOffset] = React.useState(
+    calcOffset()
+  );
 
   const addLayer = (layer) => {
     setLayers([...layers, layer]);
@@ -115,7 +123,7 @@ export const App = React.memo(() => {
         className="col"
         style={{ left: `${mapOffset}%`, width: `${mapWidth}%` }}
       >
-        <Map key="map" layers={layers} sideBarCollapsed={collapsed}/>
+        <Map key="map" layers={layers} sideBarCollapsed={collapsed} />
       </div>
     </div>
   );
