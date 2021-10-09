@@ -143,10 +143,12 @@ export const Map = React.memo(({layers, sideBarCollapsed}) => {
 							if (entry.tooltip != null) {
 								polyline.bindPopup(entry.tooltip);
 							}
-							const arrowheads = L.polylineDecorator(polyline, {
-								patterns: arrow,
-							})
-							arrowheads.addTo(relationsLayer);
+							if (localStorage.getItem("show_directions") === "true") {
+								const arrowheads = L.polylineDecorator(polyline, {
+									patterns: arrow,
+								})
+								arrowheads.addTo(relationsLayer);
+							}
 						});
 
 						newMapOverlays[ukey] = relationsLayer;
