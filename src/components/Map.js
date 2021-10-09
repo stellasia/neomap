@@ -136,14 +136,15 @@ export const Map = React.memo(({layers, sideBarCollapsed}) => {
 
 						// TODO: check if the layer has changed before rerendering it
 						relationsLayer.clearLayers();
-
+						
+						const showDirections = localStorage.getItem("show_directions") === "true";
 						data.forEach(entry => {
 							const polyline = L.polyline([entry.start, entry.end], {color: relRgbColor, opacity: relationshipColor.a}).addTo(relationsLayer)
 
 							if (entry.tooltip != null) {
 								polyline.bindPopup(entry.tooltip);
 							}
-							if (localStorage.getItem("show_directions") === "true") {
+							if (showDirections) {
 								const arrowheads = L.polylineDecorator(polyline, {
 									patterns: arrow,
 								})
