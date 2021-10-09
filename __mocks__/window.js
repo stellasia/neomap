@@ -1,5 +1,5 @@
-Object.defineProperty(window, 'confirm', {
+Object.defineProperty(window, "confirm", {
   value: jest.fn().mockImplementation(() => {
-      return true 
-    })
-})
+    return true;
+  }),
+});

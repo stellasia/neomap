@@ -5,155 +5,154 @@
  * Consider contributing back to the package :)
  */
 
-import { L } from 'leaflet';
-const LeafletMock = jest.createMockFromModule('leaflet')
-LeafletMock.Symbol.arrowHead = jest.fn(()=>{})
-
+import { L } from "leaflet";
+const LeafletMock = jest.createMockFromModule("leaflet");
+LeafletMock.Symbol.arrowHead = jest.fn(() => {});
 
 class ControlMock extends LeafletMock.Control {
   constructor(options) {
-    super()
-    this.options = { ...L.Control.prototype.options, ...options }
+    super();
+    this.options = { ...L.Control.prototype.options, ...options };
   }
 
   getPosition() {
-    return this.options.position
+    return this.options.position;
   }
 
   setPosition(position) {
-    this.options.position = position
-    return this
+    this.options.position = position;
+    return this;
   }
 }
 
-const controlMock = (options) => new ControlMock(options)
+const controlMock = (options) => new ControlMock(options);
 
 class LayersControlMock extends ControlMock {
   constructor(baseLayers = [], overlays = [], options) {
-    super(options)
-    this._layers = []
+    super(options);
+    this._layers = [];
 
     baseLayers.forEach((layer, i) => {
-      this._addLayer(layer, i)
-    })
+      this._addLayer(layer, i);
+    });
     overlays.forEach((layer, i) => {
-      this._addLayer(layer, i, true)
-    })
+      this._addLayer(layer, i, true);
+    });
   }
 
   _addLayer(layer, name, overlay) {
-    this._layers.push({ layer, name, overlay })
+    this._layers.push({ layer, name, overlay });
   }
 
   addBaseLayer(layer, name) {
-    this._addLayer(layer, name)
-    return this
+    this._addLayer(layer, name);
+    return this;
   }
 
   addOverlay(layer, name) {
-    this._addLayer(layer, name, true)
-    return this
+    this._addLayer(layer, name, true);
+    return this;
   }
 
   removeLayer(obj) {
-    this._layers.splice(this._layers.indexOf(obj), 1)
+    this._layers.splice(this._layers.indexOf(obj), 1);
   }
 }
 
-ControlMock.Layers = LayersControlMock
+ControlMock.Layers = LayersControlMock;
 controlMock.layers = (baseLayers, overlays, options) => {
-  return new LayersControlMock(baseLayers, overlays, options)
-}
+  return new LayersControlMock(baseLayers, overlays, options);
+};
 
 class MapMock extends LeafletMock.Map {
   constructor(id, options = {}) {
-    super()
-    Object.assign(this, L.Evented.prototype)
+    super();
+    Object.assign(this, L.Evented.prototype);
 
-    this.options = { ...L.Map.prototype.options, ...options }
-    this._container = id
+    this.options = { ...L.Map.prototype.options, ...options };
+    this._container = id;
 
     if (options.bounds) {
-      this.fitBounds(options.bounds, options.boundsOptions)
+      this.fitBounds(options.bounds, options.boundsOptions);
     }
 
     if (options.maxBounds) {
-      this.setMaxBounds(options.maxBounds)
+      this.setMaxBounds(options.maxBounds);
     }
 
     if (options.center && options.zoom !== undefined) {
-      this.setView(L.latLng(options.center), options.zoom)
+      this.setView(L.latLng(options.center), options.zoom);
     }
   }
 
   _limitZoom(zoom) {
-    const min = this.getMinZoom()
-    const max = this.getMaxZoom()
-    return Math.max(min, Math.min(max, zoom))
+    const min = this.getMinZoom();
+    const max = this.getMaxZoom();
+    return Math.max(min, Math.min(max, zoom));
   }
 
   _resetView(center, zoom) {
-    this._initialCenter = center
-    this._zoom = zoom
+    this._initialCenter = center;
+    this._zoom = zoom;
   }
 
   fitBounds(bounds, options) {
-    this._bounds = bounds
-    this._boundsOptions = options
+    this._bounds = bounds;
+    this._boundsOptions = options;
   }
 
   getBounds() {
-    return this._bounds
+    return this._bounds;
   }
 
   getCenter() {
-    return this._initialCenter
+    return this._initialCenter;
   }
 
   getMaxZoom() {
-    return this.options.maxZoom === undefined ? Infinity : this.options.maxZoom
+    return this.options.maxZoom === undefined ? Infinity : this.options.maxZoom;
   }
 
   getMinZoom() {
-    return this.options.minZoom === undefined ? 0 : this.options.minZoom
+    return this.options.minZoom === undefined ? 0 : this.options.minZoom;
   }
 
   getZoom() {
-    return this._zoom
+    return this._zoom;
   }
 
   setMaxBounds(bounds) {
-    bounds = L.latLngBounds(bounds)
-    this.options.maxBounds = bounds
-    return this
+    bounds = L.latLngBounds(bounds);
+    this.options.maxBounds = bounds;
+    return this;
   }
 
   setView(center, zoom) {
-    zoom = zoom === undefined ? this.getZoom() : zoom
-    this._resetView(L.latLng(center), this._limitZoom(zoom))
-    return this
+    zoom = zoom === undefined ? this.getZoom() : zoom;
+    this._resetView(L.latLng(center), this._limitZoom(zoom));
+    return this;
   }
 
   setZoom(zoom) {
-    return this.setView(this.getCenter(), zoom)
+    return this.setView(this.getCenter(), zoom);
   }
 }
 
 class PopupMock extends LeafletMock.Popup {
   constructor(options, source) {
-    super()
-    Object.assign(this, L.Evented.prototype)
+    super();
+    Object.assign(this, L.Evented.prototype);
 
-    this.options = { ...L.Popup.prototype.options, ...options }
-    this._source = source
+    this.options = { ...L.Popup.prototype.options, ...options };
+    this._source = source;
   }
 
   getContent() {
-    return this._content
+    return this._content;
   }
 
   setContent(content) {
-    this._content = content
+    this._content = content;
   }
 }
 
@@ -169,4 +168,4 @@ module.exports = {
   map: (id, options) => new MapMock(id, options),
   Popup: PopupMock,
   popup: (options, source) => new PopupMock(options, source),
-}
+};

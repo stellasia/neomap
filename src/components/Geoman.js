@@ -28,9 +28,7 @@ export default function initGeoman(map) {
   map.on("pm:drawstart", () => {
     const layers = map.pm.getGeomanDrawLayers();
     if (layers.length > 1) {
-      window.alert(
-        "Using more than two shapes leads to performance issues with Neo4j."
-      );
+      window.alert("Using more than two shapes leads to performance issues with Neo4j.");
       map.pm.disableDraw();
     }
   });

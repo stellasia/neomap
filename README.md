@@ -18,12 +18,11 @@ A Neo4J Desktop (React-based) application to visualize nodes with geographical a
 
 1. Open neo4j desktop and go to "Graph Applications" view:
 
-    ![](img/desktop_graphapp_install.png)
+   ![](img/desktop_graphapp_install.png)
 
 2. Paste the following link in the text input:
 
-       https://registry.npmjs.org/neomap
-
+   https://registry.npmjs.org/neomap
 
 #### From tarball
 
@@ -39,7 +38,6 @@ A Neo4J Desktop (React-based) application to visualize nodes with geographical a
 7. Click "Add"
 
    ![](img/desktop_graphapp_add_2.png)
-
 
 ## Usage
 
@@ -79,12 +77,12 @@ I am a data scientist, not a front-end developer. If someone with expertise with
 1. Make sure the version in package.json is correct
 2. Build:
 
-    npm run build
+   npm run build
 
 3. Create tgz package:
 
-    npm pack
+   npm pack
 
 4. Publish to NPM: (after npm login):
 
-    `npm publish neomap-<VERSION>.tgz #  --registry=https://registry.npmjs.org`
+   `npm publish neomap-<VERSION>.tgz # --registry=https://registry.npmjs.org`

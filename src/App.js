@@ -22,8 +22,6 @@ export const App = React.memo(() => {
     localStorage.removeItem("rectangle_coordinates");
   }, []);
 
-  
-
   const defaultMapOffset = 30;
   const calcOffset = () => {
     // guarantees 60px wide sidebar
@@ -32,9 +30,7 @@ export const App = React.memo(() => {
 
   const [layers, setLayers] = React.useState([]);
   const [collapsed, setCollapse] = React.useState(false);
-  const [hiddenSidebarOffset, setHiddenSidebarOffset] = React.useState(
-    calcOffset()
-  );
+  const [hiddenSidebarOffset, setHiddenSidebarOffset] = React.useState(calcOffset());
 
   const addLayer = (layer) => {
     setLayers([...layers, layer]);
@@ -111,18 +107,9 @@ export const App = React.memo(() => {
           toggleCollapse={toggleCollapse}
           collapsed={collapsed}
         />
-        <SideBar
-          layers={layers}
-          addLayer={addLayer}
-          updateLayer={updateLayer}
-          removeLayer={removeLayer}
-        />
+        <SideBar layers={layers} addLayer={addLayer} updateLayer={updateLayer} removeLayer={removeLayer} />
       </div>
-      <div
-        id="app-maparea"
-        className="col"
-        style={{ left: `${mapOffset}%`, width: `${mapWidth}%` }}
-      >
+      <div id="app-maparea" className="col" style={{ left: `${mapOffset}%`, width: `${mapWidth}%` }}>
         <Map key="map" layers={layers} sideBarCollapsed={collapsed} />
       </div>
     </div>
