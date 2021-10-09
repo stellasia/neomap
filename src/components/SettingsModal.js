@@ -11,7 +11,9 @@ export default function SettingsModal({ handleClose, show }) {
   });
 
   const getOptions = () => {
-    const databases = (localStorage.getItem("available_databases") || "").split(",");
+    const databases = (localStorage.getItem("available_databases") || "").split(
+      ","
+    );
     return databases.map((dbName) => {
       return { value: dbName, label: dbName };
     });
@@ -22,8 +24,13 @@ export default function SettingsModal({ handleClose, show }) {
     handleClose();
   };
 
+  const onClose = () => {
+    setDatabase({ value: initialDb, label: initialDb });
+    handleClose();
+  };
+
   return (
-    <Modal show={show} onHide={handleClose}>
+    <Modal show={show} onHide={onClose}>
       <Modal.Header closeButton>
         <Modal.Title>Settings</Modal.Title>
       </Modal.Header>
@@ -39,7 +46,7 @@ export default function SettingsModal({ handleClose, show }) {
           />
         </Form.Group>
         <Modal.Footer>
-          <Button variant="secondary" onClick={handleClose}>
+          <Button variant="secondary" onClick={onClose}>
             Close
           </Button>
           <Button variant="primary" onClick={onSave}>
