@@ -1,10 +1,9 @@
 # neomap release notes
 
-
 ## 0.5.1 (2020-08-08)
 
 - Fix overflow in side bar (layer configuration)
-- Publish package to NPM and update installation instructions 
+- Publish package to NPM and update installation instructions
 
 ## 0.5.0 (2020-07-04)
 
@@ -13,7 +12,6 @@
 - Better support for Neo4j Desktop versions (#53)
 - Support for Neo4j 4.x (#60)
 - Some code refactoring (#52 - #58)
-
 
 ## 0.4.0 (2020-02-27)
 
@@ -27,7 +25,6 @@
 - Fix CI on GitHub
 - Code refactoring by introducing a neo4jService to isolate the DB queries
 
-
 ## 0.3.1 (2019-11-19)
 
 - Remove warning popup when changing the limit (#36);
@@ -35,13 +32,12 @@
 - Improve map centering/zooming (now fit bounds);
 - Lat/lon/tooltip labels now selectable from list of available labels;
 
-
 ## 0.3.0 (2019-11-17)
 
 - Better error and warning handling:
-    - Inform the user when query returns no result
-    - Warning when switching from advanced to simple query
-    - Warning before deleting a layer (definitive action)
+  - Inform the user when query returns no result
+  - Warning when switching from advanced to simple query
+  - Warning before deleting a layer (definitive action)
 - Possibility to switch from simple to advanced layer with pre-filled query
 - Possibility to show the generated query for simple mode layer
 - Display the selected marker color in the layer header (left side bar)

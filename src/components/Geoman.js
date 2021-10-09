@@ -28,9 +28,7 @@ export default function initGeoman(map) {
   map.on("pm:drawstart", () => {
     const layers = map.pm.getGeomanDrawLayers();
     if (layers.length > 1) {
-      window.alert(
-        "Using more than two shapes leads to performance issues with Neo4j."
-      );
+      window.alert("Using more than two shapes leads to performance issues with Neo4j.");
       map.pm.disableDraw();
     }
   });
@@ -40,13 +38,13 @@ export default function initGeoman(map) {
     if (e.layer && e.layer.pm) {
       setRectangleCoordinates();
       // also need to add listener for a new layer
-      e.layer.on("pm:edit", (e) => {
+      e.layer.on("pm:edit", () => {
         setRectangleCoordinates();
       });
     }
   });
 
-  map.on("pm:remove", (e) => {
+  map.on("pm:remove", () => {
     setRectangleCoordinates();
   });
 }

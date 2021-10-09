@@ -17,14 +17,8 @@ class Neo4JService {
           .reduce((acc, { graphs }) => acc.concat(graphs), [])[0];
 
         if (activeGraph) {
-          console.log(
-            `Active graph is: ${activeGraph.name} - (${activeGraph.description})`
-          );
-          const {
-            url,
-            username,
-            password,
-          } = activeGraph.connection.configuration.protocols.bolt;
+          console.log(`Active graph is: ${activeGraph.name} - (${activeGraph.description})`);
+          const { url, username, password } = activeGraph.connection.configuration.protocols.bolt;
 
           this.driver = createDriver(url, auth.basic(username, password));
           await this._getAvailableDatabases();
@@ -39,9 +33,9 @@ class Neo4JService {
 
   _getAvailableDatabases = async () => {
     const records = await this._runQuery("SHOW DATABASES YIELD name RETURN name;");
-    const dbNames = records.map(rec => rec._fields[0]).filter(name => name !== "system");
-    localStorage.setItem("available_databases", dbNames)
-  }
+    const dbNames = records.map((rec) => rec._fields[0]).filter((name) => name !== "system");
+    localStorage.setItem("available_databases", dbNames);
+  };
 
   _runQuery = async (query, params = undefined) => {
     const driver = this.driver || (await this._getNeo4jDriver());
@@ -51,7 +45,7 @@ class Neo4JService {
     }
 
     const selectedDatabase = localStorage.getItem("selected_database") || "neo4j";
-    const session = driver.session({database: selectedDatabase});
+    const session = driver.session({ database: selectedDatabase });
     const records = (await session.run(query, params)).records;
     session.close();
 
@@ -99,15 +93,16 @@ class Neo4JService {
   };
 
   getRelationshipLabels = async () => {
-    const query = 'CALL db.relationshipTypes() YIELD relationshipType RETURN relationshipType ORDER BY relationshipType;'
-    const records = await this._runQuery(query)
+    const query =
+      "CALL db.relationshipTypes() YIELD relationshipType RETURN relationshipType ORDER BY relationshipType;";
+    const records = await this._runQuery(query);
 
-    const res = records.map(record => ({
-            value: record.get("relationshipType"),
-            label: record.get("relationshipType"),
-          }));    
+    const res = records.map((record) => ({
+      value: record.get("relationshipType"),
+      label: record.get("relationshipType"),
+    }));
     return res;
-  }
+  };
 
   getRelationshipData = async (query, params) => {
     const records = await this._runQuery(query, params);
@@ -135,8 +130,7 @@ class Neo4JService {
       status: 200,
       result: res,
     };
-  }
-      
+  };
 
   hasSpatial = async () => {
     const query = "CALL spatial.procedures() YIELD name RETURN name LIMIT 1";
@@ -189,9 +183,7 @@ class Neo4JService {
 
       return { status: 200, result };
     } catch (error) {
-      const customError = new Error(
-        `${error.message}, please check your query`
-      );
+      const customError = new Error(`${error.message}, please check your query`);
       return { status: 500, error: customError };
     }
   };

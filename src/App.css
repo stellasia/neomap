@@ -1,142 +1,144 @@
-html, body, #root {
-    padding: 0;
-    margin: 0;
-    height: 100%;
+html,
+body,
+#root {
+  padding: 0;
+  margin: 0;
+  height: 100%;
 }
 
 body {
-    background: rgba(0,0,0,.75);
-    color: #fff;
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
 }
 
 #wrapper {
-    height: 100%;
-    position: relative;
-    margin: auto;
-    width: 100%;
+  height: 100%;
+  position: relative;
+  margin: auto;
+  width: 100%;
 }
 
 #sidebar {
-    position: absolute;
-    width: 30%;
-    min-height: 100%;
-    padding: 0;
-    height: 100%;
-    overflow-y: scroll;
+  position: absolute;
+  width: 30%;
+  min-height: 100%;
+  padding: 0;
+  height: 100%;
+  overflow-y: scroll;
 }
 
 .navbar {
-    margin-top: 0;
-    margin-bottom: 20px;
-    background: darkgrey;
-    color: #fff;
-    padding-left: 5%;
+  margin-top: 0;
+  margin-bottom: 20px;
+  background: darkgrey;
+  color: #fff;
+  padding-left: 5%;
 }
 
 #collapse-button {
-    padding-right: 0;
+  padding-right: 0;
 }
 
 #map {
-    height: 100%;
+  height: 100%;
 }
 
 #app-maparea {
-    position: absolute;
-    height: inherit;
-    padding: 0;
+  position: absolute;
+  height: inherit;
+  padding: 0;
 }
 
 .leaflet-pane {
-    z-index: 1;
+  z-index: 1;
 }
 
 .leaflet-container {
-    position: relative;
-    width: 100%;
-    height: inherit;
-    min-height: 90em;
-    box-shadow: 0 5px 5px 5px white;
+  position: relative;
+  width: 100%;
+  height: inherit;
+  min-height: 90em;
+  box-shadow: 0 5px 5px 5px white;
 }
 
 .btn {
-    margin-top: 20px;
+  margin-top: 20px;
 }
 
 .select {
-    position: absolute;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    padding: 0;
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  padding: 0;
 }
 
 .accordion {
-    margin: 0 3%;
+  margin: 0 3%;
 }
 
 .card {
-    background-color: inherit;
-    border: 1px solid white;
-    padding: 0 10px;
+  background-color: inherit;
+  border: 1px solid white;
+  padding: 0 10px;
 }
 
 .accordion > .card {
-    overflow: visible;
+  overflow: visible;
 }
 
 .disabled {
-    color: grey;
+  color: grey;
 }
 
 .nav-tabs {
-    margin-bottom: 20px;
-    background-color: #aaa;
-    color: black;
+  margin-bottom: 20px;
+  background-color: #aaa;
+  color: black;
 }
 
 p.help {
-    margin: 2px;
-    font-style: italic;
-    font-size: 0.8em;
-    color: #999;
+  margin: 2px;
+  font-style: italic;
+  font-size: 0.8em;
+  color: #999;
 }
 
 .form-label {
-    margin-bottom: .5rem;
-    font-weight: 500;
-    line-height: 1.2;
-    font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  line-height: 1.2;
+  font-size: 1.25rem;
 }
 
 h4 {
-    margin-top: 1.1em;
-    color: #aaa;
+  margin-top: 1.1em;
+  color: #aaa;
 }
 
 .dropdown-item {
-    position: relative;
+  position: relative;
 }
 
 .beta::after {
-    content: "(beta)";
-    color: goldenrod;
-    font-size: 12px;
-    font-weight: bold;
-    padding: 4px;
-    position: absolute;
-    bottom: 3px;
+  content: "(beta)";
+  color: goldenrod;
+  font-size: 12px;
+  font-weight: bold;
+  padding: 4px;
+  position: absolute;
+  bottom: 3px;
 }
 
 .leaflet-control-layers {
-    font-size: 1.25rem;
+  font-size: 1.25rem;
 }
 
 .leaflet-control-layers section {
-    padding: 5px 10px;
+  padding: 5px 10px;
 }
 
 .modal-content {
-    color: #111;
- }
+  color: #111;
+}

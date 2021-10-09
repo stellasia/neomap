@@ -32,7 +32,7 @@ export default function SettingsModal({ handleClose, show }) {
     setDatabase({ value: initialDb, label: initialDb });
     setDefaultLonProperty(initialLonProperty);
     setDefaultLatProperty(initialLatProperty);
-    setShowDirections(initialShowDirections === "true")
+    setShowDirections(initialShowDirections === "true");
   };
 
   const onClose = () => {

@@ -2,57 +2,58 @@
  * Importing neo4jDesktopApi from __mocks__ adds a mock desktop api to the global window object
  * subsequent neo4jservice imports will use a mock api and driver *
  */
-import '../../__mocks__/neo4jDesktopApi';
+import "../../__mocks__/neo4jDesktopApi"; // eslint-disable-line jest/no-mocks-import
 
-import { neo4jService } from './neo4jService';
-import { neo4jService as neo4jServiceCopy } from './neo4jService';
+import { neo4jService } from "./neo4jService";
+import { neo4jService as neo4jServiceCopy } from "./neo4jService";
 
-jest.mock('neo4j-driver', () => {
+jest.mock("neo4j-driver", () => {
   const mockRecord = new Map([
-    ['name', 't-name'],
-    ['label', 't-label'],
-    ['layer', 't-layer'],
-    ['tooltip', 't-tooltip'],
-    ['propertyKey', 't-propertyKey'],
-    ['longitude', '4321'],
-    ['latitude', '1234']
+    ["name", "t-name"],
+    ["label", "t-label"],
+    ["layer", "t-layer"],
+    ["tooltip", "t-tooltip"],
+    ["propertyKey", "t-propertyKey"],
+    ["longitude", "4321"],
+    ["latitude", "1234"],
   ]);
 
   const mockSession = {
+    // eslint-disable-next-line no-unused-vars
     run: jest.fn((_query, _params, _config) => {
+      // eslint-disable-next-line no-unused-vars
       return new Promise((resolve, _reject) => {
         return resolve({ records: [mockRecord] });
       });
     }),
-    close: jest.fn()
-  }
+    close: jest.fn(),
+  };
 
   const mockDriver = {
-    session: jest.fn((_args) => mockSession)
-  }
+    session: jest.fn((_args) => mockSession), // eslint-disable-line no-unused-vars
+  };
 
   return {
-    auth:  {
-      basic: (_username, _password, _realm=undefined) => 'AuthToken'
+    auth: {
+      basic: (_username, _password, _realm = undefined) => "AuthToken", // eslint-disable-line no-unused-vars
     },
-    driver: jest.fn((_url, _authToken, _config) => mockDriver),
-  }
+    driver: jest.fn((_url, _authToken, _config) => mockDriver), // eslint-disable-line no-unused-vars
+  };
 });
 
-
-describe('neo4jService tests', () => {
-  it('is a singelton', () => {
+describe("neo4jService tests", () => {
+  it("is a singelton", () => {
     expect(neo4jService).toEqual(neo4jServiceCopy);
   });
 
-  it('gets node labels', async () => {
+  it("gets node labels", async () => {
     // Arrange
     const testNodeLabels = [
       {
-        value: 't-label',
-        label: 't-label'
-      }
-    ]
+        value: "t-label",
+        label: "t-label",
+      },
+    ];
 
     // Act
     const nodeLabels = await neo4jService.getNodeLabels();
@@ -61,14 +62,14 @@ describe('neo4jService tests', () => {
     expect(nodeLabels).toEqual({ status: 200, result: testNodeLabels });
   });
 
-  it('gets properties', async () => {
+  it("gets properties", async () => {
     // Arrange
     const testProperties = [
       {
-        value: 't-propertyKey',
-        label: 't-propertyKey'
-      }
-    ]
+        value: "t-propertyKey",
+        label: "t-propertyKey",
+      },
+    ];
 
     // Act
     const properties = await neo4jService.getProperties();
@@ -77,22 +78,22 @@ describe('neo4jService tests', () => {
     expect(properties).toEqual({ status: 200, result: testProperties });
   });
 
-  it('checks for spatial', async () => {
+  it("checks for spatial", async () => {
     // Act
-    const hasSpatial = await neo4jService.hasSpatial()
+    const hasSpatial = await neo4jService.hasSpatial();
 
     // Assert
     expect(hasSpatial).toEqual({ status: 200, result: true });
   });
 
-  it('gets spatial layers', async () => {
+  it("gets spatial layers", async () => {
     // Arrange
     const testSpatialLayers = [
       {
-        value: 't-layer',
-        label: 't-layer'
-      }
-    ]
+        value: "t-layer",
+        label: "t-layer",
+      },
+    ];
 
     // Act
     const spatialLayers = await neo4jService.getSpatialLayers();
@@ -101,14 +102,14 @@ describe('neo4jService tests', () => {
     expect(spatialLayers).toEqual({ status: 200, result: testSpatialLayers });
   });
 
-  it('gets corect data', async () => {
+  it("gets corect data", async () => {
     // Arrange
     const testData = [
       {
-        pos: ['1234', '4321'],
-        tooltip: 't-tooltip'
-      }
-    ]
+        pos: ["1234", "4321"],
+        tooltip: "t-tooltip",
+      },
+    ];
 
     // Act
     const data = await neo4jService.getData();
