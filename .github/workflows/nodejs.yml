@@ -24,3 +24,8 @@ jobs:
         npm test
       env:
         CI: true
+    - name: eslint
+      run: |
+        npx eslint .
+      env:
+        CI: true
