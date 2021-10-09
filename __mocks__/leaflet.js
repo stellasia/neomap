@@ -156,7 +156,7 @@ class PopupMock extends LeafletMock.Popup {
   }
 }
 
-module.exports = {
+module.exports = {  // eslint-disable-line no-undef
   ...LeafletMock,
   Control: ControlMock,
   control: controlMock,

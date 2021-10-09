@@ -1,8 +1,8 @@
-/**
- * Importing neo4jDesktopApi from __mocks__ adds a mock desktop api to the global window object
- * subsequent neo4jservice imports will use a mock api and driver *
- */
-import "../../__mocks__/neo4jDesktopApi";
+// /**
+//  * Importing neo4jDesktopApi from __mocks__ adds a mock desktop api to the global window object
+//  * subsequent neo4jservice imports will use a mock api and driver *
+//  */
+// import "../../__mocks__/neo4jDesktopApi";
 
 import { neo4jService } from "./neo4jService";
 import { neo4jService as neo4jServiceCopy } from "./neo4jService";
@@ -19,8 +19,8 @@ jest.mock("neo4j-driver", () => {
   ]);
 
   const mockSession = {
-    run: jest.fn((_query, _params, _config) => {
-      return new Promise((resolve, _reject) => {
+    run: jest.fn((_query, _params, _config) => {  // eslint-disable-line no-unused-vars
+      return new Promise((resolve, _reject) => {  // eslint-disable-line no-unused-vars
         return resolve({ records: [mockRecord] });
       });
     }),
@@ -28,14 +28,14 @@ jest.mock("neo4j-driver", () => {
   };
 
   const mockDriver = {
-    session: jest.fn((_args) => mockSession),
+    session: jest.fn((_args) => mockSession),  // eslint-disable-line no-unused-vars
   };
 
   return {
     auth: {
-      basic: (_username, _password, _realm = undefined) => "AuthToken",
+      basic: (_username, _password, _realm = undefined) => "AuthToken",  // eslint-disable-line no-unused-vars
     },
-    driver: jest.fn((_url, _authToken, _config) => mockDriver),
+    driver: jest.fn((_url, _authToken, _config) => mockDriver),  // eslint-disable-line no-unused-vars
   };
 });
 

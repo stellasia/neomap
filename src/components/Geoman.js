@@ -38,13 +38,13 @@ export default function initGeoman(map) {
     if (e.layer && e.layer.pm) {
       setRectangleCoordinates();
       // also need to add listener for a new layer
-      e.layer.on("pm:edit", (e) => {
+      e.layer.on("pm:edit", () => {
         setRectangleCoordinates();
       });
     }
   });
 
-  map.on("pm:remove", (e) => {
+  map.on("pm:remove", () => {
     setRectangleCoordinates();
   });
 }

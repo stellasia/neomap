@@ -23,7 +23,7 @@ jest.mock("./Layer", () => {
 describe("SideBar tests", () => {
   it("always renders one create new layer", () => {
     const { container: sidebar, getByText } = render(
-      <SideBar layers={[]} addLayer={() => {}} updateLayer={() => {}} removeLayer={() => {}} />
+      <SideBar layers={[]} addLayer={() => {}} updateLayer={() => {}} removeLayer={() => {}} />,
     );
 
     expect(sidebar).toBeDefined();
@@ -32,7 +32,7 @@ describe("SideBar tests", () => {
 
   it("renders multiple layers and the create new layer", () => {
     const { container: sidebar, getByText } = render(
-      <SideBar layers={[testLayer1, testLayer2]} addLayer={() => {}} updateLayer={() => {}} removeLayer={() => {}} />
+      <SideBar layers={[testLayer1, testLayer2]} addLayer={() => {}} updateLayer={() => {}} removeLayer={() => {}} />,
     );
 
     expect(sidebar).toBeDefined();

@@ -38,7 +38,7 @@ describe("Map tests", () => {
 
   it("plots multiple layers of different types and autoremoves deleted layers on update", () => {
     const renderResult = render(
-      <Map layers={[testMarkerLayer, testPolylineLayer, testHeatmapLayer, testClusterLayer]} />
+      <Map layers={[testMarkerLayer, testPolylineLayer, testHeatmapLayer, testClusterLayer]} />,
     );
 
     expect(true); // FIX

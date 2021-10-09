@@ -76,7 +76,7 @@ export class Layer extends Component {
     let maxLon = -Number.MAX_VALUE;
     if (arr.length > 0) {
       // TODO refactor/optimize
-      if (arr[0].hasOwnProperty("start")) {
+      if (Object.prototype.hasOwnProperty.call(arr[0], "start")) {
         arr.forEach((item) => {
           let startLat = item.start[0];
           let startLon = item.start[1];

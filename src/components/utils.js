@@ -1502,20 +1502,20 @@ const names = [
   "Lieuwe",
 ];
 
-function getRandomInt(min, max) {
+const getRandomInt = (min, max) => {
   return Math.floor(Math.random() * (max - min)) + min;
-}
+};
 
-export function generateRandomName() {
+export const generateRandomName = () => {
   return `${names[getRandomInt(0, names.length + 1)]} ${names[getRandomInt(0, names.length + 1)]}`;
-}
+};
 
-export function generateUkeyFromName(name) {
+export const generateUkeyFromName = (name) => {
   let thisName = name || generateRandomName();
   return `${thisName.replace(/\s/g, "")}${getRandomInt(0, 100)}`;
-}
+};
 
-export function getMinMaxLatLongs() {
+export const getMinMaxLatLongs = () => {
   const rawCoords = localStorage.getItem("rectangle_coordinates") || "[]";
   const coords = JSON.parse(rawCoords);
 
@@ -1527,4 +1527,4 @@ export function getMinMaxLatLongs() {
     return { minLat, minLon, maxLat, maxLon };
   });
   return bounds;
-}
+};
