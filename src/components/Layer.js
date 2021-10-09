@@ -687,7 +687,16 @@ export class Layer extends Component {
 			</div>
 		)
 	}
+	
+	getDefaultLatProperty() {
+		const propName = localStorage.getItem("default_lat") || "lat";
+		return {value: propName, label: propName}
+	}
 
+	getDefaultLonProperty() {
+		const propName = localStorage.getItem("default_lon") || "lon";
+		return {value: propName, label: propName}
+	}
 
 	renderConfigDefault() {
 		/*If layerType==latlon, then we display the elements to choose
@@ -728,7 +737,7 @@ export class Layer extends Component {
 						options={this.state.propertyNames}
 						onChange={this.handleLatPropertyChange}
 						isMulti={false}
-						defaultValue={this.state.latitudeProperty}
+						defaultValue={this.getDefaultLatProperty()}
 						name="latitudeProperty"
 					/>
 				</Form.Group>
@@ -740,7 +749,7 @@ export class Layer extends Component {
 						options={this.state.propertyNames}
 						onChange={this.handleLonPropertyChange}
 						isMulti={false}
-						defaultValue={this.state.longitudeProperty}
+						defaultValue={this.getDefaultLonProperty()}
 						name="longitudeProperty"
 					/>
 				</Form.Group>
