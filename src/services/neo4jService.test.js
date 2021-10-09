@@ -1,8 +1,8 @@
-// /**
-//  * Importing neo4jDesktopApi from __mocks__ adds a mock desktop api to the global window object
-//  * subsequent neo4jservice imports will use a mock api and driver *
-//  */
-// import "../../__mocks__/neo4jDesktopApi";
+/**
+ * Importing neo4jDesktopApi from __mocks__ adds a mock desktop api to the global window object
+ * subsequent neo4jservice imports will use a mock api and driver *
+ */
+import "../../__mocks__/neo4jDesktopApi";  // eslint-disable-line jest/no-mocks-import
 
 import { neo4jService } from "./neo4jService";
 import { neo4jService as neo4jServiceCopy } from "./neo4jService";
