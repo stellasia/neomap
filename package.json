@@ -42,6 +42,10 @@
 	"devDependencies": {
 		"@testing-library/jest-dom": "^5.11.2",
 		"@testing-library/react": "^10.4.8",
+		"babel-eslint": "^10.1.0",
+		"eslint-config-prettier": "^8.3.0",
+		"eslint-plugin-jest": "^24.5.2",
+		"eslint-plugin-prettier": "^4.0.0",
 		"jest": "^24.9.0"
 	},
 	"repository": "git://github.com/stellasia/neomap.git",
