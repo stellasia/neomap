@@ -3,22 +3,22 @@ import "@testing-library/jest-dom";
 import { render, fireEvent, cleanup, act } from "@testing-library/react";
 import { Layer } from "./Layer";
 import { NEW_LAYER } from "./constants";
-import "../../__mocks__/window";  // eslint-disable-line jest/no-mocks-import
+import "../../__mocks__/window"; // eslint-disable-line jest/no-mocks-import
 
 // Use these to assert invocations of App callbacks
-const mockAddLayer = jest.fn((_layer) => {});  // eslint-disable-line no-unused-vars
-const mockUpdateLayer = jest.fn((_layer) => {});  // eslint-disable-line no-unused-vars
-const mockRemoveLayer = jest.fn((_key) => {});  // eslint-disable-line no-unused-vars
+const mockAddLayer = jest.fn((_layer) => {}); // eslint-disable-line no-unused-vars
+const mockUpdateLayer = jest.fn((_layer) => {}); // eslint-disable-line no-unused-vars
+const mockRemoveLayer = jest.fn((_key) => {}); // eslint-disable-line no-unused-vars
 
 jest.mock("../services/neo4jService", () => {
   return {
     neo4jService: {
       getNodeLabels: jest.fn(() => Promise.resolve({ status: 200, result: [] })),
       getRelationshipLabels: jest.fn(() => Promise.resolve({ status: 200, result: [] })),
-      getProperties: jest.fn((_nodeFilter) => Promise.resolve({ status: 200, result: [] })),  // eslint-disable-line no-unused-vars
+      getProperties: jest.fn((_nodeFilter) => Promise.resolve({ status: 200, result: [] })), // eslint-disable-line no-unused-vars
       hasSpatial: jest.fn(() => Promise.resolve({ status: 200, result: false })),
       getSpatialLayers: jest.fn(() => Promise.resolve({ status: 200, result: [] })),
-      getData: jest.fn((_query, _params) => Promise.resolve({ status: 200, result: [] })),  // eslint-disable-line no-unused-vars
+      getData: jest.fn((_query, _params) => Promise.resolve({ status: 200, result: [] })), // eslint-disable-line no-unused-vars
     },
   };
 });
@@ -178,12 +178,12 @@ describe("Test Layer component", () => {
   });
 
   it("Can select and update layer color", () => {
-    const renderResult = renderNewLayer();  // eslint-disable-line no-unused-vars
+    const renderResult = renderNewLayer(); // eslint-disable-line no-unused-vars
     expect(true); // FIXME
   });
 
   it("Can configure heatmap radius", () => {
-    const renderResult = renderNewLayer();  // eslint-disable-line no-unused-vars
+    const renderResult = renderNewLayer(); // eslint-disable-line no-unused-vars
     expect(true); // FIXME
   });
 
