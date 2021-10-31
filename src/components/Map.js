@@ -128,7 +128,7 @@ export const Map = React.memo(({ layers, sideBarCollapsed }) => {
                 symbol: L.Symbol.arrowHead({
                   pixelSize: 10,
                   polygon: false,
-                  pathOptions: { stroke: true },
+                  pathOptions: { stroke: true, color: relRgbColor, opacity: relationshipColor.a },
                 }),
               },
             ];
