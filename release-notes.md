@@ -1,5 +1,17 @@
 # neomap release notes
 
+## 0.6.0 (2021-11-01)
+
+- Relationship visualization (issue #15; PR #98)
+- Database selection (issue #86; PR #100)
+- Area selection on map using geoman (issue #51; PR: #101)
+- Side-bar collapse (issue #84; PR #102)
+- Default latitude and longitude property names global setting (issue #103; PR #104)
+- Code improvement:
+  - Compliance with new React best practices (PR #71 to #97)
+  - Add linter (PR #105)
+  - Setup test framework (tests still not covering, but framework in place)
+
 ## 0.5.1 (2020-08-08)
 
 - Fix overflow in side bar (layer configuration)

@@ -73,9 +73,9 @@ export const Map = React.memo(({ layers, sideBarCollapsed }) => {
       const currentMapOverlays = mapOverlaysRef.current;
 
       layers.forEach((layer) => {
-        const { bounds, rendering, data, radius, color, relationshipColor, ukey } = layer;
+        const { bounds, rendering, data, radius, color, relationshipColor, ukey, name } = layer;
 
-        console.log(data);
+        // console.log(data);
 
         const layerBounds = new L.LatLngBounds(bounds);
 
@@ -210,7 +210,7 @@ export const Map = React.memo(({ layers, sideBarCollapsed }) => {
             break;
         }
 
-        layerControl.addOverlay(newMapOverlays[ukey], ukey);
+        layerControl.addOverlay(newMapOverlays[ukey], name);
       });
 
       // Remove deleted layers from the map and the layer control
