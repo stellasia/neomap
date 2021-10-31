@@ -177,7 +177,7 @@ export class Layer extends Component {
     if (relationshipLabel != null && relationshipLabel.length > 0) {
       let sub_q = "(false";
       relationshipLabel.forEach((value) => {
-        sub_q += ` OR r:\`${value.label}\``;
+        sub_q += ` OR type(r) = '${value.label}' `;
       });
       sub_q += ")";
       filter += "\nAND " + sub_q;
